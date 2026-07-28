@@ -1,0 +1,128 @@
+{
+  "dataset": "Sebastyijan/gdpr-enforcement-sample",
+  "own_total": 3202,
+  "own_fields": [
+    "C",
+    "a",
+    "c",
+    "d",
+    "e",
+    "f",
+    "r",
+    "t",
+    "u"
+  ],
+  "hf_info": {
+    "default": {
+      "description": "",
+      "citation": "",
+      "homepage": "",
+      "license": "",
+      "features": {
+        "id": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "date": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "country": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "dpa_authority": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "company": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "sector": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "violation_type": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "violation_summary": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "fine_amount_eur": {
+          "dtype": "float64",
+          "_type": "Value"
+        },
+        "fine_currency_original": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "fine_amount_original": {
+          "dtype": "float64",
+          "_type": "Value"
+        },
+        "outcome_type": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "appeal_status": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "source_url": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "last_updated": {
+          "dtype": "string",
+          "_type": "Value"
+        }
+      },
+      "builder_name": "csv",
+      "dataset_name": "gdpr-enforcement-sample",
+      "config_name": "default",
+      "version": {
+        "version_str": "0.0.0",
+        "major": 0,
+        "minor": 0,
+        "patch": 0
+      },
+      "splits": {
+        "train": {
+          "name": "train",
+          "num_bytes": 432538,
+          "num_examples": 682,
+          "dataset_name": "gdpr-enforcement-sample"
+        }
+      },
+      "download_checksums": {
+        "hf://datasets/Sebastyijan/gdpr-enforcement-sample@9f259f08b82162ddd23e70a2d02abd1cfd99ff0c/gdpr-enforcement-sample.csv": {
+          "num_bytes": 405178,
+          "checksum": null
+        }
+      },
+      "download_size": 405178,
+      "dataset_size": 432538,
+      "size_in_bytes": 837716
+    }
+  },
+  "hf_total": 682,
+  "hf_fields": [],
+  "extra_in_hf": [],
+  "missing_in_hf": [
+    "C",
+    "a",
+    "c",
+    "d",
+    "e",
+    "f",
+    "r",
+    "t",
+    "u"
+  ],
+  "hf_sample_rows": [],
+  "decision": "SCRAPING_PROPIO",
+  "decision_reason": "Dataset HF no accesible o no existe"
+}
