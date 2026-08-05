@@ -150,6 +150,36 @@ def _load_corpus_index() -> dict | None:
     return _corpus_index_cache
 
 
+# ── Entity aliases ────────────────────────────────────────────────────────────
+# Maps common abbreviations / trade names → canonical legal names stored in DB.
+_ENTITY_ALIASES: dict[str, str] = {
+    "bbva":       "Banco Bilbao Vizcaya Argentaria",
+    "santander":  "Banco Santander",
+    "caixabank":  "CaixaBank",
+    "vodafone":   "Vodafone España",
+    "telefonica": "Telefónica",
+    "telefónica": "Telefónica",
+    "amadeus":    "Amadeus IT Group",
+    "laliga":     "Liga Nacional de Fútbol Profesional",
+    "la liga":    "Liga Nacional de Fútbol Profesional",
+    "axa":        "AXA Real Estate",
+    "facebook":   "Facebook",
+    "meta":       "Meta Platforms",
+    "google":     "Google",
+    "amazon":     "Amazon",
+    "microsoft":  "Microsoft",
+}
+
+
+def _resolve_entity_alias(name: str) -> list[str]:
+    """Returns ILIKE patterns for controller_name — original + canonical if alias known."""
+    patterns = [name]
+    canonical = _ENTITY_ALIASES.get(name.lower().strip())
+    if canonical and canonical.lower() not in name.lower():
+        patterns.append(canonical)
+    return patterns
+
+
 # ── Intent extraction ──────────────────────────────────────────────────────────
 
 _INTENT_PROMPT = """\
@@ -235,20 +265,25 @@ def _fetch_fine_sorted_chunks(cur: psycopg.Cursor, k: int, filters: dict) -> lis
 
 
 def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str]:
-    """Returns doc IDs that match controller_name and have child chunks.
-    Does NOT require embeddings — vector search already filters by embedding IS NOT NULL,
-    and text search works without embeddings. Removing the embedding filter allows
-    freshly ingested (not yet embedded) docs to be found via tsvector search."""
+    """Returns doc IDs that match controller_name and have embedded child chunks.
+    Resolves entity aliases (e.g. 'BBVA' → 'Banco Bilbao Vizcaya Argentaria')
+    so abbreviations match the canonical legal names stored in DB.
+    Requires c.embedding IS NOT NULL — prevents unembedded Tracker docs from
+    restricting the search to docs with no vector representation."""
+    patterns = _resolve_entity_alias(controller_name)
+    placeholders = " OR ".join("d.controller_name ILIKE %s" for _ in patterns)
+    params = [f"%{p}%" for p in patterns]
     cur.execute(
-        """
+        f"""
         SELECT DISTINCT d.id
         FROM documents d
         JOIN chunks c ON c.document_id = d.id
-        WHERE d.controller_name ILIKE %s
+        WHERE ({placeholders})
           AND c.chunk_type = 'child'
+          AND c.embedding IS NOT NULL
         LIMIT 50
         """,
-        [f"%{controller_name}%"],
+        params,
     )
     return [str(row[0]) for row in cur.fetchall()]
 
@@ -330,6 +365,19 @@ LIMIT  %s
 """
 
 
+_SQL_QUESTION = """
+SELECT c.id
+FROM   chunks c
+JOIN   documents d ON d.id = c.document_id
+WHERE  c.chunk_type = 'child'
+  AND  c.section    = 'enrichment'
+  AND  c.embedding  IS NOT NULL
+  {filter_clause}
+ORDER BY c.embedding <=> %s::VECTOR({dims})
+LIMIT  %s
+"""
+
+
 def search_vector_chunks(
     cur: psycopg.Cursor, query_vec: list[float], k: int, filters: dict
 ) -> list[str]:
@@ -360,23 +408,34 @@ def search_text_chunks(
         return []  # fallback: vector search solo
 
 
+def search_question_chunks(
+    cur: psycopg.Cursor, query_vec: list[float], k: int, filters: dict
+) -> list[str]:
+    """Vector search against HyPE question chunks (section='enrichment') only.
+    Searched in a separate RRF arm so it doesn't contaminate original chunk search."""
+    clause, params = _build_filter_clause(filters)
+    sql = _SQL_QUESTION.format(filter_clause=clause, dims=EMBED_DIMS)
+    try:
+        cur.execute(sql, params + [vector_to_pg(query_vec), k])
+        return [str(row[0]) for row in cur.fetchall()]
+    except Exception as exc:
+        log.debug("search_question_chunks failed: %s", exc)
+        return []
+
+
 # ── RRF ───────────────────────────────────────────────────────────────────────
 
 def reciprocal_rank_fusion(
-    vector_hits: list[str],
-    text_hits:   list[str],
-    fine_hits:   list[str] | None = None,
+    *arms: list[str],
     k: int = RRF_K,
 ) -> list[tuple[str, float]]:
-    """3-way RRF: vector + text + optional fine-sort arm (each ranked independently)."""
+    """N-way RRF: each arm is a ranked list of chunk IDs.
+    Accepts: vector_hits, text_hits, fine_hits (optional), question_hits (optional)."""
     scores: dict[str, float] = {}
-    for rank, cid in enumerate(vector_hits):
-        scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
-    for rank, cid in enumerate(text_hits):
-        scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
-    if fine_hits:
-        for rank, cid in enumerate(fine_hits):
-            scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
+    for arm in arms:
+        if arm:
+            for rank, cid in enumerate(arm):
+                scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
     return sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
 
@@ -520,7 +579,8 @@ CRITICAL — GROUNDING RULES:
    "Based on the cases retrieved from the database, I cannot find sufficient information to answer \
 this question. The most relevant cases found are: [list titles]. Try searching with different terms \
 or a more specific query."
-4. Do NOT generate specific figures, dates, or decisions unless they are explicitly stated in the context."""
+4. Do NOT generate specific figures, dates, or decisions unless they are explicitly stated in the context.
+5. ARTICLE CITATIONS — HARD RULE: each case has an "Articles:" line listing the GDPR articles the DPA actually cited. Cite ONLY those articles for that case. Do NOT add, infer, or substitute article numbers from your training knowledge. If the Articles field is empty, do not cite any article number for that case."""
 
 
 def build_prompt(
@@ -792,16 +852,21 @@ def query(
         text_hits = search_text_chunks(cur, query_text, K_TEXT, filters)
         log.info("  → %d text hits", len(text_hits))
 
-        # 2b. Fine-sort injection: for sort_by=fine_desc queries, fetch top-K docs
-        #     by fine_amount and inject their chunk IDs into the RRF pool so they
-        #     rank high regardless of semantic match (fixes "highest fine" queries).
+        # 2b. Fine-sort injection
         fine_hits: list[str] = []
         if intent and intent.sort_by == "fine_desc":
             fine_hits = _fetch_fine_sorted_chunks(cur, K_VECTOR, filters)
-            log.info("  Fine-sort injection: %d chunks from top-%d fined docs", len(fine_hits), K_VECTOR)
+            log.info("  Fine-sort injection: %d chunks", len(fine_hits))
 
-        # 3. RRF (3-way: vector + text + optional fine-sort arm)
-        rrf_ranked    = reciprocal_rank_fusion(vector_hits, text_hits, fine_hits or None)
+        # 2c. HyPE question arm — separate vector search against enrichment chunks
+        question_hits = search_question_chunks(cur, query_vec, K_VECTOR, filters)
+        if question_hits:
+            log.info("  HyPE question hits: %d", len(question_hits))
+
+        # 3. 4-way RRF: vector + text + fine-sort + HyPE questions
+        rrf_ranked    = reciprocal_rank_fusion(
+            vector_hits, text_hits, fine_hits or None, question_hits or None
+        )
         rrf_scores    = dict(rrf_ranked)
         # Fetch top_n*3 child IDs to allow dedup by parent and still land top_n parents
         top_child_ids = [cid for cid, _ in rrf_ranked[: top_n * 3]]

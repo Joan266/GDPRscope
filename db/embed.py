@@ -1,8 +1,8 @@
 """
 JurisMind — Embedding generator
 
-Lee chunks sin embedding de CockroachDB, llama a Amazon Bedrock
-Titan Text Embeddings V2 y guarda los vectores de 1024 dims.
+Lee chunks sin embedding de CockroachDB, genera vectores con
+sentence-transformers (intfloat/e5-large-v2, 1024 dims) y los guarda.
 
 Estrategia:
   - Se embeben TODOS los chunks (parent y child).
@@ -18,28 +18,21 @@ Uso:
 """
 
 import argparse
-import json
 import logging
 import os
 import sys
 import time
-from datetime import datetime
 
-import boto3
 import psycopg
-from botocore.exceptions import ClientError
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
 DATABASE_URL      = os.environ.get("DATABASE_URL", "")
-AWS_REGION        = os.environ.get("AWS_REGION", "us-east-1")
-MODEL_ID          = "amazon.titan-embed-text-v2:0"
-EMBEDDING_VERSION = "titan-v2-1024"
+MODEL_NAME        = "intfloat/e5-large-v2"   # 1024 dims, mismo que Titan V2
+EMBEDDING_VERSION = "e5-large-v2-1024"
 EMBED_DIMS        = 1024
 BATCH_SIZE        = 100     # chunks por commit de DB
-MAX_CHARS         = 30_000  # Titan soporta ~8192 tokens ≈ 32K chars; margen conservador
-MAX_RETRIES       = 6
-RETRY_BASE_SEC    = 1.0     # backoff exponencial: 1, 2, 4, 8, 16, 32s
+MAX_CHARS         = 8_000   # e5-large-v2 max ~512 tokens ≈ 8K chars
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -49,51 +42,31 @@ logging.basicConfig(
 )
 
 
-# ── Bedrock ────────────────────────────────────────────────────────────────────
+# ── Sentence Transformers ───────────────────────────────────────────────────────
 
-def make_bedrock_client() -> boto3.client:
-    return boto3.client("bedrock-runtime", region_name=AWS_REGION)
+_st_model = None
 
 
-def embed_text(client, text: str) -> list[float]:
-    """
-    Llama a Titan Text Embeddings V2. Devuelve vector de 1024 floats.
-    Aplica exponential backoff ante ThrottlingException.
-    """
-    text = text[:MAX_CHARS].strip()
+def get_model():
+    """Lazy-load del modelo — se descarga una sola vez (~1.3GB)."""
+    global _st_model
+    if _st_model is None:
+        from sentence_transformers import SentenceTransformer
+        log.info("Cargando modelo %s (primera vez: descarga ~1.3GB)...", MODEL_NAME)
+        _st_model = SentenceTransformer(MODEL_NAME)
+        log.info("Modelo cargado.")
+    return _st_model
+
+
+def embed_text(text: str) -> list[float]:
+    """Genera embedding de 1024 floats con e5-large-v2 (L2 normalizado).
+    e5-large-v2 requiere prefijo 'passage: ' en documentos."""
+    text = ("passage: " + text[:MAX_CHARS]).strip()
     if not text:
         raise ValueError("Texto vacío — no se puede embeber")
-
-    body = json.dumps({
-        "inputText": text,
-        "dimensions": EMBED_DIMS,
-        "normalize":  True,   # L2 normalización — mejora cosine similarity
-    })
-
-    last_error: Exception | None = None
-    for attempt in range(MAX_RETRIES):
-        try:
-            resp   = client.invoke_model(
-                modelId=MODEL_ID,
-                body=body,
-                contentType="application/json",
-                accept="application/json",
-            )
-            result = json.loads(resp["body"].read())
-            return result["embedding"]
-
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            if code in ("ThrottlingException", "ServiceUnavailableException"):
-                delay = RETRY_BASE_SEC * (2 ** attempt)
-                log.warning("Bedrock %s — esperando %.0fs (intento %d/%d)",
-                            code, delay, attempt + 1, MAX_RETRIES)
-                time.sleep(delay)
-                last_error = e
-                continue
-            raise  # otros errores: no reintentar
-
-    raise RuntimeError(f"Bedrock no respondió tras {MAX_RETRIES} intentos") from last_error
+    model = get_model()
+    vec = model.encode(text, normalize_embeddings=True)
+    return vec.tolist()
 
 
 def vector_to_pg(embedding: list[float]) -> str:
@@ -104,13 +77,15 @@ def vector_to_pg(embedding: list[float]) -> str:
 # ── DB helpers ─────────────────────────────────────────────────────────────────
 
 _SELECT_PENDING = """
-SELECT c.id, c.content, c.chunk_type, c.section, d.source
+SELECT c.id, c.content, c.chunk_type, c.section, d.source,
+       d.title, d.controller_name, d.gdpr_articles
 FROM   chunks c
 JOIN   documents d ON d.id = c.document_id
 WHERE  c.embedding IS NULL
   AND  c.content IS NOT NULL
   AND  length(c.content) > 20
 {source_filter}
+{section_filter}
 ORDER BY c.created_at
 LIMIT  %s
 """
@@ -124,26 +99,39 @@ SET    embedding         = %s::VECTOR({dims}),
 WHERE  id = %s
 """.format(dims=EMBED_DIMS)
 
-_COUNT_PENDING = """
-SELECT count(*) FROM chunks WHERE embedding IS NULL AND length(coalesce(content,'')) > 20
-"""
+def _section_filter_sql(sections: list[str] | None, alias: str = "c") -> tuple[str, list]:
+    """Construye cláusula AND section IN (...) y devuelve (sql, params)."""
+    if not sections:
+        return "", []
+    col = f"{alias}.section" if alias else "section"
+    placeholders = ",".join(["%s"] * len(sections))
+    return f"AND {col} IN ({placeholders})", list(sections)
 
-_COUNT_TOTAL = "SELECT count(*) FROM chunks WHERE length(coalesce(content,'')) > 20"
 
-
-def count_chunks(conn: psycopg.Connection) -> tuple[int, int]:
-    """Devuelve (pendientes, total)."""
+def count_chunks(conn: psycopg.Connection, sections: list[str] | None = None) -> tuple[int, int]:
+    """Devuelve (pendientes, total), opcionalmente filtrado por sección."""
+    sec_sql, sec_params = _section_filter_sql(sections, alias="")
     with conn.cursor() as cur:
-        cur.execute(_COUNT_PENDING)
+        cur.execute(
+            f"SELECT count(*) FROM chunks WHERE embedding IS NULL AND length(coalesce(content,'')) > 20 {sec_sql}",
+            sec_params,
+        )
         pending = cur.fetchone()[0]
-        cur.execute(_COUNT_TOTAL)
+        cur.execute(
+            f"SELECT count(*) FROM chunks WHERE length(coalesce(content,'')) > 20 {sec_sql}",
+            sec_params,
+        )
         total = cur.fetchone()[0]
     return pending, total
 
 
-def fetch_pending(cur: psycopg.Cursor, batch: int, source: str | None) -> list[tuple]:
+def fetch_pending(cur: psycopg.Cursor, batch: int, source: str | None, sections: list[str] | None) -> list[tuple]:
     src_filter = f"AND d.source = '{source}'" if source else ""
-    cur.execute(_SELECT_PENDING.format(source_filter=src_filter), (batch,))
+    sec_sql, sec_params = _section_filter_sql(sections, alias="c")
+    cur.execute(
+        _SELECT_PENDING.format(source_filter=src_filter, section_filter=sec_sql),
+        sec_params + [batch],
+    )
     return cur.fetchall()
 
 
@@ -156,9 +144,15 @@ def run(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     log.info("Conectando a CockroachDB...")
-    conn = psycopg.connect(DATABASE_URL)
+    conn = psycopg.connect(DATABASE_URL, autocommit=True)
 
-    pending, total = count_chunks(conn)
+    sections = None if args.sections == "all" else args.sections.split(",")
+    if sections:
+        log.info("Secciones a embeber: %s", ", ".join(sections))
+    else:
+        log.info("Embebiendo TODAS las secciones (--sections all)")
+
+    pending, total = count_chunks(conn, sections)
     done = total - pending
     log.info("Chunks: %d total — %d ya embebidos — %d pendientes", total, done, pending)
 
@@ -168,34 +162,34 @@ def run(args: argparse.Namespace) -> None:
         return
 
     if args.dry_run:
-        log.info("--dry-run: sin llamadas a Bedrock ni escrituras.")
+        log.info("--dry-run: sin embeddings ni escrituras.")
         conn.close()
         return
 
-    log.info("Iniciando Bedrock client (region=%s, model=%s)...", AWS_REGION, MODEL_ID)
-    client = make_bedrock_client()
-
-    # Estimación de coste: Titan V2 = $0.00002 / 1K tokens; ~150 tokens/child chunk
-    est_tokens = pending * 150
-    est_cost   = est_tokens / 1_000 * 0.00002
-    log.info("Coste estimado: ~$%.4f (%.0fK tokens aprox.)", est_cost, est_tokens / 1_000)
+    log.info("Inicializando modelo de embeddings: %s...", MODEL_NAME)
+    get_model()   # pre-carga para que el ETA sea preciso
+    log.info("Coste estimado: $0.00 (sentence-transformers es local y gratuito)")
 
     n_ok = n_err = 0
     t_start = time.monotonic()
 
     with conn.cursor() as cur:
         while True:
-            rows = fetch_pending(cur, args.batch_size, args.source)
+            rows = fetch_pending(cur, args.batch_size, args.source, sections)
             if not rows:
                 break
 
             batch_updates: list[tuple] = []
 
-            for chunk_id, content, chunk_type, section, source in rows:
+            for chunk_id, content, chunk_type, section, source, title, controller, articles in rows:
                 try:
-                    vector    = embed_text(client, content)
+                    # Inyectar contexto del documento para distinguir entidades específicas
+                    articles_str = ", ".join(articles) if articles else ""
+                    meta_prefix = " | ".join(filter(None, [title, controller, articles_str]))
+                    enriched = f"{meta_prefix}\n{content}" if meta_prefix else content
+                    vector    = embed_text(enriched)
                     vector_pg = vector_to_pg(vector)
-                    batch_updates.append((vector_pg, MODEL_ID, EMBEDDING_VERSION, chunk_id))
+                    batch_updates.append((vector_pg, MODEL_NAME, EMBEDDING_VERSION, chunk_id))
                     n_ok += 1
                 except Exception as e:
                     log.warning("chunk %s [%s/%s]: ERROR — %s", chunk_id, source, section, e)
@@ -205,7 +199,6 @@ def run(args: argparse.Namespace) -> None:
             # Actualizar en batch
             if batch_updates:
                 cur.executemany(_UPDATE_CHUNK, batch_updates)
-                conn.commit()
 
             elapsed  = time.monotonic() - t_start
             rate     = n_ok / elapsed if elapsed > 0 else 0
@@ -235,6 +228,9 @@ def main() -> None:
                         help="Contar pendientes sin llamar a Bedrock")
     parser.add_argument("--source", choices=["gdprhub", "enforcement_tracker", "eurlex"],
                         default=None, help="Embeber solo una fuente")
+    parser.add_argument("--sections", default="teaser,facts,dispute",
+                        help="Secciones a embeber, separadas por coma. "
+                             "'all' = sin filtro (default: teaser,facts,dispute)")
     args = parser.parse_args()
     run(args)
 

@@ -100,19 +100,19 @@ def make_chunks(doc_id: str, doc: dict) -> list[dict]:
         })
         chunk_index += 1
 
-        # Solo crear hijos si el parent es suficientemente largo para dividir
-        if len(parent_text) > CHILD_SIZE:
-            for window in _windows(parent_text):
-                chunks.append({
-                    "id":            _new_id(),
-                    "document_id":   doc_id,
-                    "chunk_type":    "child",
-                    "parent_id":     parent_id,
-                    "chunk_index":   chunk_index,
-                    "content":       window,
-                    "content_tokens": len(window) // 4,
-                    "section":       section,
-                })
-                chunk_index += 1
+        # Siempre crear al menos un child: _windows() devuelve [text] si cabe en un chunk.
+        # Sin children, el documento es invisible al RAG (busca chunk_type='child').
+        for window in _windows(parent_text):
+            chunks.append({
+                "id":            _new_id(),
+                "document_id":   doc_id,
+                "chunk_type":    "child",
+                "parent_id":     parent_id,
+                "chunk_index":   chunk_index,
+                "content":       window,
+                "content_tokens": len(window) // 4,
+                "section":       section,
+            })
+            chunk_index += 1
 
     return chunks

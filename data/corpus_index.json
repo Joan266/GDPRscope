@@ -1,0 +1,47 @@
+{
+  "total_docs": 1352,
+  "date_range": "2013–2026",
+  "authorities": {
+    "AEPD": 579,
+    "APD/GBA": 242,
+    "ANSPDCP": 194,
+    "AEPD (Spain)": 129,
+    "AP": 35,
+    "AKI": 32,
+    "ANSPDCP (Romania)": 31,
+    "APD/GBA (Belgium)": 28,
+    "APDCAT": 13,
+    "AP (The Netherlands)": 13,
+    "AZOP": 12,
+    "AN": 11,
+    "Unknown": 4,
+    "APDCAT (Catalonia)": 4,
+    "AKI (Estonia)": 3,
+    "AG München": 3,
+    "AG Düsseldorf": 2,
+    "AG Frankfurt am Main": 2,
+    "AG Lörrach": 2,
+    "ABRvS": 1
+  },
+  "fine_range_eur": {
+    "min": 1,
+    "max": 10000000,
+    "docs_with_fine": 416
+  },
+  "top_gdpr_articles": [
+    "Article 6(1) GDPR",
+    "Article 5(1)(f) GDPR",
+    "Article 5(1)(c) GDPR",
+    "Article 5(1)(a) GDPR",
+    "Article 13 GDPR",
+    "Article 32 GDPR",
+    "Article 6 GDPR",
+    "Article 15 GDPR",
+    "Article 5(2) GDPR",
+    "Article 12 GDPR"
+  ],
+  "top_sectors": [],
+  "sources": {
+    "gdprhub": 1352
+  }
+}

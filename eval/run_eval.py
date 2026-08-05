@@ -92,6 +92,36 @@ Rate how well the response answers the question, from 0.0 to 1.0:
 Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
 
 
+_LEGAL_PRECISION_PROMPT = """\
+You are a GDPR legal expert evaluating whether an AI response uses correct and precise \
+legal terminology as found in official DPA enforcement decisions.
+
+## AI response to evaluate:
+{response}
+
+## Scoring (0.0 – 1.0):
+
+1.0 — Excellent: uses standard GDPR terms (controller, processor, data subject, \
+supervisory authority); cites specific articles with sub-paragraphs (Art. 5(1)(f), \
+Art. 32, Art. 83(5)); names GDPR principles correctly (data minimisation, purpose \
+limitation, storage limitation, accountability); references fine tier when relevant \
+(Art. 83(4) ≤€10M/2% vs Art. 83(5) ≤€20M/4%); uses enforcement language \
+(effective, proportionate and dissuasive; aggravating/mitigating circumstances).
+
+0.5 — Acceptable: uses some GDPR terms but mixes with generic language \
+(says "company" instead of "controller"; "violated privacy" instead of \
+"infringed Art. X GDPR"); mentions articles without sub-paragraph precision; \
+cites fine amounts without Art. 83 framework.
+
+0.0 — Poor: no GDPR-specific terms; refers to "privacy laws" generically; \
+invents or confuses article numbers; vague fine amounts; confuses controller/processor.
+
+If the response legitimately states it cannot answer (insufficient context), \
+score 0.5 — correct refusal is better than hallucination.
+
+Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
+
+
 # ── Retrieval helpers ──────────────────────────────────────────────────────────
 
 def retrieve_top_k(
@@ -130,12 +160,17 @@ def retrieve_top_k(
     vector_hits = rag_module.search_vector_chunks(cur, query_vec, k * 2, filters)
     text_hits   = rag_module.search_text_chunks(cur, question, k * 2, filters)
 
-    # Fine-sort injection: for sort_by=fine_desc, add a fine-ranked arm to RRF
+    # Fine-sort injection
     fine_hits: list[str] = []
     if intent and intent.sort_by == "fine_desc":
         fine_hits = rag_module._fetch_fine_sorted_chunks(cur, k * 2, filters)
 
-    rrf_ranked  = rag_module.reciprocal_rank_fusion(vector_hits, text_hits, fine_hits or None)
+    # HyPE question arm
+    question_hits = rag_module.search_question_chunks(cur, query_vec, k * 2, filters)
+
+    rrf_ranked  = rag_module.reciprocal_rank_fusion(
+        vector_hits, text_hits, fine_hits or None, question_hits or None
+    )
     rrf_scores  = dict(rrf_ranked)
     top_child_ids = [cid for cid, _ in rrf_ranked[: k * 3]]
 
@@ -211,7 +246,7 @@ def faithfulness_score(
     bedrock_client, contexts: list[dict], response: str
 ) -> tuple[float, str]:
     context_text = "\n\n".join(
-        f"[{i+1}] {ctx.get('title','')}: {(ctx.get('content') or '')[:500]}"
+        f"[{i+1}] {ctx.get('title','')}: {(ctx.get('content') or '')[:1000]}"
         for i, ctx in enumerate(contexts[:5])
     )
     prompt = _FAITHFULNESS_PROMPT.format(context=context_text, response=response[:1500])
@@ -222,6 +257,14 @@ def answer_relevance_score(
     bedrock_client, question: str, response: str
 ) -> tuple[float, str]:
     prompt = _RELEVANCE_PROMPT.format(question=question, response=response[:1500])
+    return _call_judge(bedrock_client, prompt)
+
+
+def legal_precision_score(
+    bedrock_client, response: str
+) -> tuple[float, str]:
+    """Evalúa si la respuesta usa terminología GDPR correcta (Art. refs, roles, principios)."""
+    prompt = _LEGAL_PRECISION_PROMPT.format(response=response[:1500])
     return _call_judge(bedrock_client, prompt)
 
 
@@ -301,14 +344,18 @@ def evaluate(
             # Judge metrics
             faith_score, faith_reason = faithfulness_score(bedrock_client, contexts, response)
             rel_score,   rel_reason   = answer_relevance_score(bedrock_client, question, response)
+            legal_score, legal_reason = legal_precision_score(bedrock_client, response)
 
-            result["response"]           = response[:2000]
-            result["faithfulness"]       = faith_score
-            result["faithfulness_reason"] = faith_reason
-            result["answer_relevance"]   = rel_score
+            result["response"]                = response[:2000]
+            result["faithfulness"]            = faith_score
+            result["faithfulness_reason"]     = faith_reason
+            result["answer_relevance"]        = rel_score
             result["answer_relevance_reason"] = rel_reason
+            result["legal_precision"]         = legal_score
+            result["legal_precision_reason"]  = legal_reason
 
-            log.info("  Faithfulness=%.2f  Answer relevance=%.2f", faith_score, rel_score)
+            log.info("  Faithfulness=%.2f  Answer relevance=%.2f  Legal precision=%.2f",
+                     faith_score, rel_score, legal_score)
 
         results.append(result)
 
@@ -343,11 +390,13 @@ def print_report(results: list[dict]) -> None:
     llm_results = [r for r in valid if "faithfulness" in r]
     if llm_results:
         n_llm = len(llm_results)
-        avg_faith = sum(r["faithfulness"] for r in llm_results) / n_llm
-        avg_rel   = sum(r["answer_relevance"] for r in llm_results) / n_llm
+        avg_faith  = sum(r["faithfulness"] for r in llm_results) / n_llm
+        avg_rel    = sum(r["answer_relevance"] for r in llm_results) / n_llm
+        avg_legal  = sum(r.get("legal_precision", 0) for r in llm_results) / n_llm
         print(f"\n── Generation Metrics ({n_llm} questions) ─────────────────────")
         print(f"  Faithfulness        : {avg_faith:.3f}  ({avg_faith*100:.1f}%)")
         print(f"  Answer Relevance    : {avg_rel:.3f}  ({avg_rel*100:.1f}%)")
+        print(f"  Legal Precision     : {avg_legal:.3f}  ({avg_legal*100:.1f}%)")
 
     # Per-category breakdown
     categories = sorted({r.get("category", "") for r in valid})

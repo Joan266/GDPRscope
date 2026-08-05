@@ -40,7 +40,7 @@ TRACKER_URL        = "https://www.enforcementtracker.com/"
 GDPRHUB_API        = "https://gdprhub.eu/api.php"
 SPARQL_ENDPOINT    = "https://publications.europa.eu/webapi/rdf/sparql"
 GDPR_CELLAR_URI    = "http://publications.europa.eu/resource/cellar/3e485e15-11bd-11e6-ba9a-01aa75ed71a1"
-BATCH_SIZE         = 50    # documentos por commit
+BATCH_SIZE         = 10    # documentos por commit (50 era demasiado para CockroachDB Serverless lock budget)
 REQUEST_DELAY      = 0.35  # segundos entre requests HTTP
 
 HEADERS = {"User-Agent": "JurisMind/1.0 (research@jurismind.dev)"}
@@ -195,7 +195,10 @@ def normalize_gdprhub(title: str, fields: dict, summary: dict) -> dict:
         dec_year = int(dec_date[:4])
 
     fine_str    = fields.get("Fine", "")
-    fine_amount = int(fine_str) if fine_str and fine_str.isdigit() else None
+    try:
+        fine_amount = int(float(fine_str)) if fine_str and fine_str.strip() else None
+    except (ValueError, TypeError):
+        fine_amount = None
 
     gdpr_articles = [fields[f"GDPR_Article_{i}"] for i in range(1, 10) if fields.get(f"GDPR_Article_{i}")]
     parties       = [{"name": fields[f"Party_Name_{i}"], "url": fields.get(f"Party_Link_{i}")}
@@ -368,12 +371,16 @@ def _prep(doc: dict) -> dict:
 
 
 def upsert_document_and_chunks(cur: psycopg.Cursor, doc: dict) -> str:
-    """Upserta documento + regenera chunks. Devuelve UUID."""
+    """Upserta documento + genera chunks solo si el doc es nuevo. Devuelve UUID."""
     cur.execute(_UPSERT_DOC, _prep(doc))
     doc_id = str(cur.fetchone()[0])
 
-    # Regenerar chunks: borrar los anteriores y recrear
-    cur.execute("DELETE FROM chunks WHERE document_id = %s", (doc_id,))
+    # Solo generar chunks si el doc no tiene ninguno todavía.
+    # Esto preserva embeddings ya calculados cuando se re-ejecuta ingest.
+    cur.execute("SELECT count(*) FROM chunks WHERE document_id = %s", (doc_id,))
+    if cur.fetchone()[0] > 0:
+        return doc_id  # ya chunkado — no tocar
+
     chunks = make_chunks(doc_id, doc)
     if chunks:
         cur.executemany(
@@ -443,8 +450,8 @@ def ingest_enforcement_tracker(conn: psycopg.Connection) -> int:
 
 # ── Fuente 2: GDPRhub ──────────────────────────────────────────────────────────
 
-def _gdprhub_get(params: dict) -> dict:
-    r = requests.get(GDPRHUB_API, params={**params, "format": "json"}, headers=HEADERS, timeout=20)
+def _gdprhub_get(params: dict, timeout: int = 60) -> dict:
+    r = requests.get(GDPRHUB_API, params={**params, "format": "json"}, headers=HEADERS, timeout=timeout)
     r.raise_for_status()
     return r.json()
 
@@ -526,6 +533,7 @@ def ingest_gdprhub(conn: psycopg.Connection, limit: int = 0) -> int:
                 count += 1
             except Exception as e:
                 log.warning("GDPRhub '%s': normalización error — %s", title, e)
+                conn.rollback()  # reset aborted transaction before next doc
                 time.sleep(REQUEST_DELAY)
                 continue
 

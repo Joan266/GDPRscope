@@ -1,0 +1,157 @@
+[
+  {
+    "id": "gs-001",
+    "category": "named_entity",
+    "question": "What fine did AEPD impose on Amadeus IT Group and why?",
+    "ground_truth": "AEPD imposed a fine of €14,400,000 on Amadeus IT Group (case PS-00005-2025). The company, a provider of a B2B reservation system used by airlines, hotels and travel agencies, used travellers' personal data originally collected for reservations to test a new AI system without a proper legal basis. This violated Article 6 GDPR (lawful basis) and Article 14 GDPR (transparency obligations).",
+    "relevant_source_ids": ["AEPD (Spain) - PS-00005-2025"],
+    "filters": {}
+  },
+  {
+    "id": "gs-002",
+    "category": "named_entity",
+    "question": "How much was Vodafone España fined by the Spanish DPA and for what violations?",
+    "ground_truth": "Vodafone España received the largest AEPD fine at the time — €8,125,000 (case PS/00059/2020) — for continuous and numerous violations including Articles 28 and 44 GDPR (processor agreements and international data transfers). Separately, Vodafone was fined €3,940,000 (PS/00001/2021) for violating Articles 5(1)(f) and 5(2) GDPR by failing to implement security measures to prevent SIM-swap fraud.",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00059/2020",
+      "AEPD (Spain) - PS/00001/2021"
+    ],
+    "filters": {}
+  },
+  {
+    "id": "gs-003",
+    "category": "named_entity",
+    "question": "What was the AEPD decision against BBVA (Banco Bilbao Vizcaya Argentaria)?",
+    "ground_truth": "AEPD imposed two fines totalling €5,000,000 on BBVA (PS/00070/2019): €2,000,000 for breaching the transparency principle (Art. 5(1)(a) GDPR) and €3,000,000 for deficiencies in its privacy policy related to consent (Arts. 4(11), 7, 12, 13 GDPR). The case concerned the bank's failure to provide lawful, transparent information about data processing to customers.",
+    "relevant_source_ids": ["AEPD (Spain) - PS/00070/2019"],
+    "filters": {}
+  },
+  {
+    "id": "gs-004",
+    "category": "named_entity",
+    "question": "Why did AEPD impose a €1,000,000 fine on LaLiga in case EXP202315637 for stadium access control?",
+    "ground_truth": "AEPD fined LaLiga €1,000,000 in case EXP202315637 (2024) for deploying biometric facial recognition for stadium access control without first conducting a mandatory Data Protection Impact Assessment (DPIA) as required by Article 35(1) GDPR. Biometric data constitutes special category data under Article 9, making a DPIA obligatory before deployment of such high-risk processing. The fine was imposed as an autonomous violation of the DPIA requirement.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202315637"],
+    "filters": {}
+  },
+  {
+    "id": "gs-005",
+    "category": "fine_lookup",
+    "question": "What is the highest GDPR fine imposed by AEPD in the database?",
+    "ground_truth": "The highest fine in the database is €14,400,000 imposed on Amadeus IT Group (PS-00005-2025, 2026) for using travellers' personal data to train an AI system without legal basis, violating Articles 6 and 14 GDPR.",
+    "relevant_source_ids": ["AEPD (Spain) - PS-00005-2025"],
+    "filters": {}
+  },
+  {
+    "id": "gs-006",
+    "category": "fine_lookup",
+    "question": "What fine did AEPD impose on the company that forced employees to install tracking apps on their personal phones?",
+    "ground_truth": "AEPD imposed a €200,000 fine on a transport services company (case EXP202411411, 2026) for requiring employees to install four tracking apps on their personal mobile phones for work purposes. This violated Articles 5(1)(c) (data minimization), 6(1) (lawful basis), and 13 GDPR (transparency).",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202411411"],
+    "filters": {}
+  },
+  {
+    "id": "gs-007",
+    "category": "fine_lookup",
+    "question": "What AEPD fine involved AXA Real Estate and a data breach affecting personal data?",
+    "ground_truth": "AXA Real Estate Investment Managers Iberica S.A. was fined €100,000 (case PS-00117-2024) following a data breach involving personal information of 143 individuals. The case addressed failures in implementing appropriate technical and organisational security measures under Article 32 GDPR.",
+    "relevant_source_ids": ["AEPD (Spain) - PS-00117-2024"],
+    "filters": {}
+  },
+  {
+    "id": "gs-008",
+    "category": "fine_lookup",
+    "question": "A bank was fined €3,500,000 by AEPD after customers could access other customers' accounts and personal data. What case was this and what articles were violated?",
+    "ground_truth": "AEPD fined a bank €3,500,000 in case EXP202213437 after a systemic failure allowed customers to access other customers' accounts and view their personal data. The violations covered Articles 5(1)(f) (integrity and confidentiality), 25 (data protection by design and by default), and 32 (security of processing) GDPR. The authority found the bank lacked adequate access controls and data segregation in its IT systems.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202213437"],
+    "filters": {}
+  },
+  {
+    "id": "gs-009",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in case PS/00051/2020 involving VOX España and the right to erasure?",
+    "ground_truth": "In case PS/00051/2020, AEPD imposed a fine of €1,500 on the far-right political party VOX España for violating the lawfulness principle under Article 6(1)(a) GDPR. The case also involved Article 17 (right to erasure) considerations regarding the retention of personal data without a valid legal basis.",
+    "relevant_source_ids": ["AEPD (Spain) - PS/00051/2020"],
+    "filters": {}
+  },
+  {
+    "id": "gs-010",
+    "category": "article_lookup",
+    "question": "A bank used a shared login credential for its CCTV system among multiple employees. What did AEPD decide in this case?",
+    "ground_truth": "AEPD fined a bank €400,000 in case EXP202404507 for sharing a single login credential among multiple employees to access the CCTV monitoring system. This violated Article 32 GDPR (security of processing), which requires appropriate technical measures including individual authentication. Shared credentials prevent audit trails and allow unauthorized access, constituting an inadequate security measure.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202404507"],
+    "filters": {}
+  },
+  {
+    "id": "gs-011",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in the PageGroup Europe recruitment agency case (PS/00003/2021)?",
+    "ground_truth": "AEPD fined PageGroup Europe €300,000 in case PS/00003/2021 for inadequate data subject rights procedures and security shortcomings in their recruitment database. Violations included Articles 5(1)(c) (data minimization), 5(1)(f) (integrity and confidentiality), 25 (data protection by design and default), and 32 (security of processing). The company retained candidate data longer than necessary and lacked proper procedures for handling access and erasure requests.",
+    "relevant_source_ids": ["AEPD (Spain) - PS/00003/2021"],
+    "filters": {}
+  },
+  {
+    "id": "gs-012",
+    "category": "article_lookup",
+    "question": "An energy company was fined by AEPD for automated decision-making without providing required information to data subjects. What was the decision in case PS/00037/2020?",
+    "ground_truth": "AEPD fined an energy company €1,500,000 in case PS/00037/2020 for failing to comply with Article 22 GDPR (automated individual decision-making). The company used automated processes to calculate contracts and charges without informing data subjects of the logic involved or their right to request human review. The case also involved data accuracy failures under Article 5(1)(d) GDPR.",
+    "relevant_source_ids": ["AEPD (Spain) - PS/00037/2020"],
+    "filters": {}
+  },
+  {
+    "id": "gs-013",
+    "category": "sector",
+    "question": "What GDPR rules apply when an employer monitors employees with location tracking apps on their personal phones?",
+    "ground_truth": "Employer monitoring of employees via tracking apps implicates several GDPR provisions. AEPD's decision in EXP202411411 (€200K fine) established that obliging employees to install tracking apps on personal phones violated: Article 5(1)(c) (data minimization — four apps is disproportionate), Article 6(1) (no valid legal basis — consent is not freely given in employment context), and Article 13 (transparency — employees not adequately informed). Employers must show a legitimate purpose, proportionality, and use the least intrusive means.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202411411"],
+    "filters": {}
+  },
+  {
+    "id": "gs-014",
+    "category": "sector",
+    "question": "Are there GDPR decisions about biometric data processing for access control in sports venues?",
+    "ground_truth": "Yes. AEPD fined LaLiga €1,000,000 (case EXP202315637, 2024) for implementing biometric facial recognition for stadium access without conducting a mandatory DPIA (Article 35(1) GDPR). Biometric data is special category data under Article 9 GDPR, requiring both an explicit legal basis (Art. 9(2)) and a DPIA before deployment. The case is a key precedent for sports venues considering biometric ticketing systems.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202315637"],
+    "filters": {}
+  },
+  {
+    "id": "gs-015",
+    "category": "sector",
+    "question": "AEPD fined a company €240,000 for a data breach caused by an API security vulnerability. What case is this and what articles were cited?",
+    "ground_truth": "AEPD imposed a €240,000 fine in case EXP202406208 for an API security vulnerability that resulted in a personal data breach. The controller failed to implement adequate technical and organisational measures under Article 5(1)(f) (integrity and confidentiality) and Article 32 GDPR (security of processing). The breach was attributed to failure to properly secure API endpoints.",
+    "relevant_source_ids": ["AEPD (Spain) - EXP202406208"],
+    "filters": {}
+  },
+  {
+    "id": "gs-016",
+    "category": "sector",
+    "question": "What security failures in a bank's customer service system led AEPD to impose a fine in case PS-00143-2025?",
+    "ground_truth": "AEPD fined a bank €400,000 in case PS-00143-2025 for failures in their customer service system that caused personal data to be incorrectly linked between customers. The violations covered Articles 5(1)(f) (integrity and confidentiality), 25 (data protection by design and by default), and 32 (security of processing) GDPR. The systemic failures meant customers could be shown another customer's data when accessing their account.",
+    "relevant_source_ids": ["AEPD (Spain) - PS-00143-2025"],
+    "filters": {}
+  },
+  {
+    "id": "gs-017",
+    "category": "edge_case",
+    "question": "What happens when a Facebook page is created with someone's personal data without their consent — which DPA handles the complaint?",
+    "ground_truth": "In case E/05270/2018–E/08416/2018, a Spanish data subject complained about a Facebook page created without consent disclosing their name, surname, and address. Since Meta (Facebook) is established in Ireland, AEPD forwarded the complaint to the Irish DPA (DPC) under the one-stop-shop mechanism (Article 56 GDPR). The case also noted that Facebook required additional personal data (identity proof) to process a deletion request, potentially violating Art. 12 GDPR.",
+    "relevant_source_ids": ["AEPD (Spain) - E/05270/2018 – E/08416/2018"],
+    "filters": {}
+  },
+  {
+    "id": "gs-018",
+    "category": "edge_case",
+    "question": "In AEPD case PD-00207-2022 involving debt collection, was the data subject's complaint upheld or dismissed, and why?",
+    "ground_truth": "AEPD dismissed the complaint in case PD-00207-2022. The data subject had an outstanding debt with the controller, which AEPD found provided a legitimate basis for processing personal data in the context of debt collection. The controller had also already responded appropriately to the data subject's access and erasure requests, so no GDPR violation was established.",
+    "relevant_source_ids": ["AEPD (Spain) - PD-00207-2022"],
+    "filters": {}
+  },
+  {
+    "id": "gs-019",
+    "category": "edge_case",
+    "question": "What did AEPD decide in case PS-00304-2024 and what data minimization violations were found?",
+    "ground_truth": "In case PS-00304-2024, AEPD imposed a €20,000 fine for violations of Article 5(1)(c) (data minimization) and Article 32 GDPR. The controller collected more personal data than necessary for the stated processing purpose and lacked adequate security measures to protect the data collected. The fine was at the lower end of the scale reflecting the limited scope of the violation.",
+    "relevant_source_ids": ["AEPD (Spain) - PS-00304-2024"],
+    "filters": {}
+  }
+]
