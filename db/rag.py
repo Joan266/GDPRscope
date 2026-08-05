@@ -160,8 +160,8 @@ _ENTITY_ALIASES: dict[str, str] = {
     "telefonica": "Telefónica",
     "telefónica": "Telefónica",
     "amadeus":    "Amadeus IT Group",
-    "laliga":     "Liga Nacional de Fútbol Profesional",
-    "la liga":    "Liga Nacional de Fútbol Profesional",
+    "laliga":     "La Liga",
+    "la liga":    "La Liga",
     "axa":        "AXA Real Estate",
     "facebook":   "Facebook",
     "meta":       "Meta Platforms",
@@ -252,6 +252,7 @@ def _fetch_fine_sorted_chunks(cur: psycopg.Cursor, k: int, filters: dict) -> lis
       AND  c.embedding  IS NOT NULL
       AND  d.fine_amount IS NOT NULL
       AND  d.fine_amount > 0
+      AND  d.source = 'gdprhub'
       {clause}
     ORDER BY d.fine_amount DESC, c.id
     LIMIT %s
@@ -580,7 +581,8 @@ CRITICAL — GROUNDING RULES:
 this question. The most relevant cases found are: [list titles]. Try searching with different terms \
 or a more specific query."
 4. Do NOT generate specific figures, dates, or decisions unless they are explicitly stated in the context.
-5. ARTICLE CITATIONS — HARD RULE: each case has an "Articles:" line listing the GDPR articles the DPA actually cited. Cite ONLY those articles for that case. Do NOT add, infer, or substitute article numbers from your training knowledge. If the Articles field is empty, do not cite any article number for that case."""
+5. ARTICLE CITATIONS — HARD RULE: each case has an "Articles:" line listing the GDPR articles the DPA actually cited. Cite ONLY those articles for that case. Do NOT add, infer, or substitute article numbers from your training knowledge. If the Articles field is empty, do not cite any article number for that case.
+6. NO GENERAL LAW EXPLANATIONS: Do NOT explain what a GDPR article requires in general. Only state what the specific case document says was violated and how. WRONG: "Article 32 requires controllers to implement encryption, pseudonymisation and regular testing..." RIGHT: "The document states that [company] failed to [specific failure stated in the document]." Every sentence must be traceable to a specific retrieved document."""
 
 
 def build_prompt(
@@ -667,6 +669,7 @@ def call_llm(client, system_prompt: str, user_prompt: str) -> str:
     msg = ac.messages.create(
         model=MODEL_ID_LLM,
         max_tokens=4096,
+        temperature=0.0,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     )
@@ -680,6 +683,7 @@ def call_llm_stream(system_prompt: str, user_prompt: str):
     with ac.messages.stream(
         model=MODEL_ID_LLM,
         max_tokens=4096,
+        temperature=0.0,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     ) as stream:

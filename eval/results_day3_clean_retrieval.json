@@ -1,0 +1,597 @@
+[
+  {
+    "id": "gs-001",
+    "category": "named_entity",
+    "question": "What fine did AEPD impose on Amadeus IT Group and why?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00005-2025"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00005-2025",
+      "Spanish Data Protection Authority (aepd) — AMADEUS IT GROUP, S.A. (Spain)"
+    ],
+    "retrieval_ms": 12250,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    }
+  },
+  {
+    "id": "gs-002",
+    "category": "named_entity",
+    "question": "How much was Vodafone España fined by the Spanish DPA and for what violations?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00059/2020",
+      "AEPD (Spain) - PS/00001/2021"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00059/2020",
+      "AEPD (Spain) - PS/00001/2021",
+      "AEPD (Spain) - PS/00085/2021",
+      "AEPD (Spain) - PS/00430/2020",
+      "AEPD (Spain) - PS/00484/2020",
+      "AEPD (Spain) - PS/00249/2021",
+      "AEPD (Spain) - PS/00474/2020",
+      "AEPD (Spain) - PS/00155/2021",
+      "AEPD (Spain) - PS/00278/2019"
+    ],
+    "retrieval_ms": 4219,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.6666666666666666,
+      "5": 0.4,
+      "10": 0.2222222222222222
+    }
+  },
+  {
+    "id": "gs-003",
+    "category": "named_entity",
+    "question": "What was the AEPD decision against BBVA (Banco Bilbao Vizcaya Argentaria)?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00070/2019"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00070/2019",
+      "AN - 0000104/2021",
+      "AEPD (Spain) - PS/00068/2020",
+      "AEPD (Spain) - PS/00420/2021",
+      "AEPD (Spain) - PS/00219/2019",
+      "AEPD (Spain) - PS/00427/2021"
+    ],
+    "retrieval_ms": 4016,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.16666666666666666
+    }
+  },
+  {
+    "id": "gs-004",
+    "category": "named_entity",
+    "question": "Why did AEPD impose a €1,000,000 fine on LaLiga in case EXP202315637 for stadium access control?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202315637"
+    ],
+    "retrieved_ids": [
+      "Spanish Data Protection Authority (aepd) — Professional Football League (LaLiga) (Spain)"
+    ],
+    "retrieval_ms": 3061,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    }
+  },
+  {
+    "id": "gs-005",
+    "category": "fine_lookup",
+    "question": "What is the highest GDPR fine imposed by AEPD in the database?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00005-2025"
+    ],
+    "retrieved_ids": [
+      "Data Protection Authority of Ireland — Meta Platforms Ireland Limited (Ireland)",
+      "Data Protection Authority of Ireland — TikTok Technology Limited (Ireland)",
+      "Data Protection Authority of Ireland — Meta Platforms, Inc. (Ireland)",
+      "AEPD (Spain) - PS/00279/2020",
+      "AEPD (Spain) - PS/00390/2019",
+      "AEPD (Spain) - EXP202200471",
+      "AEPD (Spain) - EXP202301519",
+      "AEPD (Spain) - PS/00291/2019",
+      "AEPD (Spain) - EXP202305587",
+      "AEPD (Spain) - EXP202315571"
+    ],
+    "retrieval_ms": 10532,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    }
+  },
+  {
+    "id": "gs-006",
+    "category": "fine_lookup",
+    "question": "What fine did AEPD impose on the company that forced employees to install tracking apps on their personal phones?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202411411"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202411411",
+      "AEPD (Spain) - PS-00446-2023",
+      "AEPD (Spain) - EXP202310848",
+      "AEPD (Spain) - PS/00315/2020",
+      "AEPD (Spain) - EXP202315571",
+      "AEPD (Spain) - PS/00031/2020",
+      "AEPD (Spain) - PS/00484/2020",
+      "AEPD (Spain) - EXP202404646",
+      "AEPD (Spain) - PS/00079/2020",
+      "AEPD (Spain) - EXP202409823"
+    ],
+    "retrieval_ms": 10765,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-007",
+    "category": "fine_lookup",
+    "question": "What AEPD fine involved AXA Real Estate and a data breach affecting personal data?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00117-2024"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00117-2024",
+      "Spanish Data Protection Authority (aepd) — AXA REAL ESTATE INVESTMENT MANAGERS IBERICA S.A. y SEUR GEOPOST, S.L. (Spain)"
+    ],
+    "retrieval_ms": 3266,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    }
+  },
+  {
+    "id": "gs-008",
+    "category": "fine_lookup",
+    "question": "A bank was fined €3,500,000 by AEPD after customers could access other customers' accounts and personal data. What case was this and what articles were violated?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202213437"
+    ],
+    "retrieved_ids": [
+      "Spanish Data Protection Authority (aepd) — CAIXABANK, S.A. (Spain)",
+      "AEPD (Spain) - PS/00500/2020",
+      "AEPD (Spain) - PS/00259/2020",
+      "AEPD (Spain) - EXP202500113",
+      "ANSPDCP (Romania) - Fine against Libra Internet Bank SA",
+      "AEPD (Spain) - PS-00143-2025",
+      "AEPD (Spain) - EXP202105363",
+      "AEPD (Spain) - PS/00226/2020",
+      "AEPD (Spain) - EXP202104875",
+      "AEPD (Spain) - EXP202307481"
+    ],
+    "retrieval_ms": 4780,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    }
+  },
+  {
+    "id": "gs-009",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in case PS/00051/2020 involving VOX España and the right to erasure?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00051/2020"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00051/2020",
+      "AEPD (Spain) - EXP202406574"
+    ],
+    "retrieval_ms": 7969,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    }
+  },
+  {
+    "id": "gs-010",
+    "category": "article_lookup",
+    "question": "A bank used a shared login credential for its CCTV system among multiple employees. What did AEPD decide in this case?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202404507"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202404507",
+      "AEPD (Spain) - EXP202400055",
+      "AEPD (Spain) - EXP202201718",
+      "AEPD (Spain) - PS/00369/2019",
+      "AEPD (Spain) - PS/00505/2021",
+      "AEPD (Spain) - EXP202310943",
+      "AEPD (Spain) - EXP202307481",
+      "AEPD (Spain) - PS/00050/2021",
+      "AEPD (Spain) - EXP202305233",
+      "AEPD (Spain) - EXP202210525"
+    ],
+    "retrieval_ms": 10405,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-011",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in the PageGroup Europe recruitment agency case (PS/00003/2021)?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00003/2021"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00003/2021"
+    ],
+    "retrieval_ms": 4078,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    }
+  },
+  {
+    "id": "gs-012",
+    "category": "article_lookup",
+    "question": "An energy company was fined by AEPD for automated decision-making without providing required information to data subjects. What was the decision in case PS/00037/2020?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00037/2020"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00197/2020",
+      "AEPD (Spain) - PS-00371-2021",
+      "AEPD (Spain) - PS/00037/2020",
+      "AEPD (Spain) - PS/00172/2020",
+      "AEPD (Spain) - PS/00236/2020",
+      "AEPD (Spain) - E/03624/2021",
+      "AEPD (Spain) - PS/00322/2021",
+      "AEPD (Spain) - PS/00333/2019",
+      "AEPD (Spain) - PS/00025/2019",
+      "AEPD (Spain) - PS/00240/2019"
+    ],
+    "retrieval_ms": 18452,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 0.3333333333333333,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-013",
+    "category": "sector",
+    "question": "What GDPR rules apply when an employer monitors employees with location tracking apps on their personal phones?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202411411"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202411411",
+      "AN - 136/2019",
+      "APD/GBA (Belgium) - 73/2023",
+      "AEPD (Spain) - PS-00446-2023",
+      "APD/GBA (Belgium) - 15/2023",
+      "AEPD (Spain) - EXP202310848",
+      "AEPD (Spain) - E/09208/2018",
+      "APD/GBA (Belgium) - 01/2026",
+      "APD/GBA (Belgium) - 69/2024",
+      "APD/GBA (Belgium) - 15/2021"
+    ],
+    "retrieval_ms": 10452,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-014",
+    "category": "sector",
+    "question": "Are there GDPR decisions about biometric data processing for access control in sports venues?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202315637"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - 0098/2022",
+      "AP (The Netherlands) - 30.04.2020",
+      "AN - 2185/2021",
+      "AEPD (Spain) - EXP202305134",
+      "AP (The Netherlands) - Boete vingerafdrukken personeel",
+      "AP Barcelona - Auto 72/2021",
+      "AEPD (Spain) - EXP202212956",
+      "AEPD (Spain) - EXP202315637",
+      "APD/GBA (Belgium) - 49/2023",
+      "AKI (Estonia) - 2.1.-3/20/4479"
+    ],
+    "retrieval_ms": 16563,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 1.0
+    },
+    "mrr": 0.125,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-015",
+    "category": "sector",
+    "question": "AEPD fined a company €240,000 for a data breach caused by an API security vulnerability. What case is this and what articles were cited?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202406208"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00054/2021",
+      "AEPD (Spain) - PS/00054/2020",
+      "AEPD (Spain) - EXP202401683",
+      "AEPD (Spain) - EXP202402590",
+      "AEPD (Spain) - PS/00291/2019",
+      "AEPD (Spain) - EXP202409823",
+      "AEPD (Spain) - EXP202403325",
+      "AEPD (Spain) - EXP202309453",
+      "AEPD (Spain) - EXP202307113",
+      "AEPD (Spain) - EXP202102433"
+    ],
+    "retrieval_ms": 14077,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    }
+  },
+  {
+    "id": "gs-016",
+    "category": "sector",
+    "question": "What security failures in a bank's customer service system led AEPD to impose a fine in case PS-00143-2025?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00143-2025"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00143-2025",
+      "AEPD (Spain) - EXP202307481",
+      "AEPD (Spain) - PS/00500/2020",
+      "AEPD (Spain) - EXP202105363",
+      "AEPD (Spain) - PS/00226/2020",
+      "AEPD (Spain) - EXP202500113",
+      "AEPD (Spain) - EXP202104875",
+      "AEPD (Spain) - PS/00259/2020"
+    ],
+    "retrieval_ms": 11516,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.125
+    }
+  },
+  {
+    "id": "gs-017",
+    "category": "edge_case",
+    "question": "What happens when a Facebook page is created with someone's personal data without their consent — which DPA handles the complaint?",
+    "relevant_ids": [
+      "AEPD (Spain) - E/05270/2018 – E/08416/2018"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - E/05270/2018 – E/08416/2018",
+      "AEPD (Spain) - E/00647/2019 - CO/00198/2020",
+      "AG München - 122 C 11829/24",
+      "AG München - 178 C 13527/22",
+      "Data Protection Authority of Hamburg — Facebook Germany GmbH (Germany)",
+      "Data Protection Authority of Ireland — Facebook Ireland Limited (Ireland)",
+      "French Data Protection Authority (CNIL) — Facebook Ireland Ltd. (France)"
+    ],
+    "retrieval_ms": 3108,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.14285714285714285
+    }
+  },
+  {
+    "id": "gs-018",
+    "category": "edge_case",
+    "question": "In AEPD case PD-00207-2022 involving debt collection, was the data subject's complaint upheld or dismissed, and why?",
+    "relevant_ids": [
+      "AEPD (Spain) - PD-00207-2022"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202406716",
+      "AEPD (Spain) - PS/00524/2023",
+      "AEPD (Spain) - EXP202200429",
+      "AEPD (Spain) - EXP202206805",
+      "AEPD (Spain) - PD-00207-2022",
+      "AEPD (Spain) - EXP202313713",
+      "AEPD (Spain) - TD/00233/2020",
+      "AEPD (Spain) - EXP202310203",
+      "AEPD (Spain) - EXP202305732",
+      "AEPD (Spain) - EXP202205208"
+    ],
+    "retrieval_ms": 10266,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 0.2,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.2,
+      "10": 0.1
+    }
+  },
+  {
+    "id": "gs-019",
+    "category": "edge_case",
+    "question": "What did AEPD decide in case PS-00304-2024 and what data minimization violations were found?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00304-2024"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00356/2021",
+      "AEPD (Spain) - E/03690/2020",
+      "AEPD (Spain) - PS/00014/2020",
+      "AEPD (Spain) - EXP202207494",
+      "AEPD (Spain) - PS/00293/2019",
+      "AEPD (Spain) - PS/00234/2020",
+      "AEPD (Spain) - EXP202206776",
+      "AEPD (Spain) - PS-00304-2024",
+      "AEPD (Spain) - PS/00476/2021",
+      "AEPD (Spain) - PS/00249/2020"
+    ],
+    "retrieval_ms": 15812,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 1.0
+    },
+    "mrr": 0.125,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.1
+    }
+  }
+]

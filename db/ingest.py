@@ -340,7 +340,7 @@ INSERT INTO documents (
 ON CONFLICT (source, source_id) DO UPDATE SET
     title            = EXCLUDED.title,
     outcome          = EXCLUDED.outcome,
-    fine_amount      = EXCLUDED.fine_amount,
+    fine_amount      = COALESCE(EXCLUDED.fine_amount, documents.fine_amount),
     gdpr_articles    = EXCLUDED.gdpr_articles,
     appeal_chain     = EXCLUDED.appeal_chain,
     summary_teaser   = EXCLUDED.summary_teaser,
