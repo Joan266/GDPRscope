@@ -24,17 +24,18 @@ import logging
 import os
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 
-import boto3
+import anthropic
 import psycopg
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
 DATABASE_URL      = os.environ.get("DATABASE_URL", "")
-AWS_REGION        = os.environ.get("AWS_REGION", "us-east-1")
-MODEL_ID_EMBED    = "amazon.titan-embed-text-v2:0"
-MODEL_ID_LLM      = "anthropic.claude-sonnet-4-6"
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+MODEL_NAME_EMBED  = "intfloat/e5-large-v2"    # 1024 dims, local
+MODEL_ID_LLM      = "claude-sonnet-4-6"        # Anthropic API directa
 EMBED_DIMS        = 1024
 K_VECTOR          = 20    # chunks por rama de búsqueda
 K_TEXT            = 20
@@ -42,6 +43,7 @@ K_MEMORY          = 5     # memorias de usuario a recuperar
 RRF_K             = 60    # constante RRF estándar
 TOP_N_CONTEXT     = 8     # chunks padre enviados al LLM tras RRF
 MAX_CHARS_QUERY   = 30_000
+CORPUS_INDEX_PATH = Path(__file__).parent.parent / "data" / "corpus_index.json"
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -61,35 +63,203 @@ class QueryResult:
     latency_ms: int
 
 
-# ── Bedrock ────────────────────────────────────────────────────────────────────
+@dataclass
+class QueryIntent:
+    controller_name: str | None = None
+    authority:       str | None = None
+    jurisdiction:    str | None = None
+    gdpr_articles:   list[str]  = field(default_factory=list)
+    year_min:        int | None = None
+    year_max:        int | None = None
+    sort_by:         str | None = None  # "fine_desc" | "date_desc"
+    has_fine:        bool | None = None
 
-def make_bedrock_client() -> boto3.client:
-    return boto3.client("bedrock-runtime", region_name=AWS_REGION)
+
+# ── Embeddings (sentence-transformers local) ───────────────────────────────────
+
+_st_model = None
+
+
+def _get_st_model():
+    global _st_model
+    if _st_model is None:
+        from sentence_transformers import SentenceTransformer
+        _st_model = SentenceTransformer(MODEL_NAME_EMBED)
+    return _st_model
+
+
+def make_bedrock_client():
+    """Compatibilidad — devuelve None, los clientes son internos."""
+    return None
 
 
 def embed_query(client, text: str) -> list[float]:
-    """Embed via Titan V2. Sin retry — consulta interactiva, falla rápido."""
-    text = text[:MAX_CHARS_QUERY].strip()
+    """Embed via e5-large-v2. El parámetro client se ignora (compatibilidad).
+    e5-large-v2 requiere prefijo 'query: ' en consultas."""
+    text = ("query: " + text[:MAX_CHARS_QUERY]).strip()
     if not text:
         raise ValueError("Query vacía")
+    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
-    body = json.dumps({
-        "inputText": text,
-        "dimensions": EMBED_DIMS,
-        "normalize":  True,
-    })
-    resp = client.invoke_model(
-        modelId=MODEL_ID_EMBED,
-        body=body,
-        contentType="application/json",
-        accept="application/json",
+
+def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
+    """HyDE: generates a hypothetical GDPR decision excerpt, then embeds it as a passage.
+    Improves retrieval for article_lookup queries by producing an embedding closer
+    to real decision chunks."""
+    ac = _get_anthropic_client()
+    articles = ", ".join(intent.gdpr_articles[:3]) if intent.gdpr_articles else "GDPR"
+    msg = ac.messages.create(
+        model=MODEL_ID_LLM,
+        max_tokens=150,
+        messages=[{"role": "user", "content": (
+            f"Write 2-3 sentences from a GDPR DPA enforcement decision that answers: "
+            f"{query_text}\nFocus on {articles}. Write as excerpt, no commentary."
+        )}],
     )
-    return json.loads(resp["body"].read())["embedding"]
+    hypothetical = "passage: " + msg.content[0].text.strip()
+    return embed_query(None, hypothetical)
 
 
 def vector_to_pg(embedding: list[float]) -> str:
     """Serializa vector a literal VECTOR de CockroachDB/PostgreSQL."""
     return "[" + ",".join(f"{x:.8f}" for x in embedding) + "]"
+
+
+# ── Corpus index ───────────────────────────────────────────────────────────────
+
+_corpus_index_cache: dict | None = None
+
+
+def load_corpus_index() -> dict | None:
+    """Public alias for _load_corpus_index (used by UI streaming path)."""
+    return _load_corpus_index()
+
+
+def _load_corpus_index() -> dict | None:
+    """Loads data/corpus_index.json once per process (cached in memory)."""
+    global _corpus_index_cache
+    if _corpus_index_cache is not None:
+        return _corpus_index_cache
+    if CORPUS_INDEX_PATH.exists():
+        try:
+            _corpus_index_cache = json.loads(
+                CORPUS_INDEX_PATH.read_text(encoding="utf-8")
+            )
+        except Exception as exc:
+            log.debug("Could not load corpus index: %s", exc)
+    return _corpus_index_cache
+
+
+# ── Intent extraction ──────────────────────────────────────────────────────────
+
+_INTENT_PROMPT = """\
+Extract structured search parameters from this GDPR legal query.
+Return ONLY valid JSON with these exact fields (null if not mentioned):
+{"controller_name":null,"authority":null,"jurisdiction":null,\
+"gdpr_articles":[],"year_min":null,"year_max":null,"sort_by":null,"has_fine":null}
+
+sort_by values: "fine_desc" (highest fine / largest fine) | "date_desc" (most recent) | null
+Query: """
+
+
+def extract_intent(query_text: str) -> QueryIntent | None:
+    """Calls Claude to extract structured search parameters from the query.
+    Returns None on any failure — always safe to skip."""
+    try:
+        ac = _get_anthropic_client()
+        msg = ac.messages.create(
+            model=MODEL_ID_LLM,
+            max_tokens=150,
+            messages=[{"role": "user", "content": _INTENT_PROMPT + query_text}],
+        )
+        raw = msg.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        data = json.loads(raw.strip())
+        raw_min = data.get("year_min")
+        raw_max = data.get("year_max")
+        return QueryIntent(
+            controller_name=data.get("controller_name"),
+            authority=data.get("authority"),
+            jurisdiction=data.get("jurisdiction"),
+            gdpr_articles=[str(a) for a in (data.get("gdpr_articles") or [])],
+            year_min=int(raw_min) if raw_min is not None else None,
+            year_max=int(raw_max) if raw_max is not None else None,
+            sort_by=data.get("sort_by"),
+            has_fine=data.get("has_fine"),
+        )
+    except Exception as exc:
+        log.debug("Intent extraction failed: %s", exc)
+        return None
+
+
+def apply_intent_filters(intent: QueryIntent, filters: dict) -> None:
+    """Applies conservative intent-derived filters.
+
+    Only sort_by is stored here (used by rerank_by_metadata, not SQL).
+    Jurisdiction / gdpr_article / year_min / year_max are NOT auto-applied —
+    exact-match SQL filters on those fields cause too many false negatives with
+    the DB's heterogeneous values. Users can set them explicitly via CLI/UI.
+    Controller pre-filter is handled separately in _find_controller_docs.
+    """
+    if intent.sort_by:
+        filters.setdefault("sort_by", intent.sort_by)
+
+
+def _fetch_fine_sorted_chunks(cur: psycopg.Cursor, k: int, filters: dict) -> list[str]:
+    """Returns child chunk IDs from the top-K documents by fine_amount DESC.
+    Used to ensure highest-fine docs appear in RRF candidates regardless of
+    semantic match (fixes 'what is the highest fine' queries)."""
+    clause, params = _build_filter_clause({k: v for k, v in filters.items()
+                                           if k not in ("sort_by",)})
+    sql = f"""
+    SELECT c.id
+    FROM   chunks c
+    JOIN   documents d ON d.id = c.document_id
+    WHERE  c.chunk_type = 'child'
+      AND  c.embedding  IS NOT NULL
+      AND  d.fine_amount IS NOT NULL
+      AND  d.fine_amount > 0
+      {clause}
+    ORDER BY d.fine_amount DESC, c.id
+    LIMIT %s
+    """
+    try:
+        cur.execute(sql, params + [k])
+        return [str(row[0]) for row in cur.fetchall()]
+    except Exception as exc:
+        log.debug("fine_sorted_chunks failed: %s", exc)
+        return []
+
+
+def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str]:
+    """Returns doc IDs that match controller_name and have child chunks.
+    Does NOT require embeddings — vector search already filters by embedding IS NOT NULL,
+    and text search works without embeddings. Removing the embedding filter allows
+    freshly ingested (not yet embedded) docs to be found via tsvector search."""
+    cur.execute(
+        """
+        SELECT DISTINCT d.id
+        FROM documents d
+        JOIN chunks c ON c.document_id = d.id
+        WHERE d.controller_name ILIKE %s
+          AND c.chunk_type = 'child'
+        LIMIT 50
+        """,
+        [f"%{controller_name}%"],
+    )
+    return [str(row[0]) for row in cur.fetchall()]
+
+
+def rerank_by_metadata(contexts: list[dict], intent: QueryIntent) -> list[dict]:
+    """Re-sorts RRF results by fine_amount or decision_year based on intent."""
+    if intent.sort_by == "fine_desc":
+        return sorted(contexts, key=lambda x: x.get("fine_amount") or 0, reverse=True)
+    if intent.sort_by == "date_desc":
+        return sorted(contexts, key=lambda x: x.get("decision_year") or 0, reverse=True)
+    return contexts
 
 
 # ── Filter builder ─────────────────────────────────────────────────────────────
@@ -108,8 +278,29 @@ def _build_filter_clause(filters: dict) -> tuple[str, list]:
         params.append(filters["source"])
 
     if filters.get("gdpr_article"):
-        clauses.append("AND %s = ANY(d.gdpr_articles)")
-        params.append(filters["gdpr_article"])
+        import re as _re
+        art = str(filters["gdpr_article"]).strip()
+        m = _re.search(r'\d+', art)
+        pattern = f"%{m.group()}%" if m else f"%{art}%"
+        clauses.append(
+            "AND EXISTS (SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s)"
+        )
+        params.append(pattern)
+
+    if filters.get("year_min") is not None:
+        clauses.append("AND d.decision_year >= %s::INT")
+        params.append(int(filters["year_min"]))
+
+    if filters.get("year_max") is not None:
+        clauses.append("AND d.decision_year <= %s::INT")
+        params.append(int(filters["year_max"]))
+
+    if filters.get("has_fine"):
+        clauses.append("AND d.fine_amount IS NOT NULL AND d.fine_amount > 0")
+
+    if filters.get("doc_ids"):
+        clauses.append("AND d.id = ANY(%s::UUID[])")
+        params.append(filters["doc_ids"])
 
     return "\n  ".join(clauses), params
 
@@ -148,13 +339,25 @@ def search_vector_chunks(
     return [str(row[0]) for row in cur.fetchall()]
 
 
+def _sanitize_tsquery(text: str) -> str:
+    """Elimina caracteres especiales que rompen plainto_tsquery en CockroachDB."""
+    import re
+    return re.sub(r"[()&|!:<>*?]", " ", text).strip()
+
+
 def search_text_chunks(
     cur: psycopg.Cursor, query_text: str, k: int, filters: dict
 ) -> list[str]:
+    safe_query = _sanitize_tsquery(query_text)
+    if not safe_query:
+        return []
     clause, params = _build_filter_clause(filters)
     sql = _SQL_TEXT.format(filter_clause=clause)
-    cur.execute(sql, [query_text] + params + [query_text, k])
-    return [str(row[0]) for row in cur.fetchall()]
+    try:
+        cur.execute(sql, [safe_query] + params + [safe_query, k])
+        return [str(row[0]) for row in cur.fetchall()]
+    except Exception:
+        return []  # fallback: vector search solo
 
 
 # ── RRF ───────────────────────────────────────────────────────────────────────
@@ -162,13 +365,18 @@ def search_text_chunks(
 def reciprocal_rank_fusion(
     vector_hits: list[str],
     text_hits:   list[str],
+    fine_hits:   list[str] | None = None,
     k: int = RRF_K,
 ) -> list[tuple[str, float]]:
+    """3-way RRF: vector + text + optional fine-sort arm (each ranked independently)."""
     scores: dict[str, float] = {}
     for rank, cid in enumerate(vector_hits):
         scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
     for rank, cid in enumerate(text_hits):
         scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
+    if fine_hits:
+        for rank, cid in enumerate(fine_hits):
+            scores[cid] = scores.get(cid, 0.0) + 1.0 / (k + rank + 1)
     return sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
 
@@ -303,32 +511,63 @@ Rules:
 - Distinguish DPA decisions (administrative) from court judgments (judicial)
 - Note jurisdiction divergences across EU member states
 - If retrieved context is insufficient, say so explicitly
-- Respond in the same language the user writes in"""
+- Respond in the same language the user writes in
+
+CRITICAL — GROUNDING RULES:
+1. Answer EXCLUSIVELY using the case documents provided below. Do NOT use general GDPR knowledge.
+2. For every factual claim (fine amounts, dates, decisions), cite the source: (Source: [Case Title])
+3. If the provided documents do not contain enough information to answer, respond with:
+   "Based on the cases retrieved from the database, I cannot find sufficient information to answer \
+this question. The most relevant cases found are: [list titles]. Try searching with different terms \
+or a more specific query."
+4. Do NOT generate specific figures, dates, or decisions unless they are explicitly stated in the context."""
 
 
 def build_prompt(
     query: str,
     contexts: list[dict],
     memories: list[dict],
+    corpus_index: dict | None = None,
 ) -> tuple[str, str]:
+    system = _SYSTEM_PROMPT
+    if corpus_index:
+        auths = ", ".join(
+            f"{a} ({n})" for a, n in list(corpus_index.get("authorities", {}).items())[:4]
+        )
+        fine_r   = corpus_index.get("fine_range_eur", {})
+        fine_min = fine_r.get("min")
+        fine_max = fine_r.get("max")
+        fine_str = f"\u20ac{fine_min:,}\u2013\u20ac{fine_max:,}" if fine_min and fine_max else "varies"
+        arts = ", ".join(corpus_index.get("top_gdpr_articles", [])[:6])
+        system += (
+            f"\n\nDatabase scope: {corpus_index.get('total_docs', '?')} GDPR decisions "
+            f"({corpus_index.get('date_range', '?')}). "
+            f"Authorities: {auths}. "
+            f"Fine range: {fine_str}. "
+            f"Key articles: {arts}."
+        )
+
     context_lines: list[str] = []
     for i, ctx in enumerate(contexts, start=1):
         authority_label = ctx.get("authority_abbrev") or ctx.get("authority") or "Unknown"
         fine_str    = (
-            f"Fine: {ctx['fine_currency']} {ctx['fine_amount']:,}"
+            f"Fine: {ctx.get('fine_currency', 'EUR')} {ctx['fine_amount']:,}"
             if ctx.get("fine_amount") else ""
         )
-        articles    = ", ".join(ctx["gdpr_articles"]) if ctx.get("gdpr_articles") else ""
-        articles_str = f"Articles: {articles}" if articles else ""
+        # Support both full-context dicts (gdpr_articles) and citation dicts (articles)
+        arts_list   = ctx.get("gdpr_articles") or ctx.get("articles") or []
+        articles_str = f"Articles: {', '.join(arts_list)}" if arts_list else ""
         meta = "  ".join(filter(None, [fine_str, articles_str]))
 
+        year = ctx.get("decision_year") or ctx.get("year", "")
         context_lines.append(
             f"### [{i}] {ctx['title']} | {authority_label} | "
-            f"{ctx.get('jurisdiction', '')} | {ctx.get('decision_year', '')}"
+            f"{ctx.get('jurisdiction', '')} | {year}"
         )
         if meta:
             context_lines.append(meta)
-        context_lines.append(ctx["content"] or "")
+        # Support both full-context dicts (content) and citation dicts (snippet)
+        context_lines.append(ctx.get("content") or ctx.get("snippet") or "")
         context_lines.append("")
 
     context_block = "\n".join(context_lines).strip()
@@ -347,25 +586,45 @@ def build_prompt(
         f"{query}"
     )
 
-    return _SYSTEM_PROMPT, user_prompt
+    return system, user_prompt
 
 
-# ── LLM call ──────────────────────────────────────────────────────────────────
+# ── LLM call (Anthropic API directa) ─────────────────────────────────────────
+
+_anthropic_client = None
+
+
+def _get_anthropic_client() -> anthropic.Anthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY or None)
+    return _anthropic_client
+
 
 def call_llm(client, system_prompt: str, user_prompt: str) -> str:
-    body = json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 4096,
-        "system": system_prompt,
-        "messages": [{"role": "user", "content": user_prompt}],
-    })
-    resp = client.invoke_model(
-        modelId=MODEL_ID_LLM,
-        body=body,
-        contentType="application/json",
-        accept="application/json",
+    """El parámetro client se ignora — usa Anthropic API interna."""
+    ac = _get_anthropic_client()
+    msg = ac.messages.create(
+        model=MODEL_ID_LLM,
+        max_tokens=4096,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_prompt}],
     )
-    return json.loads(resp["body"].read())["content"][0]["text"]
+    return msg.content[0].text
+
+
+def call_llm_stream(system_prompt: str, user_prompt: str):
+    """Generator: yields text chunks via Anthropic streaming API.
+    First token arrives in ~1-2s for perceived latency improvement."""
+    ac = _get_anthropic_client()
+    with ac.messages.stream(
+        model=MODEL_ID_LLM,
+        max_tokens=4096,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_prompt}],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text
 
 
 # ── Session saving ─────────────────────────────────────────────────────────────
@@ -418,9 +677,58 @@ def save_session(
             ),
         )
         session_id = str(cur.fetchone()[0])
-        conn.commit()
 
     return session_id
+
+
+# ── Iterative search helpers ───────────────────────────────────────────────────
+
+_SUFFICIENCY_PROMPT = """\
+Question: {question}
+Retrieved documents: {titles}
+Are these results sufficient to answer the question?
+Reply ONLY with JSON (no extra text):
+{{"sufficient":true}} or {{"sufficient":false,"missing":"what specific information is missing"}}"""
+
+
+def _evaluate_sufficiency(query_text: str, contexts: list[dict]) -> tuple[bool, str]:
+    """Asks Claude (max_tokens=80) whether the retrieved contexts answer the question.
+    Returns (sufficient, missing_description). On any failure returns (True, "") to
+    avoid infinite loops — the safe default is to proceed with what we have."""
+    if not ANTHROPIC_API_KEY or not contexts:
+        return True, ""
+    try:
+        titles = "; ".join(
+            (ctx.get("title") or "")[:50] for ctx in contexts[:6]
+        )
+        prompt = _SUFFICIENCY_PROMPT.format(
+            question=query_text[:300],
+            titles=titles,
+        )
+        ac = _get_anthropic_client()
+        msg = ac.messages.create(
+            model=MODEL_ID_LLM,
+            max_tokens=80,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        data = json.loads(raw.strip())
+        return bool(data.get("sufficient", True)), str(data.get("missing", ""))
+    except Exception as exc:
+        log.debug("Sufficiency check failed: %s (assuming sufficient)", exc)
+        return True, ""
+
+
+def _generate_refined_query(original_query: str, missing: str) -> str:
+    """Builds a refined query by appending what was missing from the first pass.
+    No extra LLM call — keeps latency and cost low."""
+    if not missing:
+        return original_query
+    return f"{original_query} {missing}"
 
 
 # ── Orchestrator ───────────────────────────────────────────────────────────────
@@ -437,11 +745,44 @@ def query(
     filters = filters or {}
     t_start = time.monotonic()
 
-    # 1. Embed query
+    # 0. Corpus index + intent extraction
+    corpus_index = _load_corpus_index()
+    intent: QueryIntent | None = None
+    if ANTHROPIC_API_KEY:
+        log.info("Extracting query intent...")
+        intent = extract_intent(query_text)
+        if intent:
+            apply_intent_filters(intent, filters)
+            log.info(
+                "  Intent: controller=%s sort=%s articles=%s jurisdiction=%s",
+                intent.controller_name, intent.sort_by,
+                intent.gdpr_articles, intent.jurisdiction,
+            )
+
+    # 1. Embed query (HyDE for article_lookup queries)
     log.info("Embedding query...")
-    query_vec = embed_query(bedrock_client, query_text)
+    if intent and intent.gdpr_articles and ANTHROPIC_API_KEY:
+        log.info("  Using HyDE (article_lookup detected: %s)", intent.gdpr_articles)
+        try:
+            query_vec = hyde_embed(query_text, intent)
+        except Exception as exc:
+            log.debug("HyDE failed, falling back to direct embed: %s", exc)
+            query_vec = embed_query(bedrock_client, query_text)
+    else:
+        query_vec = embed_query(bedrock_client, query_text)
 
     with conn.cursor() as cur:
+        # 1b. Controller pre-filter: if intent has a specific company/entity,
+        #     find matching doc IDs and restrict hybrid search to those docs.
+        if intent and intent.controller_name:
+            doc_ids = _find_controller_docs(cur, intent.controller_name)
+            if doc_ids:
+                filters["doc_ids"] = doc_ids
+                log.info(
+                    "  Controller pre-filter: %d docs for '%s'",
+                    len(doc_ids), intent.controller_name,
+                )
+
         # 2. Hybrid search
         log.info("Vector search (C-SPANN)...")
         vector_hits = search_vector_chunks(cur, query_vec, K_VECTOR, filters)
@@ -451,8 +792,16 @@ def query(
         text_hits = search_text_chunks(cur, query_text, K_TEXT, filters)
         log.info("  → %d text hits", len(text_hits))
 
-        # 3. RRF
-        rrf_ranked    = reciprocal_rank_fusion(vector_hits, text_hits)
+        # 2b. Fine-sort injection: for sort_by=fine_desc queries, fetch top-K docs
+        #     by fine_amount and inject their chunk IDs into the RRF pool so they
+        #     rank high regardless of semantic match (fixes "highest fine" queries).
+        fine_hits: list[str] = []
+        if intent and intent.sort_by == "fine_desc":
+            fine_hits = _fetch_fine_sorted_chunks(cur, K_VECTOR, filters)
+            log.info("  Fine-sort injection: %d chunks from top-%d fined docs", len(fine_hits), K_VECTOR)
+
+        # 3. RRF (3-way: vector + text + optional fine-sort arm)
+        rrf_ranked    = reciprocal_rank_fusion(vector_hits, text_hits, fine_hits or None)
         rrf_scores    = dict(rrf_ranked)
         # Fetch top_n*3 child IDs to allow dedup by parent and still land top_n parents
         top_child_ids = [cid for cid, _ in rrf_ranked[: top_n * 3]]
@@ -463,10 +812,49 @@ def query(
         contexts = fetch_parent_context(cur, top_child_ids, rrf_scores, top_n)
         log.info("  → %d parent contexts", len(contexts))
 
+        # 4b. Metadata re-rank: override RRF order when intent specifies sort_by
+        if intent and intent.sort_by:
+            contexts = rerank_by_metadata(contexts, intent)
+            log.info("  Re-ranked by %s", intent.sort_by)
+
         # 5. User memory
         log.info("Fetching user memory (user=%s)...", user_id)
         memories = fetch_user_memory(cur, user_id, query_vec)
         log.info("  → %d memories", len(memories))
+
+    # 4c. Iterative refinement — max 1 extra pass (only in full LLM mode)
+    if not no_llm and ANTHROPIC_API_KEY and contexts:
+        log.info("Evaluating result sufficiency...")
+        sufficient, missing = _evaluate_sufficiency(query_text, contexts)
+        log.info("  Sufficient: %s  |  Missing: '%s'", sufficient, missing)
+
+        if not sufficient and missing:
+            refined_query = _generate_refined_query(query_text, missing)
+            log.info("  Refined query: %s", refined_query)
+
+            # Second pass: remove controller pre-filter, use broader search
+            filters_broad = {k: v for k, v in filters.items() if k not in ("doc_ids",)}
+            refined_vec = embed_query(bedrock_client, refined_query)
+
+            with conn.cursor() as cur2:
+                vec2  = search_vector_chunks(cur2, refined_vec, K_VECTOR, filters_broad)
+                text2 = search_text_chunks(cur2, refined_query, K_TEXT, filters_broad)
+                rrf2_ranked = reciprocal_rank_fusion(vec2, text2)
+                rrf2  = dict(rrf2_ranked)
+                ids2  = [cid for cid, _ in rrf2_ranked[: top_n * 3]]
+                ctx2  = fetch_parent_context(cur2, ids2, rrf2, top_n)
+
+            # Merge: deduplicate by parent_id, append new contexts.
+            # Allow up to top_n + 4 total so second pass always contributes
+            # even when first pass already filled top_n slots.
+            existing_parents = {c["parent_id"] for c in contexts}
+            new_ctx = [c for c in ctx2 if c["parent_id"] not in existing_parents]
+            contexts = (contexts + new_ctx)[:top_n + 4]
+            rrf_scores.update(rrf2)
+            log.info(
+                "  Second pass: +%d new contexts (total %d)",
+                len(new_ctx), len(contexts),
+            )
 
     if no_llm:
         latency_ms = int((time.monotonic() - t_start) * 1000)
@@ -479,10 +867,10 @@ def query(
         )
 
     # 6. Build prompt
-    system_prompt, user_prompt = build_prompt(query_text, contexts, memories)
+    system_prompt, user_prompt = build_prompt(query_text, contexts, memories, corpus_index)
 
     # 7. LLM
-    log.info("Calling %s via Bedrock...", MODEL_ID_LLM)
+    log.info("Calling %s via Anthropic API...", MODEL_ID_LLM)
     response = call_llm(bedrock_client, system_prompt, user_prompt)
 
     latency_ms = int((time.monotonic() - t_start) * 1000)
@@ -509,11 +897,17 @@ def _build_citations(contexts: list[dict]) -> list[dict]:
         urls = ctx.get("source_urls")
         if isinstance(urls, list) and urls:
             source_url = urls[0].get("url")
+        snippet = (ctx.get("content") or "").replace("\n", " ").strip()[:300]
         citations.append({
-            "title":      ctx["title"],
-            "authority":  ctx.get("authority_abbrev") or ctx.get("authority", ""),
-            "year":       ctx.get("decision_year"),
-            "source_url": source_url,
+            "title":       ctx["title"],
+            "authority":   ctx.get("authority_abbrev") or ctx.get("authority", ""),
+            "jurisdiction": ctx.get("jurisdiction"),
+            "year":        ctx.get("decision_year"),
+            "fine_amount": ctx.get("fine_amount"),
+            "fine_currency": ctx.get("fine_currency"),
+            "articles":    ctx.get("gdpr_articles") or [],
+            "snippet":     snippet,
+            "source_url":  source_url,
         })
     return citations
 
@@ -558,9 +952,8 @@ def main() -> None:
         sys.exit(1)
 
     log.info("Conectando a CockroachDB...")
-    conn = psycopg.connect(DATABASE_URL)
+    conn = psycopg.connect(DATABASE_URL, autocommit=True)
 
-    log.info("Iniciando Bedrock client (region=%s)...", AWS_REGION)
     client = make_bedrock_client()
 
     filters: dict = {}
