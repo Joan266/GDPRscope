@@ -495,11 +495,26 @@ SELECT c.id  AS child_id,
        d.fine_amount, d.fine_currency, d.gdpr_articles,
        d.source_urls, d.source, d.case_number, d.ecli, d.celex,
        d.content_depth, d.violation_type, d.legal_basis_at_issue,
-       d.headnotes, d.outcome
+       d.headnotes, d.outcome, d.canonical_id
 FROM   chunks c
 JOIN   chunks p ON p.id = c.parent_id
 JOIN   documents d ON d.id = p.document_id
 WHERE  c.id = ANY(%s)
+"""
+
+_SQL_CANONICAL_CONTEXT = """
+SELECT p.content, p.section,
+       d.id AS doc_id, d.title, d.authority, d.authority_abbrev,
+       d.jurisdiction, d.decision_date, d.decision_year,
+       d.fine_amount, d.fine_currency, d.gdpr_articles,
+       d.source_urls, d.source, d.case_number, d.ecli, d.celex,
+       d.content_depth, d.violation_type, d.legal_basis_at_issue,
+       d.headnotes, d.outcome
+FROM   chunks p
+JOIN   documents d ON d.id = p.document_id
+WHERE  d.id = %s AND p.chunk_type = 'parent' AND p.section IN ('facts', 'holding')
+ORDER BY CASE p.section WHEN 'facts' THEN 1 WHEN 'holding' THEN 2 ELSE 3 END
+LIMIT  1
 """
 
 
@@ -546,9 +561,9 @@ def fetch_parent_context(
          fine_amount, fine_currency, gdpr_articles,
          source_urls, source, case_number, ecli, celex,
          content_depth, violation_type, legal_basis_at_issue,
-         headnotes, outcome) = row
+         headnotes, outcome, canonical_id) = row
 
-        results.append({
+        ctx = {
             "child_id":         str(child_id),
             "parent_id":        str(parent_id),
             "content":          content,
@@ -573,9 +588,51 @@ def fetch_parent_context(
             "legal_basis_at_issue": legal_basis_at_issue or [],
             "headnotes":        headnotes or [],
             "outcome":          outcome,
-        })
+        }
+
+        # Canonical swap: if Tracker doc has a linked GDPRhub version,
+        # replace the shallow Tracker card with the full GDPRhub context.
+        if canonical_id and content_depth == "summary":
+            ctx = _swap_canonical(cur, ctx, str(canonical_id))
+
+        results.append(ctx)
 
     return results
+
+
+def _swap_canonical(
+    cur: psycopg.Cursor, ctx: dict, canonical_id: str
+) -> dict:
+    """Replace Tracker summary context with GDPRhub full context."""
+    cur.execute(_SQL_CANONICAL_CONTEXT, (canonical_id,))
+    row = cur.fetchone()
+    if not row:
+        return ctx  # GDPRhub doc has no parent chunks — keep Tracker
+
+    (content, section, doc_id, title, authority, authority_abbrev,
+     jurisdiction, decision_date, decision_year,
+     fine_amount, fine_currency, gdpr_articles,
+     source_urls, source, case_number, ecli, celex,
+     content_depth, violation_type, legal_basis_at_issue,
+     headnotes, outcome) = row
+
+    log.info("Canonical swap: %s → %s", ctx["title"][:40], title[:40])
+
+    # Keep original Tracker metadata (fine, articles) but use GDPRhub content
+    ctx["content"] = content
+    ctx["section"] = section
+    ctx["content_depth"] = content_depth or "full"
+    ctx["title"] = title or ctx["title"]
+    ctx["source"] = source
+    ctx["case_number"] = case_number or ctx["case_number"]
+    ctx["outcome"] = outcome or ctx["outcome"]
+    ctx["headnotes"] = headnotes or ctx["headnotes"]
+    ctx["violation_type"] = violation_type or ctx["violation_type"]
+    ctx["legal_basis_at_issue"] = legal_basis_at_issue or ctx["legal_basis_at_issue"]
+    # Keep Tracker's fine_amount if GDPRhub doesn't have it
+    if fine_amount:
+        ctx["fine_amount"] = fine_amount
+    return ctx
 
 
 # ── User memory ────────────────────────────────────────────────────────────────
