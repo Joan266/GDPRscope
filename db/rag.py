@@ -120,8 +120,10 @@ def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
         )}],
     )
     log.debug("HyDE tokens: %d in / %d out", msg.usage.input_tokens, msg.usage.output_tokens)
-    hypothetical = "passage: " + msg.content[0].text.strip()
-    return embed_query(None, hypothetical)
+    hypothetical = msg.content[0].text.strip()
+    # HyDE: embed as passage (not query) — synthetic doc should match stored passage embeddings
+    text = ("passage: " + hypothetical[:MAX_CHARS_QUERY]).strip()
+    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
 
 def vector_to_pg(embedding: list[float]) -> str:
@@ -177,8 +179,19 @@ _ENTITY_ALIASES: dict[str, str] = {
 }
 
 
+_GENERIC_CONTROLLER_TERMS = {
+    "bank", "company", "hospital", "employer", "controller", "organisation",
+    "organization", "municipality", "school", "university", "operator",
+    "provider", "agency", "firm", "authority", "entity", "service",
+}
+
+
 def _resolve_entity_alias(name: str) -> list[str]:
-    """Returns ILIKE patterns for controller_name — original + canonical if alias known."""
+    """Returns ILIKE patterns for controller_name — original + canonical if alias known.
+    Returns empty list for generic terms like 'bank', 'company' — these would match
+    hundreds of docs and destroy retrieval precision."""
+    if name.lower().strip() in _GENERIC_CONTROLLER_TERMS:
+        return []
     patterns = [name]
     canonical = _ENTITY_ALIASES.get(name.lower().strip())
     if canonical and canonical.lower() not in name.lower():
@@ -233,6 +246,24 @@ def extract_intent(query_text: str) -> QueryIntent | None:
         return None
 
 
+_AUTHORITY_JURISDICTION: dict[str, str] = {
+    "aepd": "Spain", "agpd": "Spain",
+    "cnil": "France",
+    "ico": "United Kingdom", "ico (uk)": "United Kingdom",
+    "dpc": "Ireland", "dpc (ireland)": "Ireland",
+    "ap": "The Netherlands", "autoriteit persoonsgegevens": "The Netherlands",
+    "apd": "Belgium", "gba": "Belgium", "apd/gba": "Belgium",
+    "bfdi": "Germany",
+    "garante": "Italy",
+    "imy": "Sweden", "datainspektionen": "Sweden",
+    "uodo": "Poland",
+    "apdcat": "Catalonia",
+    "cnpd": "Luxembourg",
+    "naih": "Hungary",
+    "hdpa": "Greece",
+}
+
+
 def apply_intent_filters(intent: QueryIntent, filters: dict) -> None:
     """Applies conservative intent-derived filters.
 
@@ -241,9 +272,19 @@ def apply_intent_filters(intent: QueryIntent, filters: dict) -> None:
     exact-match SQL filters on those fields cause too many false negatives with
     the DB's heterogeneous values. Users can set them explicitly via CLI/UI.
     Controller pre-filter is handled separately in _find_controller_docs.
+
+    Exception: when sort_by=fine_desc and authority is detected, jurisdiction is
+    applied to fine_sort to scope "highest fine by X authority" correctly.
     """
     if intent.sort_by:
         filters.setdefault("sort_by", intent.sort_by)
+    # Map authority → jurisdiction for fine_sort scoping
+    if intent.sort_by == "fine_desc" and intent.authority and not intent.jurisdiction:
+        auth_key = intent.authority.lower().strip()
+        mapped = _AUTHORITY_JURISDICTION.get(auth_key)
+        if mapped:
+            filters.setdefault("jurisdiction", mapped)
+            log.info("  Authority '%s' → jurisdiction='%s' for fine_sort", intent.authority, mapped)
 
 
 def _fetch_fine_sorted_chunks(cur: psycopg.Cursor, k: int, filters: dict) -> list[str]:
@@ -280,6 +321,8 @@ def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str
     Requires c.embedding IS NOT NULL — prevents unembedded Tracker docs from
     restricting the search to docs with no vector representation."""
     patterns = _resolve_entity_alias(controller_name)
+    if not patterns:
+        return []
     placeholders = " OR ".join("d.controller_name ILIKE %s" for _ in patterns)
     params = [f"%{p}%" for p in patterns]
     cur.execute(
@@ -385,6 +428,18 @@ ORDER BY c.embedding <=> %s::VECTOR({dims})
 LIMIT  %s
 """
 
+_SQL_HEADNOTE = """
+SELECT c.id
+FROM   chunks c
+JOIN   documents d ON d.id = c.document_id
+WHERE  c.chunk_type = 'child'
+  AND  c.section    = 'headnote'
+  AND  c.embedding  IS NOT NULL
+  {filter_clause}
+ORDER BY c.embedding <=> %s::VECTOR({dims})
+LIMIT  %s
+"""
+
 
 def search_vector_chunks(
     cur: psycopg.Cursor, query_vec: list[float], k: int, filters: dict
@@ -429,6 +484,23 @@ def search_question_chunks(
         return [str(row[0]) for row in cur.fetchall()]
     except Exception as exc:
         log.debug("search_question_chunks failed: %s", exc)
+        return []
+
+
+def search_headnote_chunks(
+    cur: psycopg.Cursor, query_vec: list[float], k: int, filters: dict
+) -> list[str]:
+    """Vector search against headnote chunks only — professional legal summaries
+    that capture the key legal principle of each case. Especially effective for
+    conceptual queries ('when does consent fail in employment?') that don't match
+    raw case facts but DO match the legal principle."""
+    clause, params = _build_filter_clause(filters)
+    sql = _SQL_HEADNOTE.format(filter_clause=clause, dims=EMBED_DIMS)
+    try:
+        cur.execute(sql, params + [vector_to_pg(query_vec), k])
+        return [str(row[0]) for row in cur.fetchall()]
+    except Exception as exc:
+        log.debug("search_headnote_chunks failed: %s", exc)
         return []
 
 
@@ -900,10 +972,11 @@ def save_session(
 # ── CRAG Evidence Gate ─────────────────────────────────────────────────────────
 
 _EVIDENCE_GATE_PROMPT = """\
-Query: {question}
+<query>{question}</query>
 
-Retrieved context:
+<retrieved_context>
 {context_summary}
+</retrieved_context>
 
 Does this context contain specific, directly citable information (case numbers, \
 fine amounts, article violations, factual findings) to answer the query?
@@ -1068,7 +1141,7 @@ def query(
                 intent.gdpr_articles, intent.jurisdiction,
             )
 
-    # 1. Embed query (HyDE for article_lookup queries)
+    # 1. Embed query (HyDE only for article_lookup queries)
     log.info("Embedding query...")
     if intent and intent.gdpr_articles and ANTHROPIC_API_KEY:
         log.info("  Using HyDE (article_lookup detected: %s)", intent.gdpr_articles)
@@ -1112,14 +1185,25 @@ def query(
         if question_hits:
             log.info("  HyPE question hits: %d", len(question_hits))
 
-        # 2d. Case-number direct lookup — guarantees explicit case refs are retrieved
+        # 2d. Headnote arm — legal principles for conceptual queries.
+        #     Only activate when no specific controller/sort is detected,
+        #     otherwise the extra RRF arm dilutes fine_sort and controller signals.
+        headnote_hits: list[str] = []
+        is_conceptual = not (intent and (intent.controller_name or intent.sort_by))
+        if is_conceptual:
+            headnote_hits = search_headnote_chunks(cur, query_vec, K_VECTOR, filters)
+            if headnote_hits:
+                log.info("  Headnote hits: %d (conceptual query)", len(headnote_hits))
+
+        # 2e. Case-number direct lookup — guarantees explicit case refs are retrieved
         case_hits = _fetch_chunks_for_case_numbers(cur, query_text)
         if case_hits:
             log.info("  Case-number direct hits: %d", len(case_hits))
 
-        # 3. 4-way RRF: vector + text + fine-sort + HyPE questions
+        # 3. N-way RRF: vector + text + fine-sort + HyPE questions [+ headnotes]
         rrf_ranked    = reciprocal_rank_fusion(
-            vector_hits, text_hits, fine_hits or None, question_hits or None,
+            vector_hits, text_hits, fine_hits or None,
+            question_hits or None, headnote_hits or None,
         )
         rrf_scores    = dict(rrf_ranked)
         # Case-number hits: pin at top with score 1.0 (above any RRF score)
@@ -1179,8 +1263,8 @@ def query(
                 contexts = (new_ctx + contexts)[:top_n + 4]
                 rrf_scores.update(rrf2)
                 log.info("  Merged %d new contexts (total %d)", len(new_ctx), len(contexts))
-            elif evidence_score < 0.35 and not contexts:
-                # INCORRECT and no fallback found — structured abstention
+            elif evidence_score < 0.35:
+                # INCORRECT — structured abstention with nearest docs for reference
                 latency_ms = int((time.monotonic() - t_start) * 1000)
                 nearest = ", ".join(c["title"] for c in contexts[:3]) if contexts else "none"
                 return QueryResult(

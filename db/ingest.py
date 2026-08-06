@@ -197,7 +197,8 @@ def normalize_gdprhub(title: str, fields: dict, summary: dict) -> dict:
 
     fine_str    = fields.get("Fine", "")
     try:
-        fine_amount = int(float(fine_str)) if fine_str and fine_str.strip() else None
+        raw = int(float(fine_str)) if fine_str and fine_str.strip() else None
+        fine_amount = raw if raw and raw >= 0 else None
     except (ValueError, TypeError):
         fine_amount = None
 

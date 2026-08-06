@@ -164,7 +164,7 @@ def retrieve_top_k(
                 if doc_ids:
                     filters["doc_ids"] = doc_ids
 
-    # HyDE: for article_lookup queries, embed a hypothetical passage instead
+    # HyDE: for article_lookup queries, embed a hypothetical passage
     if intent and intent.gdpr_articles and rag_module.ANTHROPIC_API_KEY:
         try:
             query_vec = rag_module.hyde_embed(question, intent)
@@ -184,11 +184,18 @@ def retrieve_top_k(
     # HyPE question arm
     question_hits = rag_module.search_question_chunks(cur, query_vec, k * 2, filters)
 
+    # Headnote arm — only for conceptual queries (no controller, no sort_by)
+    headnote_hits: list[str] = []
+    is_conceptual = not (intent and (intent.controller_name or intent.sort_by))
+    if is_conceptual:
+        headnote_hits = rag_module.search_headnote_chunks(cur, query_vec, k * 2, filters)
+
     # Case-number direct lookup — pin at top with score 1.0
     case_hits = rag_module._fetch_chunks_for_case_numbers(cur, question)
 
     rrf_ranked  = rag_module.reciprocal_rank_fusion(
-        vector_hits, text_hits, fine_hits or None, question_hits or None
+        vector_hits, text_hits, fine_hits or None,
+        question_hits or None, headnote_hits or None,
     )
     rrf_scores  = dict(rrf_ranked)
     if case_hits:
