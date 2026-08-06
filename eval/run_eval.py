@@ -168,11 +168,18 @@ def retrieve_top_k(
     # HyPE question arm
     question_hits = rag_module.search_question_chunks(cur, query_vec, k * 2, filters)
 
+    # Case-number direct lookup — pin at top with score 1.0
+    case_hits = rag_module._fetch_chunks_for_case_numbers(cur, question)
+
     rrf_ranked  = rag_module.reciprocal_rank_fusion(
         vector_hits, text_hits, fine_hits or None, question_hits or None
     )
     rrf_scores  = dict(rrf_ranked)
-    top_child_ids = [cid for cid, _ in rrf_ranked[: k * 3]]
+    if case_hits:
+        for cid in case_hits:
+            rrf_scores[cid] = max(rrf_scores.get(cid, 0.0), 1.0)
+    top_child_ids = case_hits + [cid for cid, _ in rrf_ranked[: k * 3]
+                                 if cid not in set(case_hits)]
 
     contexts = rag_module.fetch_parent_context(cur, top_child_ids, rrf_scores, k)
 
@@ -245,11 +252,21 @@ def _call_judge(bedrock_client, prompt: str) -> tuple[float, str]:
 def faithfulness_score(
     bedrock_client, contexts: list[dict], response: str
 ) -> tuple[float, str]:
-    context_text = "\n\n".join(
-        f"[{i+1}] {ctx.get('title','')}: {(ctx.get('content') or '')[:1000]}"
-        for i, ctx in enumerate(contexts[:5])
-    )
-    prompt = _FAITHFULNESS_PROMPT.format(context=context_text, response=response[:1500])
+    """Judge receives same metadata the LLM had: fine_amount, articles, plus chunk text."""
+    def _ctx_block(i: int, ctx: dict) -> str:
+        fine = ctx.get("fine_amount")
+        fine_str = f"Fine: {ctx.get('fine_currency','EUR')} {fine:,}" if fine else ""
+        arts = ctx.get("gdpr_articles") or []
+        arts_str = f"Articles: {', '.join(arts)}" if arts else ""
+        meta = "  ".join(filter(None, [fine_str, arts_str]))
+        return (
+            f"[{i+1}] {ctx.get('title','')} | {ctx.get('authority','')} | {ctx.get('decision_year','')}\n"
+            + (meta + "\n" if meta else "")
+            + (ctx.get("content") or "")[:800]
+        )
+
+    context_text = "\n\n".join(_ctx_block(i, ctx) for i, ctx in enumerate(contexts[:8]))
+    prompt = _FAITHFULNESS_PROMPT.format(context=context_text, response=response[:2000])
     return _call_judge(bedrock_client, prompt)
 
 

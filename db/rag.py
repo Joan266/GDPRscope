@@ -424,6 +424,45 @@ def search_question_chunks(
         return []
 
 
+import re as _re
+
+_CASE_NUMBER_PATTERN = _re.compile(
+    r'\b(?:'
+    r'(?:PS|PD|EXP|E|TD|AN)[-/]\s*\d{4,9}[-/]\s*\d{4}'  # PS/00037/2020, EXP-202406208
+    r'|EXP\d{9}'                                            # EXP202406208 (no separator)
+    r'|PS-\d{5}-\d{4}'                                      # PS-00304-2024
+    r')\b',
+    _re.IGNORECASE,
+)
+
+
+def _fetch_chunks_for_case_numbers(cur: psycopg.Cursor, query_text: str) -> list[str]:
+    """Extracts DPA case numbers from the query text and returns embedded child
+    chunk IDs for those documents. Used as a direct-lookup RRF arm to guarantee
+    docs are retrieved when the user mentions an explicit case number."""
+    found = list({m.group().upper() for m in _CASE_NUMBER_PATTERN.finditer(query_text)})
+    if not found:
+        return []
+    placeholders = " OR ".join("d.case_number ILIKE %s" for _ in found)
+    try:
+        cur.execute(
+            f"""
+            SELECT c.id
+            FROM chunks c
+            JOIN documents d ON d.id = c.document_id
+            WHERE c.chunk_type = 'child'
+              AND c.embedding IS NOT NULL
+              AND ({placeholders})
+            LIMIT 20
+            """,
+            [f"%{cn}%" for cn in found],
+        )
+        return [str(row[0]) for row in cur.fetchall()]
+    except Exception as exc:
+        log.debug("case_number_chunks failed: %s", exc)
+        return []
+
+
 # ── RRF ───────────────────────────────────────────────────────────────────────
 
 def reciprocal_rank_fusion(
@@ -582,7 +621,9 @@ this question. The most relevant cases found are: [list titles]. Try searching w
 or a more specific query."
 4. Do NOT generate specific figures, dates, or decisions unless they are explicitly stated in the context.
 5. ARTICLE CITATIONS — HARD RULE: each case has an "Articles:" line listing the GDPR articles the DPA actually cited. Cite ONLY those articles for that case. Do NOT add, infer, or substitute article numbers from your training knowledge. If the Articles field is empty, do not cite any article number for that case.
-6. NO GENERAL LAW EXPLANATIONS: Do NOT explain what a GDPR article requires in general. Only state what the specific case document says was violated and how. WRONG: "Article 32 requires controllers to implement encryption, pseudonymisation and regular testing..." RIGHT: "The document states that [company] failed to [specific failure stated in the document]." Every sentence must be traceable to a specific retrieved document."""
+6. NO GENERAL LAW EXPLANATIONS: Do NOT explain what a GDPR article requires in general. Only state what the specific case document says was violated and how. WRONG: "Article 32 requires controllers to implement encryption, pseudonymisation and regular testing..." RIGHT: "The document states that [company] failed to [specific failure stated in the document]." Every sentence must be traceable to a specific retrieved document.
+7. RETRIEVED CASES ONLY: Only mention cases, entities, fine amounts, dates, and article violations that explicitly appear in the Retrieved GDPR Jurisprudence section below. You may have training knowledge of related cases — IGNORE IT ENTIRELY. Do not add cases, numbers, or decisions not present in the retrieved text, even if you believe they are accurate.
+8. COMPLETENESS CHECK — OMIT, DON'T INVENT: If a detail (specific fine amount, case number, article, date, factual finding) is not explicitly stated in the retrieved documents, OMIT it from your response. Partial answers with fewer verified facts are ALWAYS preferable to complete-seeming answers with fabricated details."""
 
 
 def build_prompt(
@@ -867,13 +908,22 @@ def query(
         if question_hits:
             log.info("  HyPE question hits: %d", len(question_hits))
 
+        # 2d. Case-number direct lookup — guarantees explicit case refs are retrieved
+        case_hits = _fetch_chunks_for_case_numbers(cur, query_text)
+        if case_hits:
+            log.info("  Case-number direct hits: %d", len(case_hits))
+
         # 3. 4-way RRF: vector + text + fine-sort + HyPE questions
         rrf_ranked    = reciprocal_rank_fusion(
-            vector_hits, text_hits, fine_hits or None, question_hits or None
+            vector_hits, text_hits, fine_hits or None, question_hits or None,
         )
         rrf_scores    = dict(rrf_ranked)
-        # Fetch top_n*3 child IDs to allow dedup by parent and still land top_n parents
-        top_child_ids = [cid for cid, _ in rrf_ranked[: top_n * 3]]
+        # Case-number hits: pin at top with score 1.0 (above any RRF score)
+        if case_hits:
+            for cid in case_hits:
+                rrf_scores[cid] = max(rrf_scores.get(cid, 0.0), 1.0)
+        top_child_ids = case_hits + [cid for cid, _ in rrf_ranked[: top_n * 3]
+                                     if cid not in set(case_hits)]
         log.info("RRF: %d unique chunks (using top %d as candidates)", len(rrf_ranked), len(top_child_ids))
 
         # 4. Parent context
