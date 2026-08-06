@@ -231,9 +231,9 @@ def main() -> None:
                         help="Contar pendientes sin llamar a Bedrock")
     parser.add_argument("--source", choices=["gdprhub", "enforcement_tracker", "eurlex"],
                         default=None, help="Embeber solo una fuente")
-    parser.add_argument("--sections", default="teaser,facts,dispute",
+    parser.add_argument("--sections", default="teaser,facts,dispute,headnote",
                         help="Secciones a embeber, separadas por coma. "
-                             "'all' = sin filtro (default: teaser,facts,dispute)")
+                             "'all' = sin filtro (default: teaser,facts,dispute,headnote)")
     args = parser.parse_args()
     run(args)
 

@@ -45,6 +45,13 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 AWS_REGION   = os.environ.get("AWS_REGION", "us-east-1")
 K_VALUES     = [1, 3, 5, 10]   # Hit Rate y Precision se calculan para cada K
 
+# Precios Anthropic (USD/token) — para estimación de coste del eval
+_SONNET_PRICE_IN  = 3e-6   # $3/M input tokens
+_SONNET_PRICE_OUT = 15e-6  # $15/M output tokens
+
+# Acumulador de tokens para el eval completo (actualizado en _call_judge)
+_token_counter: dict[str, int] = {"input": 0, "output": 0, "calls": 0}
+
 log = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
@@ -56,68 +63,77 @@ logging.basicConfig(
 # ── Judge prompts (Claude como evaluador) ──────────────────────────────────────
 
 _FAITHFULNESS_PROMPT = """\
-You are a strict GDPR legal expert evaluating whether an AI response is factually \
-grounded in the provided source documents.
+You are a strict GDPR legal expert. Compare an AI response against the retrieved \
+source documents AND a known-correct reference answer.
 
-## Retrieved context:
+## Retrieved context (what the AI had access to):
 {context}
+
+## Known-correct reference answer:
+{ground_truth}
 
 ## AI response to evaluate:
 {response}
 
 ## Task:
-Rate the faithfulness of the AI response on a scale from 0.0 to 1.0:
-- 1.0 = Every factual claim in the response is directly supported by the context
-- 0.5 = Most claims are supported, but some are inferred or missing from context
-- 0.0 = Claims contradict the context or are entirely fabricated
+Rate faithfulness from 0.0 to 1.0 by checking two things:
+1. Are the AI's factual claims supported by the retrieved context?
+2. Do the AI's key facts (fine amounts, case numbers, articles cited) match the reference answer?
+
+- 1.0 = All claims grounded in context AND consistent with reference answer
+- 0.5 = Most claims correct but some facts missing, imprecise, or not in context
+- 0.0 = Claims contradict context or reference answer, or are fabricated
 
 Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
 
 
 _RELEVANCE_PROMPT = """\
-You are evaluating whether an AI response answers the user's question.
+You are evaluating whether an AI legal research response correctly answers the question, \
+using a known-correct reference answer as the benchmark.
 
 ## Question:
 {question}
 
-## AI response:
+## Known-correct reference answer:
+{ground_truth}
+
+## AI response to evaluate:
 {response}
 
 ## Task:
-Rate how well the response answers the question, from 0.0 to 1.0:
-- 1.0 = Directly and completely answers the question with specific details
-- 0.5 = Partially answers, missing key details or somewhat off-topic
-- 0.0 = Does not answer the question or is entirely irrelevant
+Rate from 0.0 to 1.0 how well the AI response covers the key points in the reference answer:
+- 1.0 = Covers all key facts from the reference (case ID, fine amount, articles, decision outcome)
+- 0.5 = Covers the main conclusion but misses specific details (exact fine, articles, case number)
+- 0.0 = Misses the point, gives wrong answer, or ignores the reference facts entirely
 
 Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
 
 
 _LEGAL_PRECISION_PROMPT = """\
-You are a GDPR legal expert evaluating whether an AI response uses correct and precise \
-legal terminology as found in official DPA enforcement decisions.
+You are a GDPR legal expert comparing an AI response against a known-correct reference answer \
+to evaluate accuracy of legal terminology and specific legal citations.
+
+## Known-correct reference answer:
+{ground_truth}
 
 ## AI response to evaluate:
 {response}
 
-## Scoring (0.0 – 1.0):
+## Task:
+Rate legal precision from 0.0 to 1.0:
 
-1.0 — Excellent: uses standard GDPR terms (controller, processor, data subject, \
-supervisory authority); cites specific articles with sub-paragraphs (Art. 5(1)(f), \
-Art. 32, Art. 83(5)); names GDPR principles correctly (data minimisation, purpose \
-limitation, storage limitation, accountability); references fine tier when relevant \
-(Art. 83(4) ≤€10M/2% vs Art. 83(5) ≤€20M/4%); uses enforcement language \
-(effective, proportionate and dissuasive; aggravating/mitigating circumstances).
+1.0 — AI uses the same specific articles (with sub-paragraphs), correct fine amounts, \
+correct case numbers, and proper GDPR roles (controller/processor/data subject) as the \
+reference answer.
 
-0.5 — Acceptable: uses some GDPR terms but mixes with generic language \
-(says "company" instead of "controller"; "violated privacy" instead of \
-"infringed Art. X GDPR"); mentions articles without sub-paragraph precision; \
-cites fine amounts without Art. 83 framework.
+0.5 — AI identifies the right area of law but lacks precision: mentions Art. 32 but not \
+Art. 32(1)(b); gives approximate fine ("around €300K" vs exact €300,000); omits case number; \
+uses generic terms ("privacy violation") instead of GDPR-specific language.
 
-0.0 — Poor: no GDPR-specific terms; refers to "privacy laws" generically; \
-invents or confuses article numbers; vague fine amounts; confuses controller/processor.
+0.0 — AI cites wrong articles, wrong fine amounts, wrong case number, or uses non-GDPR \
+terminology. Contradicts the reference answer on specific legal facts.
 
-If the response legitimately states it cannot answer (insufficient context), \
-score 0.5 — correct refusal is better than hallucination.
+If the AI legitimately states it cannot answer (insufficient context), score 0.5.
 
 Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
 
@@ -239,6 +255,9 @@ def _call_judge(bedrock_client, prompt: str) -> tuple[float, str]:
         max_tokens=256,
         messages=[{"role": "user", "content": prompt}],
     )
+    _token_counter["input"]  += msg.usage.input_tokens
+    _token_counter["output"] += msg.usage.output_tokens
+    _token_counter["calls"]  += 1
     raw = msg.content[0].text.strip()
     try:
         parsed = json.loads(raw)
@@ -250,9 +269,9 @@ def _call_judge(bedrock_client, prompt: str) -> tuple[float, str]:
 
 
 def faithfulness_score(
-    bedrock_client, contexts: list[dict], response: str
+    bedrock_client, contexts: list[dict], response: str, ground_truth: str = ""
 ) -> tuple[float, str]:
-    """Judge receives same metadata the LLM had: fine_amount, articles, plus chunk text."""
+    """Judge compares response against retrieved context AND known-correct ground truth."""
     def _ctx_block(i: int, ctx: dict) -> str:
         fine = ctx.get("fine_amount")
         fine_str = f"Fine: {ctx.get('fine_currency','EUR')} {fine:,}" if fine else ""
@@ -266,22 +285,33 @@ def faithfulness_score(
         )
 
     context_text = "\n\n".join(_ctx_block(i, ctx) for i, ctx in enumerate(contexts[:8]))
-    prompt = _FAITHFULNESS_PROMPT.format(context=context_text, response=response[:2000])
+    prompt = _FAITHFULNESS_PROMPT.format(
+        context=context_text,
+        ground_truth=ground_truth or "(not provided)",
+        response=response[:2000],
+    )
     return _call_judge(bedrock_client, prompt)
 
 
 def answer_relevance_score(
-    bedrock_client, question: str, response: str
+    bedrock_client, question: str, response: str, ground_truth: str = ""
 ) -> tuple[float, str]:
-    prompt = _RELEVANCE_PROMPT.format(question=question, response=response[:1500])
+    prompt = _RELEVANCE_PROMPT.format(
+        question=question,
+        ground_truth=ground_truth or "(not provided)",
+        response=response[:1500],
+    )
     return _call_judge(bedrock_client, prompt)
 
 
 def legal_precision_score(
-    bedrock_client, response: str
+    bedrock_client, response: str, ground_truth: str = ""
 ) -> tuple[float, str]:
-    """Evalúa si la respuesta usa terminología GDPR correcta (Art. refs, roles, principios)."""
-    prompt = _LEGAL_PRECISION_PROMPT.format(response=response[:1500])
+    """Evalúa precisión legal comparando contra la respuesta de referencia conocida."""
+    prompt = _LEGAL_PRECISION_PROMPT.format(
+        ground_truth=ground_truth or "(not provided)",
+        response=response[:1500],
+    )
     return _call_judge(bedrock_client, prompt)
 
 
@@ -301,12 +331,14 @@ def evaluate(
         log.info("Filtro de categoría '%s': %d preguntas", category_filter, len(golden_set))
 
     results: list[dict] = []
+    eval_t0 = time.monotonic()
 
     for i, item in enumerate(golden_set, start=1):
-        qid      = item["id"]
-        question = item["question"]
-        relevant = item["relevant_source_ids"]
-        filters  = item.get("filters", {})
+        qid          = item["id"]
+        question     = item["question"]
+        relevant     = item["relevant_source_ids"]
+        filters      = item.get("filters", {})
+        ground_truth = item.get("ground_truth", "")
 
         log.info("[%d/%d] %s — %s", i, len(golden_set), qid, question[:80])
 
@@ -349,6 +381,7 @@ def evaluate(
 
         if run_llm:
             # Generar respuesta
+            llm_t0 = time.monotonic()
             try:
                 system_p, user_p = rag_module.build_prompt(question, contexts, [])
                 response = rag_module.call_llm(bedrock_client, system_p, user_p)
@@ -358,12 +391,15 @@ def evaluate(
                 results.append(result)
                 continue
 
-            # Judge metrics
-            faith_score, faith_reason = faithfulness_score(bedrock_client, contexts, response)
-            rel_score,   rel_reason   = answer_relevance_score(bedrock_client, question, response)
-            legal_score, legal_reason = legal_precision_score(bedrock_client, response)
+            llm_ms = int((time.monotonic() - llm_t0) * 1000)
+
+            # Judge metrics — ground_truth como referencia objetiva
+            faith_score, faith_reason = faithfulness_score(bedrock_client, contexts, response, ground_truth)
+            rel_score,   rel_reason   = answer_relevance_score(bedrock_client, question, response, ground_truth)
+            legal_score, legal_reason = legal_precision_score(bedrock_client, response, ground_truth)
 
             result["response"]                = response[:2000]
+            result["llm_ms"]                  = llm_ms
             result["faithfulness"]            = faith_score
             result["faithfulness_reason"]     = faith_reason
             result["answer_relevance"]        = rel_score
@@ -371,18 +407,36 @@ def evaluate(
             result["legal_precision"]         = legal_score
             result["legal_precision_reason"]  = legal_reason
 
-            log.info("  Faithfulness=%.2f  Answer relevance=%.2f  Legal precision=%.2f",
-                     faith_score, rel_score, legal_score)
+            log.info("  LLM: %d ms  Faithfulness=%.2f  Answer relevance=%.2f  Legal precision=%.2f",
+                     llm_ms, faith_score, rel_score, legal_score)
 
         results.append(result)
 
+    total_eval_ms = int((time.monotonic() - eval_t0) * 1000)
+    log.info("Eval completado en %.1f s", total_eval_ms / 1000)
+    if _token_counter["calls"] > 0:
+        cost = (_token_counter["input"] * _SONNET_PRICE_IN
+                + _token_counter["output"] * _SONNET_PRICE_OUT)
+        log.info("Judge tokens: %d in / %d out — coste estimado: $%.4f (%d llamadas)",
+                 _token_counter["input"], _token_counter["output"], cost,
+                 _token_counter["calls"])
+
+    # Añadir resumen de coste/tiempo a los resultados para print_report
+    results.append({
+        "_meta": True,
+        "total_eval_ms":   total_eval_ms,
+        "judge_input_tok": _token_counter["input"],
+        "judge_output_tok":_token_counter["output"],
+        "judge_calls":     _token_counter["calls"],
+    })
     return results
 
 
 # ── Aggregate report ───────────────────────────────────────────────────────────
 
 def print_report(results: list[dict]) -> None:
-    valid = [r for r in results if "error" not in r]
+    meta  = next((r for r in results if r.get("_meta")), {})
+    valid = [r for r in results if "error" not in r and not r.get("_meta")]
     n = len(valid)
     if n == 0:
         print("No hay resultados válidos.")
@@ -433,6 +487,29 @@ def print_report(results: list[dict]) -> None:
         for r in failed:
             print(f"  [{r['id']}] {r['question'][:70]}")
 
+    # Timing
+    avg_retrieval_ms = sum(r.get("retrieval_ms", 0) for r in valid) / n
+    print(f"\n── Timing ─────────────────────────────────────────────────")
+    print(f"  Retrieval latency avg : {avg_retrieval_ms:.0f} ms")
+    llm_results = [r for r in valid if "llm_ms" in r]
+    if llm_results:
+        avg_llm_ms = sum(r["llm_ms"] for r in llm_results) / len(llm_results)
+        print(f"  LLM generation avg    : {avg_llm_ms:.0f} ms")
+    if meta.get("total_eval_ms"):
+        print(f"  Total eval duration   : {meta['total_eval_ms'] / 1000:.1f} s")
+
+    # Cost
+    in_tok  = meta.get("judge_input_tok", 0)
+    out_tok = meta.get("judge_output_tok", 0)
+    calls   = meta.get("judge_calls", 0)
+    if calls > 0:
+        cost = in_tok * _SONNET_PRICE_IN + out_tok * _SONNET_PRICE_OUT
+        print(f"\n── Cost (judge LLM only) ──────────────────────────────────")
+        print(f"  Judge calls           : {calls}")
+        print(f"  Tokens in / out       : {in_tok:,} / {out_tok:,}")
+        print(f"  Estimated cost        : ${cost:.4f}")
+        print(f"  Cost per question     : ${cost / n:.4f}")
+
     print(f"\n{'=' * 65}\n")
 
 
@@ -474,7 +551,8 @@ def main() -> None:
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2, ensure_ascii=False, default=str)
+            json.dump([r for r in results if not r.get("_meta")],
+                      f, indent=2, ensure_ascii=False, default=str)
         log.info("Resultados guardados en %s", out_path)
 
 

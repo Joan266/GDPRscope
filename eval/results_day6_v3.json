@@ -1,0 +1,740 @@
+[
+  {
+    "id": "gs-001",
+    "category": "named_entity",
+    "question": "What fine did AEPD impose on Amadeus IT Group and why?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00005-2025"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00005-2025",
+      "Spanish Data Protection Authority (aepd) — AMADEUS IT GROUP, S.A. (Spain)"
+    ],
+    "retrieval_ms": 11157,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    },
+    "response": "## AEPD Decision Against Amadeus IT Group\n\n### Fine Imposed\n\nThe AEPD imposed a fine of **EUR 14,400,000** on Amadeus IT Group, S.A. [AEPD — PS-00005-2025 — 2026].\n\n### Reasons for the Fine\n\nThe AEPD found violations of **Article 6 GDPR** (legal basis for processing) and **Article 14 GDPR** (information to be provided where personal data have not been obtained from the data subject) based on the following findings:\n\n1. **Unlawful secondary use of reservation data**: Amadeus IT Group operated a Global Distribution System (GDS) — a B2B reservation platform used by airlines, hotels, and travel agencies. Personal data of travellers (specifically **Passenger Name Record (PNR) data**) originally collected for travel reservations was subsequently used to test the feasibility of developing a new product, without a valid legal basis for that secondary use. (Source: PS-00005-2025)\n\n2. **Inadequate information to data subjects**: Travellers were not properly informed that their data would be used for this purpose. The controller's claim that information was available in its privacy policy was not considered sufficient by the DPA. (Source: PS-00005-2025)\n\n3. **Profiling without consent**: The complaint alleged — and the investigation confirmed — that travellers' data had been consolidated into a data platform to create **travel histories and profiles**, without consent and without adequate transparency. (Source: PS-00005-2025)\n\n### Controller's Defence (Rejected)\n\nAmadeus argued that:\n- The pilot project was **never commercialised** and was later discarded, including for data protection reasons;\n- The processing of its own GDS data was based on **legitimate interest**;\n- Information on the processing was available in its **privacy policy**.\n\nThese arguments did not prevent the AEPD from imposing the fine. (Source: PS-00005-2025)\n\n### Note on Controller vs. Processor Distinction\n\nThe DPA also made a notable finding regarding Amadeus's **dual role**: for data obtained from hotel ",
+    "llm_ms": 10217,
+    "faithfulness": 0.7,
+    "faithfulness_reason": "The AI response correctly identifies the fine amount (€14,400,000), case number (PS-00005-2025), GDPR articles (6 and 14), and core violations, consistent with both the retrieved context and reference answer, but introduces details not found in the retrieved context (e.g., specific mention of 'Passenger Name Record (PNR) data,' the controller's defence arguments, and the 'Note on Controller vs. Processor Distinction' which appears cut off and unsupported), and slightly mischaracterizes the new product as an 'AI system' per the reference answer while the context only says 'new product.'",
+    "answer_relevance": 0.95,
+    "answer_relevance_reason": "The AI response correctly identifies the fine amount (€14,400,000), case number (PS-00005-2025), the two violated articles (Article 6 and Article 14 GDPR), and the core reason (using travellers' personal data from reservations to test a new AI/product system without proper legal basis), with additional accurate details about PNR data and the B2B reservation platform context.",
+    "legal_precision": 0.95,
+    "legal_precision_reason": "The AI response correctly identifies the fine amount (€14,400,000), case number (PS-00005-2025), the correct GDPR articles (Art. 6 and Art. 14), and accurately describes the core violation (use of travellers' reservation data to test a new AI/product system without legal basis), with only minor additions beyond the reference (profiling mention, PNR specifics) that don't contradict the reference answer."
+  },
+  {
+    "id": "gs-002",
+    "category": "named_entity",
+    "question": "How much was Vodafone España fined by the Spanish DPA and for what violations?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00059/2020",
+      "AEPD (Spain) - PS/00001/2021"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00059/2020",
+      "AEPD (Spain) - PS/00001/2021",
+      "AEPD (Spain) - PS/00085/2021",
+      "AEPD (Spain) - PS/00430/2020",
+      "AEPD (Spain) - PS/00484/2020",
+      "AEPD (Spain) - PS/00249/2021",
+      "AEPD (Spain) - PS/00474/2020",
+      "AEPD (Spain) - PS/00155/2021",
+      "AEPD (Spain) - PS/00278/2019"
+    ],
+    "retrieval_ms": 3375,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.6666666666666666,
+      "5": 0.4,
+      "10": 0.2222222222222222
+    },
+    "response": "# Vodafone España — AEPD Enforcement Overview\n\nBased on the retrieved case documents, the Spanish Data Protection Authority (AEPD) imposed **multiple fines on Vodafone España** across several proceedings. Here is a structured summary:\n\n---\n\n## 1. Major Fines\n\n### 🔴 €8,125,000 — PS/00059/2020 [AEPD — PS/00059/2020 — 2021]\nThe largest fine, covering three distinct violations:\n- **Unsolicited commercial communications**: Vodafone sent communications to 191 complainants without prior consent or after they had exercised their right to object, violating the Spanish Information Society Services Act (LSSI) and the Spanish Telecommunications Act (LGT).\n- **Lack of processor oversight** (Article 28 GDPR): Contracts with processors were described as \"merely a checklist,\" with no real, continuous, permanent, or audited control over processing operations.\n- **Unlawful international data transfer** (Article 44 GDPR): Vodafone contracted with a Peruvian processor without ensuring any adequate level of protection — the contract made no reference to any transfer mechanism.\n\n> ⚠️ The AEPD noted that Vodafone had already been sanctioned multiple times within a two-year period for the same conduct without rectifying its behaviour.\n\n---\n\n### 🔴 €3,940,000 — PS/00001/2021 [AEPD — PS/00001/2021]\n- **Articles 5(1)(f) and 5(2) GDPR** — Failure to implement appropriate security measures to prevent fraudulent SIM card replication. Nine complainants were victims of fraud: perpetrators obtained SIM card replicas through Vodafone (which could not verify requestors' identities) and used them to conduct unauthorised bank transfers.\n\n---\n\n## 2. Significant Fines\n\n| Case | Fine | Violation | Articles |\n|---|---|---|---|\n| PS/00085/2021 | **€150,000** (reduced to €90,000) | Sending messages to data subjects after they had requested erasure of their data following contract termination | Article 6(1)(a) GDPR |\n| PS/00430/2020 | **€120,000** | Continued sending of invoicing emails to a former client desp",
+    "llm_ms": 21500,
+    "faithfulness": 0.95,
+    "faithfulness_reason": "The AI response accurately reproduces all key facts from both the retrieved context and the reference answer, including correct fine amounts, case numbers, and GDPR articles for the major cases (PS/00059/2020 at €8,125,000 for Articles 28 and 44 GDPR, and PS/00001/2021 at €3,940,000 for Articles 5(1)(f) and 5(2) GDPR), with the minor issue being the response appears truncated at the end but all verifiable claims are grounded in the source documents.",
+    "answer_relevance": 0.95,
+    "answer_relevance_reason": "The AI response accurately covers both fines (€8,125,000 for PS/00059/2020 and €3,940,000 for PS/00001/2021), the correct GDPR articles (28, 44, 5(1)(f), 5(2)), and the nature of violations, though it adds additional detail about unsolicited communications and the response appears cut off mid-sentence for the second case.",
+    "legal_precision": 1.0,
+    "legal_precision_reason": "The AI response correctly identifies both case numbers (PS/00059/2020 and PS/00001/2021), exact fine amounts (€8,125,000 and €3,940,000), and the precise GDPR articles cited in the reference answer (Articles 28, 44, 5(1)(f), and 5(2)), with accurate descriptions of the violations including processor agreements, international data transfers, and SIM-swap fraud security failures."
+  },
+  {
+    "id": "gs-003",
+    "category": "named_entity",
+    "question": "What was the AEPD decision against BBVA (Banco Bilbao Vizcaya Argentaria)?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00070/2019"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00070/2019",
+      "AN - 0000104/2021",
+      "AEPD (Spain) - PS/00068/2020",
+      "AEPD (Spain) - PS/00420/2021",
+      "AEPD (Spain) - PS/00219/2019",
+      "AEPD (Spain) - PS/00427/2021"
+    ],
+    "retrieval_ms": 3859,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.16666666666666666
+    },
+    "response": "# AEPD Decisions Against BBVA (Banco Bilbao Vizcaya Argentaria)\n\nBased on the retrieved cases, the AEPD (Spanish Data Protection Authority) issued **multiple decisions** against BBVA across several proceedings. Here is a structured overview:\n\n---\n\n## 1. PS/00070/2019 — Privacy Policy & Consent Violations\n**[AEPD — PS/00070/2019 — Spain]**\n\nThe AEPD imposed a **total fine of €5,000,000** on BBVA, split into two separate fines:\n\n- **€2,000,000** for breaching the **principle of transparency** (Articles 12, 13, and 14 GDPR)\n- **€3,000,000** for breaching the **lawfulness of processing** (Article 6 GDPR)\n\nThe decision arose from **five joint complaints** concerning BBVA's privacy policy practices:\n\n- Complainants received **unsolicited promotional SMS and calls** without valid consent\n- BBVA's consent mechanism used **pre-ticked opt-out boxes** (e.g., *\"I DO NOT want BBVA to process my data…\"*), meaning silence or signature was treated as consent\n- Customers were **required to sign the privacy policy document** to become or remain clients, undermining the **freely given** nature of consent under Article 4(11) GDPR\n- One complainant reported that BBVA **blocked their account** unless they signed the privacy policy document\n- The AEPD found that the document provided **no genuine possibility to refuse** data processing for commercial purposes\n\n> ⚠️ **Important procedural note:** The Spanish court **Audiencia Nacional annulled this fine** on appeal (AN — 0000104/2021 — 2022), finding that the AEPD had **exceeded the scope of the original complaints** by conducting a general investigation into BBVA's data protection policy, in violation of principles of administrative sanctioning procedure. (Source: AN — 0000104/2021)\n\n---\n\n## 2. PS/00068/2020 — Unlawful Credit Check (Equifax)\n**[AEPD — PS/00068/2020 — Spain]**\n\nThe AEPD initiated a sanction procedure after a complainant reported that BBVA had **unlawfully consulted their personal data** in the Equifax debtors list, despite",
+    "llm_ms": 26750,
+    "faithfulness": 0.8,
+    "faithfulness_reason": "The AI correctly identifies the €5,000,000 total fine split into €2M and €3M, the relevant articles, and the Audiencia Nacional annulment, all supported by the retrieved context; however, it states the case involved 'five joint complaints' which is not supported by the context (which only mentions 'various joint complaints' and describes two complainants), and it slightly mischaracterizes the €3M fine as being for Article 6 GDPR rather than for deficiencies in the privacy policy related to consent under Arts. 4(11), 7, 12, 13 GDPR as per the reference answer.",
+    "answer_relevance": 0.6,
+    "answer_relevance_reason": "The AI response correctly identifies the case number (PS/00070/2019), total fine (€5,000,000), and the split (€2M + €3M), but misattributes the legal articles (citing Arts. 12-14 and Art. 6 instead of Art. 5(1)(a) for transparency and Arts. 4(11), 7, 12, 13 for consent as in the reference), and adds extra details not in the reference including an annulment claim that cuts off mid-sentence.",
+    "legal_precision": 0.55,
+    "legal_precision_reason": "The AI correctly identifies the case number PS/00070/2019 and total fine of €5,000,000 with the correct split (€2M and €3M), but misattributes the articles: the reference cites Art. 5(1)(a) for the €2M fine and Arts. 4(11), 7, 12, 13 for the €3M fine, whereas the AI cites Arts. 12, 13, 14 and Art. 6 respectively, missing the critical Art. 5(1)(a) transparency principle citation and incorrectly framing the second violation as 'lawfulness of processing' rather than consent deficiencies."
+  },
+  {
+    "id": "gs-004",
+    "category": "named_entity",
+    "question": "Why did AEPD impose a €1,000,000 fine on LaLiga in case EXP202315637 for stadium access control?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202315637"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202315637",
+      "Spanish Data Protection Authority (aepd) — Professional Football League (LaLiga) (Spain)"
+    ],
+    "retrieval_ms": 6938,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    },
+    "response": "## AEPD Fine Against LaLiga — Case EXP202315637 (2024)\n\n### Core Finding\n\nThe AEPD imposed a **€1,000,000 fine** on LaLiga for **failing to conduct a Data Protection Impact Assessment (DPIA) prior to mandating biometric access controls** at football stadiums. (Source: AEPD — EXP202315637 — 2024)\n\n---\n\n### Factual Background\n\nIn **March 2023**, LaLiga, acting as data controller, issued a regulation to Spanish football clubs requiring changes to stadium access procedures. Two distinct access regimes were established:\n\n- **Ordinary ticket holders**: Could enter via a physical ticket *or* an electronic ticket combined with a **fingerprint scanner**.\n- **\"Animation stands\"** (reserved for the home team's most dedicated supporters): Entry required **biometric identification** — either fingerprinting or facial recognition — with consent provided at the point of entry. Patrons who refused were **denied entry**.\n\nLaLiga also offered clubs a system to implement and comply with this updated access guidance. (Source: AEPD — EXP202315637 — 2024)\n\nThe case was triggered by a **complaint filed on 4 November 2022** by a fan against LaLiga with the AEPD. (Source: AEPD — EXP202315637 — 2024)\n\n---\n\n### Legal Basis for the Fine\n\n| Element | Detail |\n|---|---|\n| **Article violated** | Article 35(1) GDPR |\n| **Violation** | Failure to carry out a DPIA before implementing large-scale biometric processing |\n| **Fine amount** | €1,000,000 |\n| **Authority** | AEPD (Spain) |\n| **Year** | 2024 |\n\n(Source: AEPD — EXP202315637 — 2024)\n\n---\n\n### Key Takeaway\n\nThe AEPD's enforcement action focused exclusively on the **procedural obligation** under **Article 35(1) GDPR**: given that the processing involved **biometric data on a large scale** — a category of processing likely to result in high risk to individuals' rights and freedoms — LaLiga was required to conduct a DPIA *before* mandating this system. Its failure to do so was the sole cited basis for the fine.\n\n---\n\n> ⚠️ **Note on a related case*",
+    "llm_ms": 13342,
+    "faithfulness": 0.95,
+    "faithfulness_reason": "The AI response accurately reflects the fine amount (€1,000,000), case number (EXP202315637), violated article (Article 35(1) GDPR), and factual background from the retrieved context, and aligns closely with the reference answer, with only a minor unverifiable detail (complaint date of 4 November 2022) not explicitly confirmed in the provided context snippets.",
+    "answer_relevance": 0.95,
+    "answer_relevance_reason": "The AI response accurately covers all key facts: the €1,000,000 fine, case EXP202315637, Article 35(1) GDPR violation for failing to conduct a DPIA before deploying biometric facial recognition for stadium access control, and correctly identifies biometric data as the high-risk processing trigger, with additional factual detail about the specific access regimes.",
+    "legal_precision": 0.95,
+    "legal_precision_reason": "The AI response correctly identifies the case number (EXP202315637), the exact fine amount (€1,000,000), the correct article (35(1) GDPR), biometric data as special category data requiring DPIA, and LaLiga's role as data controller, with only minor additional detail about the factual background that doesn't contradict the reference answer."
+  },
+  {
+    "id": "gs-005",
+    "category": "fine_lookup",
+    "question": "What is the highest GDPR fine imposed by AEPD in the database?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00005-2025"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00005-2025",
+      "AEPD (Spain) - PS/00279/2020",
+      "AEPD (Spain) - PS/00390/2019",
+      "AEPD (Spain) - EXP202202164",
+      "AEPD (Spain) - EXP202200471",
+      "AEPD (Spain) - EXP202301519",
+      "AEPD (Spain) - PS/00291/2019",
+      "AEPD (Spain) - EXP202305587",
+      "AEPD (Spain) - EXP202315571",
+      "AEPD (Spain) - PS/00499/2022"
+    ],
+    "retrieval_ms": 8250,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "## Highest GDPR Fine Imposed by AEPD in the Retrieved Cases\n\nBased on the cases retrieved from the database, the highest fine is:\n\n### 🏆 **€14,400,000 — Amadeus IT Group, S.A.**\n**[AEPD — PS-00005-2025 — 2026]**\n\nThe AEPD imposed a fine of **€14,400,000** on Amadeus IT Group, S.A., the provider of a Global Distribution System (GDS) — a B2B reservation system used by airlines, hotels, and travel agencies. (Source: PS-00005-2025)\n\nThe DPA found that the controller had used **Passenger Name Record (PNR) data** from its GDS for a pilot project to test a new product, even though that data had originally been collected for travel reservations. The violations cited were:\n\n- **Article 6 GDPR** — absence of a valid legal basis for the secondary use of travellers' personal data\n- **Article 14 GDPR** — failure to properly inform data subjects about the processing\n\n(Source: PS-00005-2025)\n\n---\n\n> ⚠️ **Important caveat:** This ranking reflects only the **cases present in the retrieved database**. It is not a comprehensive ranking of all AEPD enforcement actions. Other AEPD decisions not included in this database may involve higher fines.",
+    "llm_ms": 9140,
+    "faithfulness": 0.9,
+    "faithfulness_reason": "The AI correctly identifies the €14,400,000 fine on Amadeus IT Group with accurate case number, articles, and factual details from the retrieved context, but slightly misdescribes the violation as testing 'a new product' rather than 'training an AI system' as stated in the reference answer, though the source document itself says 'test a new product' so the AI is actually faithful to the retrieved context while the reference answer contains a slight discrepancy.",
+    "answer_relevance": 1.0,
+    "answer_relevance_reason": "The AI response correctly identifies all key facts from the reference answer: the €14,400,000 fine, Amadeus IT Group, case number PS-00005-2025, the AI training context, and the violated Articles 6 and 14 GDPR.",
+    "legal_precision": 1.0,
+    "legal_precision_reason": "The AI response correctly identifies the exact fine amount (€14,400,000), the correct entity (Amadeus IT Group), the correct case number (PS-00005-2025), the correct year (2026), and the correct GDPR articles violated (Articles 6 and 14), fully matching the reference answer."
+  },
+  {
+    "id": "gs-006",
+    "category": "fine_lookup",
+    "question": "What fine did AEPD impose on the company that forced employees to install tracking apps on their personal phones?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202411411"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202411411",
+      "AEPD (Spain) - PS-00446-2023",
+      "AEPD (Spain) - EXP202310848",
+      "AEPD (Spain) - PS/00315/2020",
+      "AEPD (Spain) - PS/00031/2020",
+      "AEPD (Spain) - EXP202315571",
+      "AEPD (Spain) - PS/00484/2020",
+      "AEPD (Spain) - PS/00079/2020",
+      "AEPD (Spain) - EXP202404646",
+      "AEPD (Spain) - PS/00278/2020"
+    ],
+    "retrieval_ms": 8734,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "## AEPD Fine for Mandatory Employee Tracking Apps\n\nThe AEPD imposed a fine of **€200,000** on **ARES CAPITAL, S.A.**, a transport services company, for obliging employees to use four tracking apps on their personal phones for work-related purposes. (Source: AEPD — EXP202411411 — 2026)\n\nThe DPA found violations of **Article 5(1)(c), Article 6(1), Article 6(1)(a), and Article 13 GDPR**, noting in particular that:\n\n- The apps **processed data constantly**, contrary to the controller's claims that data processing ceased once the apps were closed.\n- Two of the apps contained permissions to process **additional sensitive data**, including location, information on the physical status of the data subject, and photos and videos.\n- While the controller claimed employees could choose between company or personal phones, it admitted that **company phone availability was subject to budgetary restrictions** and that it actively encouraged employees to use their personal devices.\n\n[AEPD — EXP202411411 — 2026]",
+    "llm_ms": 7515,
+    "faithfulness": 0.8,
+    "faithfulness_reason": "The AI response accurately captures the fine amount (€200,000), case number (EXP202411411), company name, and most cited articles matching both the context and reference answer, but adds specific details (e.g., apps processing data after closing, sensitive data permissions, encouragement to use personal devices) that go beyond what is explicitly stated in the retrieved context snippet, making some claims unverifiable from the provided source material.",
+    "answer_relevance": 1.0,
+    "answer_relevance_reason": "The AI response correctly identifies all key facts from the reference answer: the €200,000 fine, the transport services company, case number EXP202411411, 2026 decision, and violations of Articles 5(1)(c), 6(1), and 13 GDPR, while additionally providing more detailed context about the violations.",
+    "legal_precision": 0.95,
+    "legal_precision_reason": "The AI response correctly identifies the €200,000 fine, case number EXP202411411, year 2026, Articles 5(1)(c), 6(1), and 13 GDPR matching the reference, with only a minor addition of 'Article 6(1)(a)' as a sub-specification that slightly exceeds but does not contradict the reference answer."
+  },
+  {
+    "id": "gs-007",
+    "category": "fine_lookup",
+    "question": "What AEPD fine involved AXA Real Estate and a data breach affecting personal data?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00117-2024"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00117-2024",
+      "Spanish Data Protection Authority (aepd) — AXA REAL ESTATE INVESTMENT MANAGERS IBERICA S.A. y SEUR GEOPOST, S.L. (Spain)"
+    ],
+    "retrieval_ms": 2641,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    },
+    "response": "## AEPD Enforcement Action Against AXA Real Estate — Data Breach via USB Device\n\nTwo related AEPD decisions involving AXA Real Estate and data security failures have been retrieved from the database:\n\n---\n\n### 1. PS-00117-2024 — AXA Real Estate Investment Managers Iberica S.A.\n**[AEPD — PS-00117-2024 — 2024]**\n\n- **Fine:** EUR 100,000\n- **Article violated:** Article 32 GDPR\n- **Facts:** AXA Real Estate Investment Managers Iberica S.A. suffered a data breach in May 2023 involving the mishandling of a USB device containing sensitive personal information relating to **143 individuals**. Although the USB device was encrypted, the password was transmitted within the **same physical envelope** as the device itself, meaning that when both were lost, the encryption protection was rendered entirely ineffective.\n\n(Source: PS-00117-2024)\n\n---\n\n### 2. AXA Real Estate Investment Managers Iberica S.A. y SEUR GEOPOST, S.L.\n**[AEPD — AXA Real Estate Investment Managers Iberica S.A. y SEUR GEOPOST, S.L. — 2024]** *(Enforcement Tracker Summary)*\n\n- **Fine:** EUR 80,000\n- **Article violated:** Article 32 GDPR\n- **Violation characterised as:** Insufficient technical and organisational measures to ensure information security\n- **Sector:** Real Estate\n\n> ⚠️ **Important caveat:** This second case is available only as an **[ENFORCEMENT TRACKER SUMMARY]**, meaning only metadata is available. No detailed factual analysis of the decision can be provided. The involvement of **SEUR GEOPOST, S.L.** (a courier/logistics company) alongside AXA suggests this may relate to the same underlying incident, but this cannot be confirmed from the available documents alone.\n\n---\n\n### Key Legal Takeaway\nIn both cases, the AEPD found violations of **Article 32 GDPR** in the context of the same data breach scenario. The core security failure identified in the fully documented case (PS-00117-2024) was that **encrypting a device provides no meaningful protection when the decryption password is transmitted throug",
+    "llm_ms": 15014,
+    "faithfulness": 0.95,
+    "faithfulness_reason": "The AI response accurately reproduces all key facts from both retrieved documents (fine amounts, case numbers, Article 32 GDPR, 143 individuals, USB encryption failure) and aligns with the reference answer, with only a minor truncation at the end of the response that does not affect factual accuracy.",
+    "answer_relevance": 0.9,
+    "answer_relevance_reason": "The AI response correctly identifies all key facts from the reference answer (case PS-00117-2024, €100,000 fine, 143 individuals, Article 32 GDPR) and adds additional relevant details about the USB device breach mechanism, though it also introduces a second case not mentioned in the reference answer which slightly dilutes focus.",
+    "legal_precision": 0.9,
+    "legal_precision_reason": "The AI correctly identifies case PS-00117-2024, the €100,000 fine, Article 32 GDPR, and the 143 individuals affected, matching all key facts in the reference answer, with only minor additional detail (USB device context) and an extra unverified second case that doesn't contradict the reference."
+  },
+  {
+    "id": "gs-008",
+    "category": "fine_lookup",
+    "question": "A bank was fined €3,500,000 by AEPD after customers could access other customers' accounts and personal data. What case was this and what articles were violated?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202213437"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00500/2020",
+      "AEPD (Spain) - PS/00259/2020",
+      "AEPD (Spain) - EXP202500113",
+      "ANSPDCP (Romania) - Fine against Libra Internet Bank SA",
+      "AEPD (Spain) - PS-00143-2025",
+      "AEPD (Spain) - EXP202105363",
+      "AEPD (Spain) - PS/00226/2020",
+      "AEPD (Spain) - EXP202104875",
+      "AEPD (Spain) - EXP202307481"
+    ],
+    "retrieval_ms": 3672,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "response": "Based on the cases retrieved from the database, I cannot find sufficient information to answer this question. The most relevant cases found are:\n\n- **AEPD — PS/00500/2020 (Caixabank)** — Fine of €3,000,000 for unlawful profiling for marketing purposes [Articles 4(4), 6(1), 22(1) GDPR]\n- **AEPD — EXP202104875 (Bankinter)** — Fine for a security breach where a customer could view another customer's banking information online [Articles 5(1)(f) and 32(1) GDPR]\n\nNeither of these matches the specific scenario you describe. The Bankinter case (EXP202104875) does involve customers accessing other customers' account data, but the fine amount is stated as **€80,000**, not €3,500,000. (Source: AEPD — EXP202104875). No case in the retrieved documents corresponds to a €3,500,000 fine for that type of incident.\n\nTry searching with different terms or a more specific query — for example, searching by the fine amount, the bank name, or the specific security breach type may return more relevant results.",
+    "llm_ms": 9389,
+    "faithfulness": 0.9,
+    "faithfulness_reason": "The AI correctly acknowledges it cannot find the specific case (EXP202213437, €3,500,000 fine) in the retrieved context, accurately cites the Bankinter case (EXP202104875) with the correct €80,000 fine amount as the closest match, and does not fabricate or hallucinate information — all factual claims are grounded in the retrieved documents, though the reference answer describes a case not present in the context.",
+    "answer_relevance": 0.0,
+    "answer_relevance_reason": "The AI response fails to identify the correct case (EXP202213437) and instead says it cannot find sufficient information, missing all key facts including the case ID, the correct fine amount attribution, and the violated articles (5(1)(f), 25, and 32 GDPR).",
+    "legal_precision": 0.5,
+    "legal_precision_reason": "The AI explicitly states it cannot find the specific case matching the reference answer (EXP202213437 with €3,500,000 fine) and acknowledges insufficient information, which warrants a 0.5 score for a legitimate inability to answer, despite identifying a related but different case (EXP202104875) with incorrect fine amount."
+  },
+  {
+    "id": "gs-009",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in case PS/00051/2020 involving VOX España and the right to erasure?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00051/2020"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00051/2020",
+      "AEPD (Spain) - EXP202406574"
+    ],
+    "retrieval_ms": 10797,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    },
+    "response": "## AEPD Decision — PS/00051/2020 — VOX España\n\n### Overview\n\nThe Spanish Data Protection Authority (AEPD) imposed a fine of **EUR 1,500** on the far-right political party **VOX España** in case PS/00051/2020. (Source: PS/00051/2020)\n\n---\n\n### Factual Background\n\nThe case arose from a complaint by a **former affiliate** of VOX España who had:\n1. Fully **unsubscribed** from the political party, and\n2. Submitted a **request for erasure** of all her personal data — receiving a **confirmation from the party's DPO** that the data had been deleted.\n\nDespite this confirmation, the complainant subsequently received an **email asking her about the possibility of acting as a party's representative** in the Spanish general elections of November 2019 — strongly suggesting her personal data had **not** in fact been erased. (Source: PS/00051/2020)\n\nThe controller, in its response to the AEPD's initial investigation, claimed that the complainant's personal data had been **totally erased** as soon as the deletion request was received. (Source: PS/00051/2020)\n\n---\n\n### GDPR Articles at Issue\n\nThe AEPD examined the following articles, all of which are cited in the decision:\n\n| Article | Subject Matter |\n|---|---|\n| **Article 6(1)(a) GDPR** | Lawfulness of processing — consent as legal basis |\n| **Article 7(3) GDPR** | Right to withdraw consent |\n| **Article 17 GDPR** | Right to erasure (\"right to be forgotten\") |\n\n*(Source: PS/00051/2020)*\n\n---\n\n### Legal Analysis Applied by the AEPD\n\n- The AEPD grounded its finding of a violation primarily in **Article 6(1)(a) GDPR**, identifying an infringement of the **lawfulness principle**. (Source: PS/00051/2020)\n- The Authority assessed the **lawfulness of the processing following the withdrawal of consent** under **Article 7(3) GDPR** — i.e., once the data subject withdrew her consent by unsubscribing, any continued processing lacked a valid legal basis. (Source: PS/00051/2020)\n- The Authority also considered the existence of the **deletion re",
+    "llm_ms": 23936,
+    "faithfulness": 0.95,
+    "faithfulness_reason": "The AI response accurately reproduces the fine amount (€1,500), case number (PS/00051/2020), articles cited (6(1)(a), 7(3), 17 GDPR), and key facts from both the retrieved context and reference answer, with the only minor issue being a truncated final sentence that doesn't affect factual accuracy.",
+    "answer_relevance": 0.9,
+    "answer_relevance_reason": "The AI response correctly identifies all key facts from the reference answer: case PS/00051/2020, the €1,500 fine on VOX España, Article 6(1)(a) GDPR violation (lawfulness/consent), and Article 17 (right to erasure), with additional accurate contextual detail about the case facts, though the response appears cut off mid-sentence.",
+    "legal_precision": 0.9,
+    "legal_precision_reason": "The AI response correctly identifies the case number PS/00051/2020, the exact fine of €1,500, VOX España as the party fined, Article 6(1)(a) GDPR as the lawfulness violation, and Article 17 GDPR (right to erasure), matching all key elements of the reference answer, with the minor addition of Article 7(3) which is not contradicted by the reference and appears contextually relevant."
+  },
+  {
+    "id": "gs-010",
+    "category": "article_lookup",
+    "question": "A bank used a shared login credential for its CCTV system among multiple employees. What did AEPD decide in this case?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202404507"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - EXP202307481",
+      "AEPD (Spain) - EXP202500113",
+      "AEPD (Spain) - PS-00143-2025",
+      "AEPD (Spain) - EXP202104875",
+      "AEPD (Spain) - PS/00226/2020",
+      "AEPD (Spain) - EXP202105363",
+      "AEPD (Spain) - PS/00500/2020"
+    ],
+    "retrieval_ms": 4405,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "response": "Based on the cases retrieved from the database, I cannot find sufficient information to answer this question. The most relevant cases found are:\n\n- AEPD — EXP202307481 — 2023 (CaixaBank cookie banner)\n- AEPD — EXP202500113 — 2025 (ING Bank document loss via courier)\n- AEPD — PS-00143-2025 — 2026 (CaixaBank customer service data disclosure)\n- AEPD — EXP202104875 (Bankinter online banking data exposure)\n- AEPD — PS/00226/2020 (CaixaBank pre-ticked consent boxes)\n- AEPD — EXP202105363 — 2024 (CaixaBank Payments identity theft)\n- AEPD — PS/00500/2020 — 2021 (CaixaBank profiling for marketing)\n\nNone of the seven retrieved cases address the use of shared login credentials for CCTV systems. The retrieved documents concern issues such as cookie consent design, physical document loss, misdirected customer communications, online banking data exposure, unlawful consent conditioning, identity theft processing, and marketing profiling — none of which involve CCTV access controls or shared credentials.\n\nTry searching with different terms such as **\"CCTV,\" \"shared credentials,\" \"access controls,\" \"video surveillance,\"** or **\"Article 32 shared password\"** to retrieve more relevant jurisprudence.",
+    "llm_ms": 8453,
+    "faithfulness": 0.9,
+    "faithfulness_reason": "The AI correctly identifies that none of the retrieved documents contain information about the CCTV shared credentials case (EXP202404507) referenced in the known-correct answer, accurately lists the retrieved cases with their key facts matching the context, and appropriately declines to fabricate an answer — demonstrating high faithfulness to the retrieved context, though it cannot match the reference answer due to the relevant case not being in the retrieved documents.",
+    "answer_relevance": 0.0,
+    "answer_relevance_reason": "The AI response fails to identify the relevant case (EXP202404507), the fine amount (€400,000), the violated article (Article 32 GDPR), or any details about the decision, instead stating it cannot find the information.",
+    "legal_precision": 0.5,
+    "legal_precision_reason": "The AI legitimately states it cannot find the relevant case and explicitly acknowledges insufficient context, rather than providing wrong legal citations or contradicting the reference answer, warranting a neutral 0.5 score."
+  },
+  {
+    "id": "gs-011",
+    "category": "article_lookup",
+    "question": "What GDPR violations did AEPD find in the PageGroup Europe recruitment agency case (PS/00003/2021)?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00003/2021"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00003/2021"
+    ],
+    "retrieval_ms": 7327,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "response": "## AEPD — PageGroup Europe (PS/00003/2021) — 2022\n\n### Violations Found\n\nFollowing reconsideration prompted by objections from the Portuguese DPA (CNPD) and the Berlin DPA (BInBDI), the AEPD ultimately found the following violations against PageGroup Europe (Michael Page International):\n\n**1. Article 5(1)(c) GDPR — Data Minimisation**\nThe controller violated the data minimisation principle by requiring data subjects to provide additional identification documentation when there was no reasonable doubt regarding their identity. (Source: PS/00003/2021)\n\n**2. Article 12 GDPR — Transparency & Facilitation of Rights**\nThe controller lacked an adequate procedure to comply with data subjects' rights requests. Specifically, it improperly demanded identity documents from data subjects exercising access requests without justification. (Source: PS/00003/2021)\n\n**3. Articles 25 and 32 GDPR — Data Protection by Design & Security**\nThese additional violations were identified by the objecting DPAs (CNPD and BInBDI), which the AEPD incorporated into its reconsidered decision. (Source: PS/00003/2021)\n\n---\n\n### Key Procedural Notes\n\n- **Lead Supervisory Authority:** The AEPD asserted jurisdiction as lead supervisory authority under **Article 56(1) GDPR**, having determined that the controller's main establishment — specifically its legal/compliance team managing access requests — was located in **Barcelona, Spain**, despite the corporate headquarters being in the United Kingdom. (Source: PS/00003/2021)\n- **One-Stop-Shop Mechanism:** This case is a notable example of the OSS cooperation procedure, where **interested DPAs (CNPD and BInBDI) successfully objected** to the AEPD's initial draft decision, which had found *no* infringement, ultimately reversing that conclusion.\n- **Fine Imposed:** **€300,000** (Source: PS/00003/2021)\n\n---\n\n### Triggering Facts\n\nThe case originated from a complaint by a Dutch data subject who had uploaded her CV to the Michael Page web portal and submitted an ",
+    "llm_ms": 11905,
+    "faithfulness": 0.5,
+    "faithfulness_reason": "The AI correctly identifies the fine amount (€300,000), case number, Articles 5(1)(c), 12, 25, and 32, but fabricates procedural details not in the retrieved context (CNPD and BInBDI objections reversing an initial no-infringement finding, Barcelona main establishment determination) and omits Article 5(1)(f) cited in the reference answer while including unsupported claims about the OSS cooperation mechanism outcome.",
+    "answer_relevance": 0.55,
+    "answer_relevance_reason": "The AI response correctly identifies the case number, Articles 25 and 32, and data minimization (5(1)(c)), but misses the €300,000 fine amount, incorrectly replaces Article 5(1)(f) (integrity and confidentiality) with Article 12, and omits the data retention issue mentioned in the reference answer.",
+    "legal_precision": 0.6,
+    "legal_precision_reason": "The AI correctly identifies the case number PS/00003/2021 and articles 5(1)(c), 25, and 32, but omits the fine amount of €300,000, misses Article 5(1)(f) (integrity and confidentiality), incorrectly substitutes Article 12 for the reference's focus on inadequate access/erasure request procedures, and adds procedural details about objecting DPAs not mentioned in the reference answer."
+  },
+  {
+    "id": "gs-012",
+    "category": "article_lookup",
+    "question": "An energy company was fined by AEPD for automated decision-making without providing required information to data subjects. What was the decision in case PS/00037/2020?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS/00037/2020"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00037/2020",
+      "Croatian Data Protection Authority (azop) — Energy company (name not available at the moment) (Croatia)"
+    ],
+    "retrieval_ms": 9530,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5
+    },
+    "response": "## AEPD Decision — PS/00037/2020 (Spain, 2021)\n\n### Fine Imposed\nThe AEPD imposed a fine of **EUR 1,500,000** on the energy company. (Source: PS/00037/2020)\n\n---\n\n### GDPR Articles Cited\nThe AEPD cited the following articles in this case:\n- **Article 6 GDPR**\n- **Article 13 GDPR**\n- **Article 22 GDPR**\n- **Article 25 GDPR**\n\n(Source: PS/00037/2020)\n\n---\n\n### Key Factual Findings\n\n**1. Inadequate Transparency (Article 13 GDPR)**\nThe AEPD found that the information provided to clients was not in line with Articles 12, 13, and 14 GDPR. The controller failed to provide sufficient information to data subjects as required. (Source: PS/00037/2020)\n\n**2. Insufficient Data Protection by Design and by Default (Article 25 GDPR)**\nThe controller did not implement adequate measures to avoid or mitigate risks related to its data processing. Specifically, the AEPD found that the controller's initial risk assessment only considered risks regarding scoring/profiling and commercial communications, **failing to account for the risks arising from its representation/contracting mechanism**. (Source: PS/00037/2020)\n\n**3. Deficient Identity Verification in Representation**\nThe controller allowed services to be contracted in another person's name (as a representative) **without properly verifying the representative's identity or validating their power of representation**. This created the risk of:\n- Contracting in another person's name without authorisation\n- Binding contracts being created without the knowledge of the purported represented person\n- Potential **identity fraud** and **economic damages**\n\n(Source: PS/00037/2020)\n\n---\n\n### ⚠️ Important Clarification on Your Query\n\nYour question frames the violation as being specifically about **automated decision-making without providing required information**. The retrieved document does indicate that **Article 22 GDPR** (automated decision-making) was cited, and that the representation mechanism could enable consent to automated decision-ma",
+    "llm_ms": 12750,
+    "faithfulness": 0.5,
+    "faithfulness_reason": "The AI accurately reports the fine amount, case number, and articles cited from the retrieved context, but it fails to confirm the reference answer's key claim that Article 22 violations involved failure to inform data subjects of automated decision logic or their right to human review, and incorrectly omits the Article 5(1)(d) data accuracy violation mentioned in the reference answer while the retrieved context does not support that detail either.",
+    "answer_relevance": 0.55,
+    "answer_relevance_reason": "The AI response correctly identifies the case number and fine amount (€1,500,000) and mentions Article 22 GDPR, but incorrectly emphasizes Articles 6, 13, and 25 as the primary violations while missing the reference's key point about Article 5(1)(d) data accuracy failures, and the response appears incomplete (cut off) while also including some inaccurate framing of the core violation around automated decision-making without informing data subjects of the logic involved.",
+    "legal_precision": 0.5,
+    "legal_precision_reason": "The AI correctly identifies the case number PS/00037/2020, the fine of €1,500,000, and includes Article 22 GDPR, but diverges from the reference by citing Articles 6, 13, and 25 instead of Article 5(1)(d) GDPR, and omits the specific reference to automated decision-making transparency failures (informing data subjects of logic and right to human review) that are central to the reference answer."
+  },
+  {
+    "id": "gs-013",
+    "category": "sector",
+    "question": "What GDPR rules apply when an employer monitors employees with location tracking apps on their personal phones?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202411411"
+    ],
+    "retrieved_ids": [
+      "AN - 136/2019",
+      "AEPD (Spain) - PS-00446-2023",
+      "AKI (Estonia) - 2.1.-4/22/2585",
+      "APD/GBA (Belgium) - 19/2020",
+      "AEPD (Spain) - PS/00008/2020",
+      "APD/GBA (Belgium) - 47/2022",
+      "AEPD (Spain) - 0098/2022",
+      "AZOP (Croatia) - Croatian School Employees",
+      "AP (The Netherlands) - 30.04.2020",
+      "APD/GBA (Belgium) - 15/2023"
+    ],
+    "retrieval_ms": 12500,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "response": "# GDPR Rules on Employer Location Tracking via Employees' Personal Phones\n\nBased on the cases retrieved from the database, here is what the jurisprudence shows on this specific issue.\n\n---\n\n## 1. Legal Basis Requirement (Article 6(1) GDPR)\n\nThe most directly relevant cases establish that requiring employees to use their personal phones for work-related tracking purposes demands a valid legal basis.\n\n**[AEPD — PS-00446-2023 — Spain]** (Administrative DPA decision)\nThe Spanish DPA fined a controller **€2,000** for compelling an employee to use their personal cell phone for work purposes — including installing an application — without establishing an appropriate legal basis for the processing. The DPA found a violation of **Article 6(1) GDPR**. Notably, the controller refused to provide a company phone despite complaints, and the employee's data (phone number, name) remained visible in WhatsApp groups even after leaving the company.\n*(Source: AEPD PS-00446-2023)*\n\n---\n\n## 2. Invalidity of Contractual Clauses Imposing Personal Phone Use\n\n**[AN — AN 136/2019 — Spain, 2019]** (Judicial decision — Audiencia Nacional)\nThe Spanish Audiencia Nacional **invalidated contractual clauses** requiring delivery drivers at Telepizza to supply their personal phones with internet connection for geolocation purposes during working hours. Key factual findings included:\n\n- The Collective Agreement for the sector did **not** regulate the requirement for workers to provide mobile phones.\n- The company unilaterally determined the compensation amount for phone use.\n- **Repeated refusal to provide a personal phone was foreseen as grounds for termination** of the employment contract.\n- The app also accessed the phone's photo gallery, raising additional concerns.\n- The court found these clauses legally invalid.\n\n*(Source: AN 136/2019)*\n\n> ⚠️ **Note:** This is a **judicial** (court) decision, not a DPA administrative decision, and therefore carries different legal weight.\n\n---\n\n## 3. Consent Is N",
+    "llm_ms": 24343,
+    "faithfulness": 0.4,
+    "faithfulness_reason": "The AI's claims are grounded in the retrieved context (AEPD PS-00446-2023 and AN 136/2019), but the reference answer focuses on a completely different case (EXP202411411, €200K fine) with different violations (Articles 5(1)(c), 6(1), and 13), which the AI does not mention, indicating the AI's response — while internally consistent with retrieved sources — misses the key case the reference answer identifies as authoritative.",
+    "answer_relevance": 0.2,
+    "answer_relevance_reason": "The AI response covers some relevant GDPR concepts (Article 6(1), consent issues, personal phone tracking) and mentions AEPD decisions, but cites different case numbers and fine amounts than the reference answer (EXP202411411/€200K), and fails to address the specific Articles 5(1)(c) (data minimization with four apps) and Article 13 (transparency) violations identified in the benchmark case.",
+    "legal_precision": 0.1,
+    "legal_precision_reason": "The AI cites completely different case numbers (PS-00446-2023 and AN 136/2019) with a wrong fine amount (€2,000 instead of €200K) and does not reference the correct case (EXP202411411) or its specific Article 5(1)(c) and Article 13 violations identified in the reference answer."
+  },
+  {
+    "id": "gs-014",
+    "category": "sector",
+    "question": "Are there GDPR decisions about biometric data processing for access control in sports venues?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202315637"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - 0098/2022",
+      "AP (The Netherlands) - 30.04.2020",
+      "AEPD (Spain) - EXP202212956",
+      "AKI (Estonia) - 2.1.-3/20/4479",
+      "AEPD (Spain) - EXP202315637",
+      "AEPD (Spain) - EXP202305134",
+      "AEPD (Spain) - EXP202313347",
+      "AEPD (Spain) - EXP202100603",
+      "AEPD (Spain) - EXP202405320",
+      "AEPD (Spain) - EXP202213792"
+    ],
+    "retrieval_ms": 10656,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 0.2,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "# GDPR Decisions on Biometric Data Processing for Access Control in Sports Venues\n\nThis is a well-documented area of GDPR enforcement, particularly in Spain. Here is a structured analysis of the relevant decisions retrieved from the database.\n\n---\n\n## 🇪🇸 Spain — Core Enforcement Cluster\n\n### 1. LaLiga — Failure to Conduct DPIA\n**[AEPD — EXP202315637 — 2024]**\nLaLiga was fined **€1,000,000** after issuing a regulation to football clubs requiring biometric access controls (fingerprinting or facial recognition) for entry to \"animation stands,\" without having conducted a DPIA prior to mandating this implementation. The regulation required fans to consent to biometric identification at the point of entry or be denied access entirely. The AEPD found a violation of **Article 35(1) GDPR**. (Source: EXP202315637)\n\n---\n\n### 2. Club Atlético Osasuna — Facial Recognition at Stadium Entrances\n**[AEPD — EXP202212956 — 2025]**\nThe AEPD fined Osasuna **€200,000** for implementing an optional facial recognition system at stadium entrances. Although traditional ticketing remained available, the DPA held that the processing violated the **principle of data minimisation (Article 5(1)(c) GDPR)**, finding that less invasive alternatives existed. The controller had conducted a DPIA and relied on consent as its legal basis, but the AEPD found this insufficient to justify the large-scale biometric processing. Violations of **Article 6(1)(a)** and **Article 9 GDPR** were also cited. (Source: EXP202212956)\n\n---\n\n### 3. Burgos Club de Fútbol — Mandatory Fingerprinting of Standing Section Members\n**[AEPD — EXP202213792 — 2024]**\nThe AEPD fined Burgos CF **€200,000** (reduced to **€120,000** following the controller's acknowledgment of fault under national law) for requiring approximately 700 members of the \"cheering stands\" to provide fingerprints for entry. Key findings included:\n- No adequate legal basis for the biometric processing\n- Violations of **necessity and proportionality obligations*",
+    "llm_ms": 25750,
+    "faithfulness": 0.5,
+    "faithfulness_reason": "The AI correctly identifies the LaLiga case (EXP202315637, €1,000,000, Article 35(1) GDPR) matching the reference answer, and the Osasuna case is supported by the retrieved context, but the AI fabricates a third case ('Burgos Club de Fútbol — EXP202213792') which does not appear anywhere in the retrieved source documents, constituting a hallucination that reduces faithfulness.",
+    "answer_relevance": 0.9,
+    "answer_relevance_reason": "The AI response accurately covers all key facts from the reference answer (AEPD case EXP202315637, €1,000,000 fine, Article 35(1) GDPR, biometric data as special category under Article 9, DPIA requirement) and adds additional context, though it also includes a second case (Osasuna) that cannot be verified against the reference answer but doesn't detract from the core facts.",
+    "legal_precision": 0.9,
+    "legal_precision_reason": "The AI correctly identifies the LaLiga case with the exact case number (EXP202315637), correct fine amount (€1,000,000), correct year (2024), and correct article citation (Article 35(1) GDPR), matching the reference answer precisely, with only minor additional elaboration about the nature of the violation; the additional Osasuna case information, while potentially accurate, goes beyond the reference but does not contradict it."
+  },
+  {
+    "id": "gs-015",
+    "category": "sector",
+    "question": "AEPD fined a company €240,000 for a data breach caused by an API security vulnerability. What case is this and what articles were cited?",
+    "relevant_ids": [
+      "AEPD (Spain) - EXP202406208"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS/00054/2021",
+      "AEPD (Spain) - PS/00054/2020",
+      "AEPD (Spain) - EXP202401683",
+      "AEPD (Spain) - EXP202402590",
+      "AEPD (Spain) - PS/00291/2019",
+      "AEPD (Spain) - EXP202409823",
+      "AEPD (Spain) - EXP202403325",
+      "AEPD (Spain) - EXP202309453",
+      "AEPD (Spain) - EXP202307113",
+      "AEPD (Spain) - EXP202102433"
+    ],
+    "retrieval_ms": 8110,
+    "hit_rate": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "mrr": 0.0,
+    "context_precision": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "response": "Based on the cases retrieved from the database, I cannot find sufficient information to answer this question. The most relevant cases found are:\n\n- **AEPD — EXP202309453 — 2026** (AXA Seguros, €200,000 fine for security failure enabling unauthorized account access, Article 5(1)(f) GDPR)\n- **AEPD — EXP202403325 — 2024** (€10,000 fine for unlawful publication of personal data, Article 6(1) GDPR)\n- **AEPD — EXP202402590 — 2025** (€5,000 fine for unlawful direct marketing call, Article 6(1) GDPR)\n\nNone of the retrieved documents describe a case involving a **€240,000 fine** or an **API security vulnerability**. The case you are describing does not appear in the documents currently available in the database.\n\nTry searching with different terms such as *\"API vulnerability\"*, *\"security breach\"*, or the specific fine amount to locate the relevant decision.",
+    "llm_ms": 7952,
+    "faithfulness": 0.9,
+    "faithfulness_reason": "The AI correctly acknowledges it cannot find the case described in the reference answer (EXP202406208, €240,000 fine, API vulnerability) and accurately describes the cases that ARE in the retrieved context without fabricating information, making its response faithful to the retrieved documents even though it cannot match the reference answer.",
+    "answer_relevance": 0.0,
+    "answer_relevance_reason": "The AI response fails to identify the correct case (EXP202406208), the €240,000 fine, or the cited articles (Article 5(1)(f) and Article 32 GDPR), instead claiming the case cannot be found in its database.",
+    "legal_precision": 0.5,
+    "legal_precision_reason": "The AI legitimately states it cannot find the specific case in its database and does not contradict the reference answer with incorrect legal facts, warranting a neutral 0.5 score for an honest admission of insufficient information."
+  },
+  {
+    "id": "gs-016",
+    "category": "sector",
+    "question": "What security failures in a bank's customer service system led AEPD to impose a fine in case PS-00143-2025?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00143-2025"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00143-2025",
+      "AEPD (Spain) - EXP202402612",
+      "AN - 578/2021",
+      "AEPD (Spain) - EXP202402154",
+      "AEPD (Spain) - EXP202406208",
+      "AEPD (Spain) - EXP202301519",
+      "AEPD (Spain) - EXP202307113",
+      "AEPD (Spain) - EXP202213437",
+      "AEPD (Spain) - EXP202306073",
+      "AEPD (Spain) - PS-00456-2025"
+    ],
+    "retrieval_ms": 12125,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "## AEPD Decision PS-00143-2025 — CaixaBank Customer Service Security Failures\n\n**[AEPD — PS-00143-2025 — 2026]**\n\n### Overview\n\nThe AEPD fined **CaixaBank, S.A. €400,000** for security failures in its Customer Service Department that resulted in personal data being disclosed to wrong recipients. (Source: PS-00143-2025)\n\n---\n\n### Specific Security Failures Identified\n\nThe DPA found **inadequate technical and organisational measures** that manifested in two distinct incidents:\n\n**Incident 1 — Cross-linked complaint responses:**\nThe controller's customer service system **wrongly linked customers with complaints**, causing a data subject to receive an email containing a response to a complaint he had not filed. That response was addressed to a third party and included that third party's personal data. Simultaneously, the third party received a communication disclosing the data subject's personal data, including his **name and ID number**. (Source: PS-00143-2025)\n\n**Incident 2 — Documents sent to incorrect recipients:**\nThe controller **failed to ensure that documents were sent only to the correct recipients**. A data subject received documents belonging to other customers, specifically:\n- A response to another customer's complaint containing information about an **overdraft situation, bank charges, and bank account data**;\n- A document prepared for **signature by another customer** in relation to banking measures for mortgage debtors. (Source: PS-00143-2025)\n\n---\n\n### Articles Cited by the AEPD\n\nThe AEPD grounded its decision on two provisions:\n\n- **Article 5(1)(f) GDPR** — the principle of integrity and confidentiality, requiring that personal data be processed in a manner ensuring appropriate security;\n- **Article 25 GDPR** — data protection by design and by default, requiring the controller to implement appropriate technical and organisational measures to ensure that only necessary personal data are processed and that they reach only intended recipients.\n\n(Source: PS",
+    "llm_ms": 13438,
+    "faithfulness": 0.7,
+    "faithfulness_reason": "The AI response accurately captures the €400,000 fine, case number PS-00143-2025, CaixaBank, Articles 5(1)(f) and 25 GDPR from both the context and reference, but the reference answer also mentions Article 32 GDPR as a cited violation while the retrieved context only lists Articles 5(1)(f) and 25 GDPR for this case — the AI correctly omits Article 32 per the source document, yet this creates a discrepancy with the reference answer, and the AI's detailed incident descriptions go beyond what is explicitly confirmed in the truncated retrieved context.",
+    "answer_relevance": 0.85,
+    "answer_relevance_reason": "The AI response correctly identifies the case number, the €400,000 fine, the nature of the security failures (customers receiving other customers' data), and begins to reference the GDPR articles, but the response appears truncated (cutting off at 'Articles Ci') so it's unclear if all three articles (5(1)(f), 25, and 32) were fully cited; it also incorrectly names CaixaBank as the bank when the reference answer doesn't specify the bank name.",
+    "legal_precision": 0.7,
+    "legal_precision_reason": "The AI correctly identifies the case number (PS-00143-2025), fine amount (€400,000), and demonstrates accurate factual detail about the incidents, but the response is cut off before listing the specific GDPR articles (5(1)(f), 25, and 32), preventing full verification of article-level precision, and it adds unverified specifics like the controller name 'CaixaBank' not present in the reference."
+  },
+  {
+    "id": "gs-017",
+    "category": "edge_case",
+    "question": "What happens when a Facebook page is created with someone's personal data without their consent — which DPA handles the complaint?",
+    "relevant_ids": [
+      "AEPD (Spain) - E/05270/2018 – E/08416/2018"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - E/05270/2018 – E/08416/2018",
+      "AG München - 122 C 11829/24",
+      "AEPD (Spain) - E/00647/2019 - CO/00198/2020",
+      "AG München - 178 C 13527/22",
+      "Data Protection Authority of Hamburg — Facebook Germany GmbH (Germany)",
+      "Data Protection Authority of Ireland — Facebook Ireland Limited (Ireland)",
+      "French Data Protection Authority (CNIL) — Facebook Ireland Ltd. (France)"
+    ],
+    "retrieval_ms": 8813,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.14285714285714285
+    },
+    "response": "## Jurisdictional Handling of Complaints About Unauthorised Facebook Pages\n\n### The Core Scenario\n\nBased on the retrieved cases, there is a directly relevant example of exactly this situation. A data subject complained that **Facebook unilaterally generated a public page disclosing their name, surname, and address without their consent**. The data subject had attempted to have the page deleted but was asked to provide even more personal data to prove their identity. (Source: AEPD — E/05270/2018 – E/08416/2018)\n\n---\n\n### Which DPA Handles the Complaint?\n\nThe retrieved case illustrates the **one-stop-shop mechanism** under GDPR:\n\n- The complaint was **initially lodged with the Spanish DPA (AEPD)**, as the data subject was located in Spain.\n- However, the AEPD **forwarded the complaint to the Irish DPA (Data Protection Commission)**, given Facebook's EU establishment in Ireland.\n\n[AEPD — E/05270/2018 – E/08416/2018 — Spain]\n\nThis referral reflects the application of **Article 56 GDPR**, which is one of the articles explicitly cited in that case, governing the lead supervisory authority mechanism for cross-border processing.\n\n---\n\n### Articles Cited in This Case\n\nThe AEPD cited the following GDPR provisions in this case:\n\n| Article | Relevance in the Case |\n|---|---|\n| **Article 6 GDPR** | The page was created **without the data subject's consent** — raising the question of lawful basis for processing |\n| **Article 17 GDPR** | The data subject's **right to erasure** was at issue when they requested deletion of the page |\n| **Article 56 GDPR** | Governed the **referral to the Irish DPA** as lead supervisory authority |\n\n[AEPD — E/05270/2018 – E/08416/2018 — Spain]\n\n---\n\n### Key Practical Takeaway\n\n> A data subject in Spain (or likely any EU member state) who finds an unauthorised Facebook page containing their personal data may file a complaint with their **local DPA**, but that DPA is likely to **refer the matter to the Irish DPA** under the one-stop-shop mechanism, giv",
+    "llm_ms": 13406,
+    "faithfulness": 0.85,
+    "faithfulness_reason": "The AI response accurately covers the core facts from the retrieved context and reference answer (case number, articles cited, one-stop-shop mechanism, AEPD forwarding to Irish DPA, Article 56 GDPR), but omits the reference answer's mention of a potential Article 12 GDPR violation regarding the identity proof requirement for deletion requests, and the response is cut off mid-sentence.",
+    "answer_relevance": 0.85,
+    "answer_relevance_reason": "The AI response correctly identifies the case ID (E/05270/2018–E/08416/2018), the one-stop-shop mechanism, AEPD forwarding to Irish DPC, Article 56 GDPR, and the issue of additional personal data required for deletion, but omits the specific mention of Article 12 GDPR violation regarding the identity proof requirement, which is a key detail in the reference answer.",
+    "legal_precision": 0.8,
+    "legal_precision_reason": "The AI correctly identifies the case number (E/05270/2018–E/08416/2018), the one-stop-shop mechanism, Article 56 GDPR, the AEPD-to-DPC referral, and the core facts, but omits the reference answer's key point about Article 12 GDPR being potentially violated by Facebook's demand for additional identity proof, instead citing Articles 6 and 17 which are not mentioned in the reference answer."
+  },
+  {
+    "id": "gs-018",
+    "category": "edge_case",
+    "question": "In AEPD case PD-00207-2022 involving debt collection, was the data subject's complaint upheld or dismissed, and why?",
+    "relevant_ids": [
+      "AEPD (Spain) - PD-00207-2022"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PD-00207-2022",
+      "AEPD (Spain) - EXP202406716",
+      "AEPD (Spain) - PS/00524/2023",
+      "AEPD (Spain) - EXP202200429",
+      "AEPD (Spain) - EXP202206805",
+      "AEPD (Spain) - EXP202313713",
+      "AEPD (Spain) - TD/00233/2020",
+      "AEPD (Spain) - EXP202310203",
+      "AEPD (Spain) - EXP202305732",
+      "APD/GBA (Belgium) - 47/2023"
+    ],
+    "retrieval_ms": 12844,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "## Analysis: AEPD Case PD-00207-2022\n\n**[AEPD — PD-00207-2022 — 2024]**\n\n### Outcome: **Complaint Dismissed**\n\nThe Spanish DPA (AEPD) **dismissed** the data subject's complaint. (Source: PD-00207-2022)\n\n---\n\n### Reasons for Dismissal\n\nThe AEPD dismissed the complaint on the following grounds, as stated in the retrieved document:\n\n1. **Requests were properly addressed:** Despite the data subject's claim that their access and erasure requests were not properly handled by the initial controller, the company demonstrated that **all answers were timely provided**, including information regarding the change of control over the data. (Source: PD-00207-2022)\n\n2. **Legitimate basis for data processing:** The existence of an **outstanding debt** owed by the data subject to the controller was found to justify the continued processing of their personal data. This meant the erasure request could not be granted. (Source: PD-00207-2022)\n\n3. **Change of control addressed:** The case involved a **posterior change of control** over the data. The AEPD took into account that the data subject had been informed of this change, which further supported the dismissal. (Source: PD-00207-2022)\n\n---\n\n### Articles Cited in This Case\n\nThe AEPD cited the following articles in this case: **Article 12, Article 15, Article 15(3), Article 17, Article 31, Article 39, Article 55, Article 56(2), and Article 57(1)(f) GDPR**. (Source: PD-00207-2022)\n\n---\n\n> ⚠️ **Note:** The retrieved document provides only a summary of this decision. No further factual detail — such as the specific debt amount, the identity of the controller, or the precise reasoning on each article — is available from the retrieved context. For a full analysis, consulting the original AEPD decision text is recommended.",
+    "llm_ms": 10796,
+    "faithfulness": 1.0,
+    "faithfulness_reason": "The AI response accurately reflects all key facts from the retrieved source document (PD-00207-2022) and is fully consistent with the known-correct reference answer, correctly identifying the dismissal outcome, the outstanding debt justification, the timely responses to access/erasure requests, and the cited GDPR articles without introducing any fabricated or contradictory claims.",
+    "answer_relevance": 0.9,
+    "answer_relevance_reason": "The AI response correctly identifies the complaint as dismissed, covers the key reasons (outstanding debt providing legitimate basis, controller having properly responded to access and erasure requests), and adds some additional detail about change of control, all aligning well with the reference answer.",
+    "legal_precision": 0.85,
+    "legal_precision_reason": "The AI correctly identifies the case number, dismissal outcome, outstanding debt as legitimate basis, and proper handling of access/erasure requests, matching the reference answer, and adds plausible GDPR article citations (Art. 12, 15, 17) with appropriate roles, though the reference answer does not specify articles so the additional detail cannot be verified but does not contradict it."
+  },
+  {
+    "id": "gs-019",
+    "category": "edge_case",
+    "question": "What did AEPD decide in case PS-00304-2024 and what data minimization violations were found?",
+    "relevant_ids": [
+      "AEPD (Spain) - PS-00304-2024"
+    ],
+    "retrieved_ids": [
+      "AEPD (Spain) - PS-00304-2024",
+      "AEPD (Spain) - EXP202206776",
+      "AEPD (Spain) - PS/00356/2021",
+      "AEPD (Spain) - PS/00293/2019",
+      "AEPD (Spain) - PS/00104/2020",
+      "AEPD (Spain) - PS/00212/2019",
+      "AEPD (Spain) - PS/00282/2020",
+      "AEPD (Spain) - PS/00362/2020",
+      "AEPD (Spain) - PS/00139/2020",
+      "AEPD (Spain) - PS/00347/2020"
+    ],
+    "retrieval_ms": 14171,
+    "hit_rate": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.1
+    },
+    "response": "## AEPD Decision in PS-00304-2024\n\n### Overview\n\nThe AEPD fined **El León de El Español Publicaciones, S.A.** (operator of the digital newspaper *El Español*) **€20,000** for unlawfully publishing an identifiable video of an assault victim and a minor assailant. (Source: PS-00304-2024)\n\n---\n\n### Data Minimisation Violations Found\n\nThe AEPD found a violation of **Article 5(1)(c) GDPR** (data minimisation), with the controller also found liable under **Article 5(2) GDPR** (accountability) and **Article 25 GDPR** (data protection by design and by default). (Source: PS-00304-2024)\n\nSpecifically, the document states that:\n\n- The newspaper **published a video showing both the assault victim and the assailant** (who was a minor) **without applying any techniques to prevent their direct or indirect identification** — meaning their image and voice were fully disclosed. (Source: PS-00304-2024)\n- The DPA found that **identification of the individuals was unnecessary for reporting the incident**, establishing that the data processed exceeded what was adequate, relevant, and limited to what was necessary for the journalistic purpose. (Source: PS-00304-2024)\n- The controller **further disseminated the video through its accounts on two social media platforms**, compounding the minimisation failure. (Source: PS-00304-2024)\n\n---\n\n### Controller's Arguments (Rejected)\n\nThe controller raised several defences, all of which were implicitly rejected by the DPA:\n\n| Argument | Basis |\n|---|---|\n| The incident was newsworthy | Freedom of information |\n| The video had already gone viral | Prior public availability |\n| The video was necessary to understand the news | Editorial necessity |\n| The minor's maturity and awareness of being recorded | Mitigating the minor's status |\n\n(Source: PS-00304-2024)\n\n---\n\n### Procedural Notes\n\n- The AEPD **initiated proceedings ex officio** after becoming aware of the dissemination.\n- A **precautionary removal order** was issued under **Article 58(2)(d) GDPR",
+    "llm_ms": 16110,
+    "faithfulness": 0.4,
+    "faithfulness_reason": "The AI correctly identifies the €20,000 fine, the controller, and Articles 5(1)(c), 5(2), and 25 GDPR from the retrieved context, but critically contradicts the reference answer by omitting Article 32 GDPR (which the reference answer lists as a key violated article) and instead citing Article 25 GDPR, while also fabricating the controller's arguments table which has no basis in the retrieved context.",
+    "answer_relevance": 0.3,
+    "answer_relevance_reason": "The AI response correctly identifies the case number, fine amount (€20,000), and Article 5(1)(c) violation, but provides a completely different factual scenario (newspaper publishing assault video) versus the reference answer (collecting more data than necessary with inadequate security measures/Article 32 violation), suggesting the AI may have fabricated or confused case details.",
+    "legal_precision": 0.5,
+    "legal_precision_reason": "The AI correctly identifies the €20,000 fine, the case number PS-00304-2024, and Article 5(1)(c) GDPR (data minimization), but contradicts the reference answer by omitting Article 32 (security measures) entirely, adding articles not mentioned in the reference (Art. 5(2), Art. 25), and describing a completely different factual scenario (video publication of assault) rather than the reference's description of excessive data collection and inadequate security measures."
+  }
+]

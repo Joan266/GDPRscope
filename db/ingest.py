@@ -111,6 +111,7 @@ def normalize_tracker(raw: dict) -> dict:
         "summary_holding":  None,
         "full_text":        None,
         "full_text_language": None,
+        "content_depth":    "summary",
     }
 
 
@@ -266,6 +267,7 @@ def normalize_gdprhub(title: str, fields: dict, summary: dict) -> dict:
         "summary_holding":  summary.get("holding") or None,
         "full_text":        None,
         "full_text_language": None,
+        "content_depth":    "full",
     }
 
 
@@ -305,6 +307,7 @@ def normalize_eurlex(raw: dict) -> dict:
         "summary_holding":  None,
         "full_text":        None,
         "full_text_language": None,
+        "content_depth":    "summary",  # EUR-Lex: only metadata until full text fetched
     }
 
 
@@ -320,7 +323,7 @@ INSERT INTO documents (
     sector, controller_name,
     gdpr_articles, parties, source_urls, national_laws, eu_laws, appeal_chain,
     summary_teaser, summary_facts, summary_dispute, summary_holding,
-    full_text, full_text_language, search_vector
+    full_text, full_text_language, content_depth, search_vector
 ) VALUES (
     %(source)s, %(source_id)s, %(document_type)s, %(pipeline_version)s,
     %(title)s, %(jurisdiction)s, %(authority)s, %(authority_abbrev)s,
@@ -330,7 +333,7 @@ INSERT INTO documents (
     %(sector)s, %(controller_name)s,
     %(gdpr_articles)s, %(parties)s, %(source_urls)s, %(national_laws)s, %(eu_laws)s, %(appeal_chain)s,
     %(summary_teaser)s, %(summary_facts)s, %(summary_dispute)s, %(summary_holding)s,
-    %(full_text)s, %(full_text_language)s,
+    %(full_text)s, %(full_text_language)s, %(content_depth)s,
     to_tsvector('english',
         coalesce(%(title)s,'') || ' ' ||
         coalesce(%(summary_teaser)s,'') || ' ' ||
@@ -347,6 +350,7 @@ ON CONFLICT (source, source_id) DO UPDATE SET
     summary_facts    = EXCLUDED.summary_facts,
     summary_dispute  = EXCLUDED.summary_dispute,
     summary_holding  = EXCLUDED.summary_holding,
+    content_depth    = EXCLUDED.content_depth,
     search_vector    = EXCLUDED.search_vector,
     pipeline_version = EXCLUDED.pipeline_version,
     updated_at       = now()
