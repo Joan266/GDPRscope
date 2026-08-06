@@ -128,6 +128,7 @@ def vector_to_pg(embedding: list[float]) -> str:
 # ── Corpus index ───────────────────────────────────────────────────────────────
 
 _corpus_index_cache: dict | None = None
+_corpus_index_mtime: float = 0.0
 
 
 def load_corpus_index() -> dict | None:
@@ -136,17 +137,18 @@ def load_corpus_index() -> dict | None:
 
 
 def _load_corpus_index() -> dict | None:
-    """Loads data/corpus_index.json once per process (cached in memory)."""
-    global _corpus_index_cache
-    if _corpus_index_cache is not None:
+    """Loads data/corpus_index.json, reloading automatically if the file changes on disk."""
+    global _corpus_index_cache, _corpus_index_mtime
+    if not CORPUS_INDEX_PATH.exists():
         return _corpus_index_cache
-    if CORPUS_INDEX_PATH.exists():
-        try:
-            _corpus_index_cache = json.loads(
-                CORPUS_INDEX_PATH.read_text(encoding="utf-8")
-            )
-        except Exception as exc:
-            log.debug("Could not load corpus index: %s", exc)
+    mtime = CORPUS_INDEX_PATH.stat().st_mtime
+    if _corpus_index_cache is not None and mtime == _corpus_index_mtime:
+        return _corpus_index_cache
+    try:
+        _corpus_index_cache = json.loads(CORPUS_INDEX_PATH.read_text(encoding="utf-8"))
+        _corpus_index_mtime = mtime
+    except Exception as exc:
+        log.debug("Could not load corpus index: %s", exc)
     return _corpus_index_cache
 
 
@@ -405,8 +407,9 @@ def search_text_chunks(
     try:
         cur.execute(sql, [safe_query] + params + [safe_query, k])
         return [str(row[0]) for row in cur.fetchall()]
-    except Exception:
-        return []  # fallback: vector search solo
+    except Exception as exc:
+        log.warning("search_text_chunks failed (BM25 fallback to vector only): %s", exc)
+        return []
 
 
 def search_question_chunks(
@@ -584,7 +587,8 @@ def fetch_user_memory(
 ) -> list[dict]:
     try:
         cur.execute(_SQL_USER_MEMORY, (user_id, vector_to_pg(query_vec), limit))
-    except Exception:
+    except Exception as exc:
+        log.warning("fetch_user_memory failed for user %s: %s", user_id, exc)
         return []
 
     return [

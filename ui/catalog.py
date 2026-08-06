@@ -134,7 +134,7 @@ def load_document_detail(doc_id: str):
 
 # ── Helpers ──────────────────────────────────────────────────────────────────────
 
-def fmt_eur(amount):
+def fmt_eur(amount: int | None) -> str:
     if amount is None:
         return "—"
     if amount >= 1_000_000:
@@ -158,7 +158,7 @@ def source_badge(source: str) -> str:
     return f'<span style="background:{color};color:white;padding:2px 8px;border-radius:4px;font-size:0.75em">{label}</span>'
 
 
-def build_source_link(doc: dict) -> str | None:
+def build_source_link(doc: dict) -> tuple[str | None, str | None]:
     """Devuelve el primer URL disponible del documento original."""
     source_urls = doc.get("source_urls")
     if source_urls and isinstance(source_urls, list) and source_urls:
