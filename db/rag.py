@@ -637,6 +637,7 @@ def build_prompt(
     memories: list[dict],
     corpus_index: dict | None = None,
 ) -> tuple[str, str]:
+    import re as _re
     system = _SYSTEM_PROMPT
     if corpus_index:
         auths = ", ".join(
@@ -654,6 +655,28 @@ def build_prompt(
             f"Fine range: {fine_str}. "
             f"Key articles: {arts}."
         )
+
+        # Inject article-level enforcement summaries for compliance/article queries.
+        # Detects article numbers from query text and injects the pre-computed summary.
+        article_summaries = corpus_index.get("article_summaries", {})
+        if article_summaries:
+            # Collect articles mentioned in query + retrieved contexts
+            mentioned: set[str] = set()
+            for m in _re.finditer(r"Art(?:icle)?\.?\s*(\d+)", query, _re.IGNORECASE):
+                mentioned.add(f"Article {m.group(1)}")
+            for ctx in contexts[:3]:
+                for raw in (ctx.get("gdpr_articles") or [])[:2]:
+                    m2 = _re.search(r"Art(?:icle)?\.?\s*(\d+)", raw, _re.IGNORECASE)
+                    if m2:
+                        mentioned.add(f"Article {m2.group(1)}")
+
+            relevant_summaries = [
+                f"## {art} Enforcement Patterns\n{article_summaries[art]['summary']}"
+                for art in sorted(mentioned)
+                if art in article_summaries
+            ]
+            if relevant_summaries:
+                system += "\n\n" + "\n\n".join(relevant_summaries[:3])
 
     context_lines: list[str] = []
     for i, ctx in enumerate(contexts, start=1):
@@ -795,7 +818,19 @@ def save_session(
     return session_id
 
 
-# ── Iterative search helpers ───────────────────────────────────────────────────
+# ── CRAG Evidence Gate ─────────────────────────────────────────────────────────
+
+_EVIDENCE_GATE_PROMPT = """\
+Query: {question}
+
+Retrieved context:
+{context_summary}
+
+Does this context contain specific, directly citable information (case numbers, \
+fine amounts, article violations, factual findings) to answer the query?
+
+Respond with JSON only: {{"score": 0.0-1.0, "reason": "one sentence"}}
+Score guide: 1.0=complete answer in context, 0.65=mostly there, 0.35=partial, 0.0=no relevant info"""
 
 _SUFFICIENCY_PROMPT = """\
 Question: {question}
@@ -843,6 +878,122 @@ def _generate_refined_query(original_query: str, missing: str) -> str:
     if not missing:
         return original_query
     return f"{original_query} {missing}"
+
+
+def _evaluate_evidence_quality(query_text: str, contexts: list[dict]) -> float:
+    """CRAG Evidence Gate — scored 0.0-1.0.
+    >=0.65 CORRECT, 0.35-0.65 AMBIGUOUS, <0.35 INCORRECT.
+    On any failure returns 0.5 (ambiguous = safe default, triggers external search)."""
+    if not ANTHROPIC_API_KEY or not contexts:
+        return 0.0 if not contexts else 0.5
+    try:
+        context_summary = "\n".join(
+            f"- {c.get('title','')[:60]} | Fine: {c.get('fine_amount')} | "
+            f"Articles: {c.get('gdpr_articles', [])} | "
+            f"Snippet: {(c.get('content') or '')[:150]}"
+            for c in contexts[:5]
+        )
+        prompt = _EVIDENCE_GATE_PROMPT.format(
+            question=query_text[:300],
+            context_summary=context_summary,
+        )
+        ac = _get_anthropic_client()
+        msg = ac.messages.create(
+            model=MODEL_ID_LLM,
+            max_tokens=80,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        data = json.loads(raw)
+        score = float(data.get("score", 0.5))
+        log.info("  Evidence Gate reason: %s", data.get("reason", ""))
+        return max(0.0, min(1.0, score))
+    except Exception as exc:
+        log.debug("Evidence Gate failed: %s (defaulting to 0.5)", exc)
+        return 0.5
+
+
+def _search_gdprhub_external(query_text: str, limit: int = 5) -> list[dict]:
+    """Searches GDPRhub MediaWiki API for cases matching the query.
+    Returns list of {title, snippet} dicts. Empty list on failure."""
+    try:
+        import requests as _req
+        gdprhub_api = "https://gdprhub.eu/api.php"
+        headers = {"User-Agent": "JurisMind/1.0 (research@jurismind.dev)"}
+        r = _req.get(
+            gdprhub_api,
+            params={
+                "action":      "query",
+                "list":        "search",
+                "srsearch":    query_text[:200],
+                "srnamespace": "0",
+                "srlimit":     str(limit),
+                "format":      "json",
+            },
+            headers=headers,
+            timeout=10,
+        )
+        r.raise_for_status()
+        results = r.json().get("query", {}).get("search", [])
+        # Filter to decision-like titles only (contain " - ")
+        hits = [
+            {"title": h["title"], "snippet": h.get("snippet", "")}
+            for h in results
+            if " - " in h.get("title", "")
+            and not h["title"].startswith(("Article", "Recital", "GDPR", "Category"))
+        ]
+        log.info("GDPRhub external search: %d hits for '%s'", len(hits), query_text[:60])
+        return hits
+    except Exception as exc:
+        log.warning("GDPRhub external search failed: %s", exc)
+        return []
+
+
+def _ingest_document_on_demand(conn: psycopg.Connection, title: str) -> bool:
+    """Fetches, parses, and upserts a single GDPRhub document by title.
+    Returns True if a new document was inserted (not a duplicate).
+    Idempotent — safe to call for documents already in DB."""
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).parent))
+        from ingest import (  # type: ignore[import]
+            _gdprhub_get, _is_decision,
+            parse_template_fields, extract_english_summary,
+            normalize_gdprhub, upsert_document_and_chunks,
+        )
+
+        data = _gdprhub_get({"action": "parse", "page": title, "prop": "wikitext"})
+        if "error" in data:
+            log.debug("GDPRhub '%s': API error %s", title, data["error"])
+            return False
+        wikitext = data.get("parse", {}).get("wikitext", {}).get("*", "")
+        if not wikitext:
+            return False
+
+        fields  = parse_template_fields(wikitext)
+        summary = extract_english_summary(wikitext)
+        if not _is_decision(title, fields):
+            return False
+
+        doc = normalize_gdprhub(title, fields, summary)
+
+        with conn.cursor() as cur:
+            # Check if already in DB by source_id before upsert
+            cur.execute(
+                "SELECT count(*) FROM documents WHERE source_id = %s AND source = 'gdprhub'",
+                (title,),
+            )
+            already = cur.fetchone()[0] > 0
+            upsert_document_and_chunks(cur, doc)
+
+        log.info("Auto-ingested GDPRhub doc: %s (new=%s)", title, not already)
+        return not already
+
+    except Exception as exc:
+        log.warning("Auto-ingest failed for '%s': %s", title, exc)
+        return False
 
 
 # ── Orchestrator ───────────────────────────────────────────────────────────────
@@ -950,39 +1101,55 @@ def query(
         memories = fetch_user_memory(cur, user_id, query_vec)
         log.info("  → %d memories", len(memories))
 
-    # 4c. Iterative refinement — max 1 extra pass (only in full LLM mode)
-    if not no_llm and ANTHROPIC_API_KEY and contexts:
-        log.info("Evaluating result sufficiency...")
-        sufficient, missing = _evaluate_sufficiency(query_text, contexts)
-        log.info("  Sufficient: %s  |  Missing: '%s'", sufficient, missing)
+    # 4c. CRAG Evidence Gate — scored quality check + GDPRhub fallback
+    if not no_llm and ANTHROPIC_API_KEY:
+        log.info("CRAG Evidence Gate...")
+        evidence_score = _evaluate_evidence_quality(query_text, contexts)
+        log.info("  Evidence Gate score: %.2f", evidence_score)
 
-        if not sufficient and missing:
-            refined_query = _generate_refined_query(query_text, missing)
-            log.info("  Refined query: %s", refined_query)
+        if evidence_score < 0.65:
+            # AMBIGUOUS or INCORRECT — search GDPRhub externally
+            log.info("  Score < 0.65 — searching GDPRhub externally...")
+            external_hits = _search_gdprhub_external(query_text, limit=5)
+            new_titles: list[str] = []
 
-            # Second pass: remove controller pre-filter, use broader search
-            filters_broad = {k: v for k, v in filters.items() if k not in ("doc_ids",)}
-            refined_vec = embed_query(bedrock_client, refined_query)
+            for hit in external_hits:
+                if _ingest_document_on_demand(conn, hit["title"]):
+                    new_titles.append(hit["title"])
 
-            with conn.cursor() as cur2:
-                vec2  = search_vector_chunks(cur2, refined_vec, K_VECTOR, filters_broad)
-                text2 = search_text_chunks(cur2, refined_query, K_TEXT, filters_broad)
-                rrf2_ranked = reciprocal_rank_fusion(vec2, text2)
-                rrf2  = dict(rrf2_ranked)
-                ids2  = [cid for cid, _ in rrf2_ranked[: top_n * 3]]
-                ctx2  = fetch_parent_context(cur2, ids2, rrf2, top_n)
-
-            # Merge: deduplicate by parent_id, append new contexts.
-            # Allow up to top_n + 4 total so second pass always contributes
-            # even when first pass already filled top_n slots.
-            existing_parents = {c["parent_id"] for c in contexts}
-            new_ctx = [c for c in ctx2 if c["parent_id"] not in existing_parents]
-            contexts = (contexts + new_ctx)[:top_n + 4]
-            rrf_scores.update(rrf2)
-            log.info(
-                "  Second pass: +%d new contexts (total %d)",
-                len(new_ctx), len(contexts),
-            )
+            if new_titles:
+                log.info("  Auto-ingested %d new doc(s): %s", len(new_titles), new_titles)
+                # Re-retrieve: BM25 finds new docs immediately (no embedding needed)
+                filters_broad = {k: v for k, v in filters.items() if k not in ("doc_ids",)}
+                with conn.cursor() as cur2:
+                    text2 = search_text_chunks(cur2, query_text, K_TEXT * 2, filters_broad)
+                    case2 = _fetch_chunks_for_case_numbers(cur2, " ".join(new_titles))
+                    rrf2_ranked = reciprocal_rank_fusion(text2, case2 or None)
+                    rrf2 = dict(rrf2_ranked)
+                    ids2 = case2 + [cid for cid, _ in rrf2_ranked[:top_n * 3]
+                                    if cid not in set(case2)]
+                    ctx2 = fetch_parent_context(cur2, ids2, rrf2, top_n)
+                # New docs go first — they're likely more specific
+                existing_parents = {c["parent_id"] for c in contexts}
+                new_ctx = [c for c in ctx2 if c["parent_id"] not in existing_parents]
+                contexts = (new_ctx + contexts)[:top_n + 4]
+                rrf_scores.update(rrf2)
+                log.info("  Merged %d new contexts (total %d)", len(new_ctx), len(contexts))
+            elif evidence_score < 0.35 and not contexts:
+                # INCORRECT and no fallback found — structured abstention
+                latency_ms = int((time.monotonic() - t_start) * 1000)
+                nearest = ", ".join(c["title"] for c in contexts[:3]) if contexts else "none"
+                return QueryResult(
+                    session_id="abstained",
+                    response=(
+                        "Based on the cases in our database, I cannot find sufficient "
+                        "information to answer this question with the required precision. "
+                        f"The most relevant cases found are: {nearest}. "
+                        "Please try a more specific query or different search terms."
+                    ),
+                    citations=_build_citations(contexts),
+                    latency_ms=latency_ms,
+                )
 
     if no_llm:
         latency_ms = int((time.monotonic() - t_start) * 1000)

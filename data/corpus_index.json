@@ -55,5 +55,211 @@
   "sources": {
     "enforcement_tracker": 3202,
     "gdprhub": 1352
+  },
+  "article_summaries": {
+    "Article 5": {
+      "n_cases": 2408,
+      "summary": "# Article 5 GDPR Enforcement Patterns\n\n**Violation Types and Sectors:** Article 5 enforcement is predominantly triggered by failures in lawfulness and transparency (unauthorized marketing communications, undisclosed data sales, and inadequate consent mechanisms), with the financial services sector (banking, insurance) and telecommunications heavily represented—accounting for approximately 60% of the 20 cases, followed by retail and energy sectors. **Fine Ranges:** Penalties span from €100,000 to €5,000,000, with the highest fines concentrated in Spain (AEPD) for large-scale violations involving major financial institutions (BBVA €5,000,000 for unsolicited SMS, Vodafone €3,940,000 for SIM card fraud, CaixaBank €3,500,000 for unauthorized account access). **Notable Patterns:** Mid-tier violations (€200,000-€1,000,000) cluster around data breaches, unauthorized processing by third parties, and failures to honor data subject rights (right to object), while smaller fines (€100,000-€150,000) typically involve isolated incidents of unauthorized disclosure or continued marketing after objection; Spain's AEPD accounts for 16 of 20 cases, suggesting either more aggressive enforcement or higher violation rates in that jurisdiction.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "APD/GBA (Belgium)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 70000,
+        "max": 5000000
+      }
+    },
+    "Article 6": {
+      "n_cases": 1653,
+      "summary": "# Article 6 GDPR Enforcement Patterns\n\nArticle 6 violations are primarily triggered by processing personal data without valid legal basis, including unauthorized use of data for profiling purposes (Amadeus IT Group, €14.4M), failure to obtain proper consent for data transfers (CaixaBank cases totaling €9M combined), and processing data after explicit erasure requests (Vodafone and Orange, €150K each). The financial services and telecommunications sectors dominate enforcement actions, with banks (CaixaBank, Equifax) and telecom providers (Vodafone, Orange) accounting for multiple cases, followed by technology platforms (Google, €10M) and retail/supermarket chains (Mercadona, €3.15M). Fine ranges span from €120,000 for minor marketing violations to €14.4M for large-scale profiling abuses, with mid-tier violations in the €1-6M range representing the most common enforcement outcomes across the dataset. A notable pattern shows Spanish authorities (AEPD) conducting the vast majority of Article 6 cases (17 of 20), with particular focus on telecommunications companies' continued processing after customer opt-out requests and financial institutions' unauthorized data sharing with third parties.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "AP (The Netherlands)",
+        "APD/GBA (Belgium)"
+      ],
+      "fine_range": {
+        "min": 80000,
+        "max": 14400000
+      }
+    },
+    "Article 32": {
+      "n_cases": 1127,
+      "summary": "# Article 32 GDPR Enforcement Patterns\n\nArticle 32 violations are primarily triggered by inadequate technical and organizational security measures, including unauthorized employee access to personal data systems, mishandling of data-containing devices (such as USB drives), and failure to implement access controls—as evidenced in cases involving OLVG Foundation (€440,000), AXA Real Estate (€100,000), and the Belgian financial institution (€100,000). The financial services sector dominates enforcement actions, with banks, insurance companies, and investment firms accounting for the majority of cases (Caixabank €3,500,000, UNICAJA BANCO €400,000, Atrium Lex €100,000), alongside telecommunications and courier services. Fine ranges span from €40,000 to €3,500,000, with the highest penalties imposed on large financial institutions handling substantial volumes of sensitive data, while smaller breaches or limited-scope violations typically result in fines between €55,000 and €300,000. A notable pattern shows that violations involving employee negligence or unauthorized internal access consistently trigger enforcement, with Spain's AEPD accounting for the majority of cases and demonstrating particular scrutiny of data controllers' ability to prevent unauthorized disclosure through inadequate access restrictions.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "APD/GBA (Belgium)",
+        "AP (The Netherlands)",
+        "AZOP (Croatia)"
+      ],
+      "fine_range": {
+        "min": 24182,
+        "max": 3500000
+      }
+    },
+    "Article 13": {
+      "n_cases": 765,
+      "summary": "# Article 13 GDPR Enforcement Summary\n\nArticle 13 violations are primarily triggered by failures to provide adequate privacy information at the point of data collection, including missing or incomplete privacy notices, lack of transparency about data processing purposes, and insufficient disclosure of data subject rights—as evidenced by cases against CaixaBank (€6,000,000), BBVA (€5,000,000), and eMAG (€40,000) where controllers failed to properly inform individuals before collecting personal data. The financial services and retail sectors dominate enforcement actions, with banks (CaixaBank, BBVA), supermarkets (Mercadona), and e-commerce platforms (eMAG) accounting for the largest fines, alongside emerging violations in debt collection and online genealogy services. Fine ranges span dramatically from €9,000 to €6,000,000, with the highest penalties concentrated in Spain's AEPD cases involving major financial institutions and large-scale data collection operations, while smaller fines (€9,000-€100,000) typically address isolated transparency failures by smaller entities or specific processing incidents. A notable pattern shows that violations involving sensitive data categories (facial recognition at Mercadona for €3,150,000, genetic testing at MyHeritage for €20,000) and large-scale unauthorized processing (debt collection agency in Croatia for €2,265,000) trigger",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "APD/GBA (Belgium)",
+        "ANSPDCP (Romania)",
+        "AZOP (Croatia)"
+      ],
+      "fine_range": {
+        "min": 6000,
+        "max": 6000000
+      }
+    },
+    "Article 12": {
+      "n_cases": 698,
+      "summary": "# Article 12 GDPR Enforcement Summary\n\nArticle 12 violations are primarily triggered by failures to provide accessible information to data subjects, with common violations including inadequate access mechanisms to personal data (as seen in the BKR case charging €830,000 for restricted portal access), insufficient transparency in data processing disclosures, and non-compliance with subject access request procedures. The financial services and retail sectors dominate enforcement actions, with banks (BBVA €5,000,000), online retailers (eMAG €40,000), credit institutions (Hora Credit €24,000), and employment agencies (Michael Page €300,000) representing the majority of cases, alongside emerging violations in social media platforms (TikTok €750,000) and surveillance-based businesses. Fine ranges span from €10,000 to €5,000,000, with the highest penalties concentrated in Spain (AEPD cases averaging €1.3 million) and the Netherlands, while Belgian and Romanian authorities typically impose fines between €10,000-€100,000. A notable pattern shows that large-scale data controllers with cross-border operations or those processing data for multiple purposes face substantially higher fines, and violations involving video surveillance systems with facial recognition (Mercadona €3,150,000, AEPD radio-tv €26,000) consistently trigger significant enforcement action across multiple jurisdictions.",
+      "top_authorities": [
+        "APD/GBA (Belgium)",
+        "ANSPDCP (Romania)",
+        "AEPD (Spain)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 5000,
+        "max": 5000000
+      }
+    },
+    "Article 15": {
+      "n_cases": 439,
+      "summary": "# Article 15 GDPR Enforcement Summary\n\n**Violation Types and Triggers:** Article 15 enforcement cases predominantly involve controllers failing to respond to data subject access requests within statutory timeframes or refusing to provide complete information, with specific violations including charging excessive fees for access (Netherlands BKR case: €830,000), inability to demonstrate compliance with access requests (Vodafone Romania), and outright denial or incomplete disclosure of personal data held (Kaufland refusing video footage, EasyJet denying boarding information access).\n\n**Affected Sectors:** Financial services and credit institutions dominate the enforcement landscape, appearing in approximately 40% of cases (BKR, credit companies, Hora Credit, Data Diggers Market Research), followed by telecommunications (Vodafone Romania), retail/supermarkets (Kaufland), and transportation (EasyJet), with smaller representation from healthcare (Actamedica) and security services.\n\n**Fine Ranges:** Penalties span from €3,000 to €830,000, with a clear stratification: major institutional violations in financial services command fines of €50,000-€830,000 (Netherlands, Spain, Belgium), mid-tier violations typically fall between €7,500-€24,000 (Romania and Belgium cases), and smaller breaches result in fines under €10,000, suggesting fine severity correlates with organizational size",
+      "top_authorities": [
+        "ANSPDCP (Romania)",
+        "APD/GBA (Belgium)",
+        "AEPD (Spain)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 1500,
+        "max": 830000
+      }
+    },
+    "Article 9": {
+      "n_cases": 317,
+      "summary": "# Article 9 GDPR Enforcement Patterns\n\n**Violation Types and Sectors:** Article 9 violations are triggered primarily by unauthorized processing of biometric data (facial recognition, fingerprints) and health information across diverse sectors, with notable cases involving retail (Mercadona's facial recognition system, €3,150,000), employment (fingerprint tracking at Dutch company, €725,000), healthcare (medical clinics and physicians recording patients without consent, €2,000 each), and education (Universitat Oberta de Catalunya's facial recognition for exam verification, €20). Temperature monitoring at airports and unauthorized disclosure of health data in cosmetics and financial services also constitute significant violation patterns.\n\n**Fine Range Distribution:** Enforcement fines span dramatically from €20 to €3,150,000, with the highest penalties concentrated in Spain (AEPD cases ranging €950 to €3,150,000) and the Netherlands (€7,500 to €725,000), while Romanian cases cluster at the lower end (€1,000 to €5,000), suggesting substantial variation in enforcement severity across jurisdictions and violation severity.\n\n**Notable Patterns:** The data reveals that biometric processing violations (facial recognition and fingerprints) consistently trigger the largest fines, while unauthorized health data disclosure and recording without consent generate moderate to minimal penalties depending on jurisdiction; employment and retail sectors face the most",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "AP (The Netherlands)",
+        "APDCAT (Catalonia)",
+        "APD/GBA (Belgium)"
+      ],
+      "fine_range": {
+        "min": 10,
+        "max": 3150000
+      }
+    },
+    "Article 58": {
+      "n_cases": 314,
+      "summary": "# Article 58 GDPR Enforcement Patterns\n\n**Violation Types and Triggering Conduct:** Article 58 enforcement is triggered primarily by failures in data subject rights (access requests, deletion, transfer), unauthorized processing or transfers of personal data without consent, and inadequate responses to DPA investigative requests. Examples include Google's improper handling of content removal requests (€10,000,000), Vodafone's unauthorized telephone number transfers (€70,000), and controllers' non-compliance with access rights such as Iberia's failure to provide phone conversation recordings (€40,000).\n\n**Affected Sectors:** Technology and telecommunications companies dominate the enforcement data, with social media platforms (TikTok €750,000), telecommunications providers (Vodafone €70,000 and €50,000), energy utilities (I-DE €200,000, EDP €75,000), and digital service providers (Amazon/SEUR €55,000) representing the majority of cases. Traditional sectors including tourism, media, and financial services appear less frequently but are still subject to enforcement.\n\n**Fine Ranges:** Fines span from €15,000 to €10,000,000, with most cases clustering in the €40,000–€200,000 range for mid-level violations, while mega-fines (€750,000 and €10,000,",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 8000,
+        "max": 10000000
+      }
+    },
+    "Article 17": {
+      "n_cases": 278,
+      "summary": "# Article 17 GDPR Enforcement Summary\n\nArticle 17 violations are primarily triggered by controllers' failure to delete personal data upon explicit erasure requests, non-compliance with objections to direct marketing, and improper handling of search result delisting requests, as evidenced in cases like AEPD PS/00220/2020 (IBERDROLA), PS/00223/2021 (Vodafone), and APD/GBA 37/2020 (Google Belgium). The telecommunications, e-commerce, and technology sectors dominate enforcement actions, with Google LLC, Vodafone, IBERDROLA, and eMAG representing the largest fined entities. Fine amounts vary dramatically by jurisdiction and severity, ranging from €7,500 in Belgium (APD/GBA 46/2022) to €10,000,000 in Spain (AEPD PS/00140/2020 against Google), with mid-range penalties typically between €100,000–€600,000 for substantiated non-compliance. A notable pattern shows Spanish authorities (AEPD) issuing significantly higher penalties than Belgian (APD/GBA) or Romanian (ANSPDCP) counterparts for comparable violations, and continued marketing communications after explicit erasure requests appear as the most frequently cited violation across multiple jurisdictions.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "APD/GBA (Belgium)",
+        "ANSPDCP (Romania)",
+        "AKI (Estonia)"
+      ],
+      "fine_range": {
+        "min": 2000,
+        "max": 10000000
+      }
+    },
+    "Article 25": {
+      "n_cases": 248,
+      "summary": "# Article 25 GDPR Enforcement Patterns\n\nArticle 25 violations are primarily triggered by failures in data protection by design and by default, with the most severe cases involving inadequate safeguards in surveillance systems (facial recognition at Mercadona €3.15M, unauthorized video surveillance €3.5M at Caixabank) and insufficient technical measures in data processing systems (energy company cases €1.5M each, marketing application malfunction €2,000). The financial services, retail, and energy sectors dominate the enforcement data, alongside employment agencies and marketing companies, reflecting high-volume personal data processing environments. Fine ranges span dramatically from €500 for minor surveillance violations to €3.5M for systemic failures, with mid-range penalties of €1-3M concentrated in Spain's AEPD cases involving major corporations, while Belgian and Romanian authorities typically impose fines under €100,000 for smaller-scale violations. A notable pattern shows that Spanish enforcement (13 of 20 cases) targets large-scale commercial operations with significant technical failures, whereas Belgian and Romanian authorities focus on smaller entities and individual controllers, suggesting divergent enforcement strategies based on organizational scale and data processing scope.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "APD/GBA (Belgium)",
+        "ANSPDCP (Romania)"
+      ],
+      "fine_range": {
+        "min": 75,
+        "max": 3500000
+      }
+    },
+    "Article 83": {
+      "n_cases": 234,
+      "summary": "# GDPR Article 83 Enforcement Patterns\n\n**Violation Types and Sectors:** The dataset reveals that telecommunications, utilities, and e-commerce companies dominate Article 83 enforcement, with violations clustering around unauthorized account creation (Vodafone, Telefónica, Lycamobile), failure to honor data deletion requests (Iberdrola, Endesa), and improper consent handling (Naturgy, TikTok). Facial recognition and surveillance systems represent a distinct violation category, exemplified by Mercadona's case. **Fine Ranges:** Fines span dramatically from €50,000 to €10,000,000, with most cases falling between €50,000–€132,000, while only two cases exceeded €3,000,000 (Google LLC at €10,000,000 and Mercadona at €3,150,000), suggesting that scale of processing and systemic violations trigger exponentially higher penalties. **Notable Patterns:** Spain's AEPD accounts for 18 of 20 cases, indicating concentrated enforcement activity in one jurisdiction, and telecommunications companies appear in at least 6 separate cases, suggesting sector-specific vulnerability to Article 83 violations related to consent and account management.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 10000,
+        "max": 10000000
+      }
+    },
+    "Article 14": {
+      "n_cases": 207,
+      "summary": "# Article 14 GDPR Enforcement Summary\n\nArticle 14 violations are primarily triggered by failures to provide required information to data subjects when data is not obtained directly from them, including cases where controllers process data without proper transparency notices, use data for purposes beyond original collection (such as Amadeus IT Group's profiling of travel booking data), or include individuals in databases without consent (as in the Equifax complaint file case). The enforcement data shows Spain's AEPD is the most active enforcer with the highest-value cases, followed by Belgium and the Netherlands, with violations concentrated in the travel/hospitality sector (Amadeus: €14.4M), financial services (CaixaBank: €6M, Equifax: €1M), e-commerce (eMAG: €40,000), and public administration. Fine ranges span dramatically from €2,000 for minor municipal violations (Albeni City Hall CCTV, unsolicited messaging) to €14.4 million for large-scale corporate data misuse, with mid-range enforcement typically between €750,000–€1,000,000 for significant breaches by established companies. A notable pattern shows that larger, multinational corporations face substantially higher penalties (Amadeus, CaixaBank, Equifax, TikTok at €750K), while smaller entities and public bodies receive proportionally lower fines",
+      "top_authorities": [
+        "APD/GBA (Belgium)",
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 40,
+        "max": 14400000
+      }
+    },
+    "Article 24": {
+      "n_cases": 177,
+      "summary": "# Article 24 GDPR Enforcement Summary\n\n**Violation Types and Affected Sectors:** Article 24 enforcement actions in this dataset primarily target failures in accountability mechanisms across diverse sectors including financial services (unauthorized employee access to credit registers), telecommunications (improper data handling in subscription changes), marketing (targeting pregnant mothers without proper safeguards), media (cookie usage without proper documentation), and public utilities (water supply companies). The violations span both data processing governance failures and inadequate documentation of controller responsibilities.\n\n**Fine Ranges and Patterns:** Fines where imposed ranged from €50 to €100,000, with the highest penalty (€100,000) applied to the financial institution's unauthorized employee access case (APD/GBA 56/2021), while marketing and parking regulation companies received €50,000 penalties (APD/GBA 04/2021 and 81/2020). Notably, 11 of the 20 cases resulted in no fine being recorded, suggesting that enforcement increasingly focuses on corrective orders and compliance remediation rather than financial penalties, particularly in cases from 2025-2026.\n\n**Notable Trend:** A significant shift toward non-punitive enforcement is evident in recent years, with all cases from 2026 and most from 2025 resulting in no fines despite documented Article 24 violations, indicating a potential DPA strategy prioritizing accountability",
+      "top_authorities": [
+        "APD/GBA (Belgium)",
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)"
+      ],
+      "fine_range": {
+        "min": 50,
+        "max": 100000
+      }
+    },
+    "Article 21": {
+      "n_cases": 171,
+      "summary": "# Article 21 GDPR Enforcement Summary\n\n**Violation Types and Patterns:** Article 21 enforcement is predominantly triggered by continued direct marketing communications—particularly unsolicited commercial calls, emails, and SMS messages—after data subjects have explicitly exercised their right to object, withdrawn consent, or registered on opt-out lists (Robinson Lists). The Spanish cases (AEPD) show especially egregious patterns, including one instance where a data subject received over 250 unsolicited calls from Vodafone after objecting in 2017, and another involving continued contact despite Robinson List registration.\n\n**Affected Sectors:** The telecommunications and utilities sectors dominate the enforcement data, with Vodafone appearing in three separate cases, alongside violations from Telekom Romania Communications, Iberdrola, and the Belgian National Railway (NMBS). Direct marketing companies and call centers also feature prominently, indicating systematic non-compliance across customer-facing industries relying on marketing communications.\n\n**Fine Ranges:** Penalties vary significantly by jurisdiction and severity, ranging from €2,000 (Romanian DPA for unsolicited emails) to €100,000 (AEPD for Vodafone's continued calls post-objection), with most cases clustering between €4,000–€24,000. Spanish enforcement shows notably higher penalties (€24,000–€100,000) compared to Belgian and",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "APD/GBA (Belgium)"
+      ],
+      "fine_range": {
+        "min": 1000,
+        "max": 100000
+      }
+    },
+    "Article 33": {
+      "n_cases": 170,
+      "summary": "# Article 33 GDPR Enforcement Patterns\n\nArticle 33 violations are primarily triggered by unauthorized access to personal data systems, including credential compromise (Booking.com), third-party misuse of customer information (Air Europa affecting 1.5 million records, Belgian cellphone provider), and inadvertent disclosure of sensitive data (medical records, insurance documentation). The financial services, telecommunications, and travel/hospitality sectors dominate the enforcement data, with Air Europa (€600,000), Booking.com (€475,000), and various banking/credit institutions appearing repeatedly across Spanish, Dutch, Belgian, and Romanian authorities. Fine ranges span dramatically from €5 to €600,000, with a clear clustering pattern: major breaches affecting large populations (Air Europa's 489,000 data subjects) and international platforms receive six-figure penalties, while smaller-scale incidents in healthcare and local services typically result in fines under €25,000. Notable patterns include Romanian DPA's consistent enforcement of lower-tier violations (€3,000–€24,000 range), the absence of fines in high-profile cases (23andMe, Carrefour) despite breach notifications, and a correlation between breach scale and fine severity rather than sector-specific penalties.",
+      "top_authorities": [
+        "AEPD (Spain)",
+        "ANSPDCP (Romania)",
+        "APD/GBA (Belgium)",
+        "AP (The Netherlands)"
+      ],
+      "fine_range": {
+        "min": 5,
+        "max": 600000
+      }
+    }
   }
 }
