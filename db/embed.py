@@ -110,6 +110,8 @@ def _section_filter_sql(sections: list[str] | None, alias: str = "c") -> tuple[s
 
 def count_chunks(conn: psycopg.Connection, sections: list[str] | None = None) -> tuple[int, int]:
     """Devuelve (pendientes, total), opcionalmente filtrado por sección."""
+    # sec_sql only contains hardcoded SQL fragments like "AND section IN (%s, %s)".
+    # User values go exclusively into sec_params. No injection risk.
     sec_sql, sec_params = _section_filter_sql(sections, alias="")
     with conn.cursor() as cur:
         cur.execute(
@@ -126,11 +128,12 @@ def count_chunks(conn: psycopg.Connection, sections: list[str] | None = None) ->
 
 
 def fetch_pending(cur: psycopg.Cursor, batch: int, source: str | None, sections: list[str] | None) -> list[tuple]:
-    src_filter = f"AND d.source = '{source}'" if source else ""
+    # Parameterized source filter — never interpolate user/external values into SQL strings.
+    src_sql, src_params = ("AND d.source = %s", [source]) if source else ("", [])
     sec_sql, sec_params = _section_filter_sql(sections, alias="c")
     cur.execute(
-        _SELECT_PENDING.format(source_filter=src_filter, section_filter=sec_sql),
-        sec_params + [batch],
+        _SELECT_PENDING.format(source_filter=src_sql, section_filter=sec_sql),
+        src_params + sec_params + [batch],
     )
     return cur.fetchall()
 

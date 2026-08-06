@@ -65,20 +65,20 @@ def load_stats():
 @st.cache_data(ttl=30)
 def load_documents(source_filter, authority_filter, year_from, year_to, has_fine, search_text, limit, offset):
     conditions = ["1=1"]
-    params = []
+    filter_params: list = []  # params for WHERE clause only
 
     if source_filter != "All":
         conditions.append("source = %s")
-        params.append(source_filter)
+        filter_params.append(source_filter)
     if authority_filter:
         conditions.append("authority_abbrev ILIKE %s")
-        params.append(f"%{authority_filter}%")
+        filter_params.append(f"%{authority_filter}%")
     if year_from:
         conditions.append("decision_year >= %s")
-        params.append(year_from)
+        filter_params.append(year_from)
     if year_to:
         conditions.append("decision_year <= %s")
-        params.append(year_to)
+        filter_params.append(year_to)
     if has_fine:
         conditions.append("fine_amount IS NOT NULL")
     if search_text:
@@ -86,7 +86,7 @@ def load_documents(source_filter, authority_filter, year_from, year_to, has_fine
             "(title ILIKE %s OR summary_teaser ILIKE %s OR controller_name ILIKE %s)"
         )
         like = f"%{search_text}%"
-        params.extend([like, like, like])
+        filter_params.extend([like, like, like])
 
     where = " AND ".join(conditions)
     sql = f"""
@@ -99,12 +99,12 @@ def load_documents(source_filter, authority_filter, year_from, year_to, has_fine
         ORDER BY decision_year DESC NULLS LAST, ingested_at DESC
         LIMIT %s OFFSET %s
     """
-    params.extend([limit, offset])
 
     with get_conn().cursor() as cur:
-        cur.execute(sql, params)
+        cur.execute(sql, filter_params + [limit, offset])
         rows = cur.fetchall()
-        cur.execute(f"SELECT COUNT(*) FROM documents WHERE {where}", params[:-2])
+        # COUNT uses only filter_params — pagination params (limit/offset) are separate.
+        cur.execute(f"SELECT COUNT(*) FROM documents WHERE {where}", filter_params)
         total = cur.fetchone()[0]
 
     return rows, total
@@ -144,14 +144,17 @@ def fmt_eur(amount):
     return f"€{amount}"
 
 
-def source_badge(source):
+def source_badge(source: str) -> str:
+    import html as _html
     colors = {
         "gdprhub": "#1a6b5c",
         "enforcement_tracker": "#7b3a10",
         "eurlex": "#1a3a6b",
     }
+    labels = {"gdprhub": "GDPRhub", "enforcement_tracker": "Tracker", "eurlex": "EUR-Lex"}
     color = colors.get(source, "#444")
-    label = {"gdprhub": "GDPRhub", "enforcement_tracker": "Tracker", "eurlex": "EUR-Lex"}.get(source, source)
+    # Escape fallback to prevent XSS if DB contains an unexpected source value.
+    label = labels.get(source) or _html.escape(source or "unknown")
     return f'<span style="background:{color};color:white;padding:2px 8px;border-radius:4px;font-size:0.75em">{label}</span>'
 
 
