@@ -193,6 +193,12 @@ with st.sidebar:
     only_fines = st.checkbox("Only cases with fine")
     page_size = st.selectbox("Results per page", [20, 50, 100], index=0)
     st.divider()
+    # Live doc counter — refreshes every 30 s to show auto-ingest growth during demo
+    try:
+        _total, _, _, _ = load_stats()
+        st.metric("Cases in database", f"{_total:,}", help="Grows automatically as you research new cases")
+    except Exception:
+        pass
     st.caption("JurisMind — Hackathon CockroachDB × AWS 2026")
 
 # ── Catalog tab ───────────────────────────────────────────────────────────────────
@@ -433,12 +439,60 @@ with tab_research:
                 st.session_state.rag_result = result
                 st.session_state.rag_error = None
             else:
-                # FASE 2 — Streaming generation
+                # FASE 2 — Evidence Gate + Streaming generation
                 st.markdown("---")
                 st.markdown(f"#### {len(result.citations)} cases found ({retrieval_ms} ms retrieval)")
                 for c in result.citations[:5]:
                     fine_str = f" · {fmt_eur(c.get('fine_amount'))}" if c.get("fine_amount") else ""
                     st.caption(f"- {c.get('title', '—')} | {c.get('authority', '')} | {c.get('year', '')}{fine_str}")
+
+                # CRAG Evidence Gate
+                status_ph = st.empty()
+                status_ph.info("Evaluating evidence quality...")
+                evidence_score = rag_module.evaluate_evidence_quality(
+                    query_text.strip(), result.citations
+                )
+
+                # Score display
+                if evidence_score >= 0.65:
+                    score_label = f"Evidence quality: {evidence_score:.0%} (CORRECT — answering from database)"
+                    status_ph.success(score_label)
+                elif evidence_score >= 0.35:
+                    score_label = f"Evidence quality: {evidence_score:.0%} (AMBIGUOUS — searching GDPRhub for more context)"
+                    status_ph.warning(score_label)
+
+                    # External search + auto-ingest
+                    ext_hits = rag_module.search_gdprhub_external(query_text.strip(), limit=5)
+                    new_titles: list[str] = []
+                    for hit in ext_hits:
+                        if rag_module.ingest_document_on_demand(conn, hit["title"]):
+                            new_titles.append(hit["title"])
+                    if new_titles:
+                        status_ph.success(
+                            f"Added {len(new_titles)} case(s) to database: "
+                            + ", ".join(new_titles[:2])
+                            + (f" (+{len(new_titles)-2} more)" if len(new_titles) > 2 else "")
+                        )
+                        # Invalidate stats cache so sidebar counter updates
+                        load_stats.clear()
+                else:
+                    score_label = f"Evidence quality: {evidence_score:.0%} (LOW — searching GDPRhub)"
+                    status_ph.warning(score_label)
+
+                    ext_hits = rag_module.search_gdprhub_external(query_text.strip(), limit=5)
+                    new_titles = []
+                    for hit in ext_hits:
+                        if rag_module.ingest_document_on_demand(conn, hit["title"]):
+                            new_titles.append(hit["title"])
+                    if new_titles:
+                        status_ph.success(
+                            f"Added {len(new_titles)} case(s) to database from GDPRhub"
+                        )
+                        load_stats.clear()
+                    else:
+                        status_ph.error(
+                            f"Evidence quality: {evidence_score:.0%} — insufficient context in database or GDPRhub"
+                        )
 
                 corpus_index = rag_module.load_corpus_index()
                 system_p, user_p = rag_module.build_prompt(
@@ -452,7 +506,10 @@ with tab_research:
                     )
 
                 latency_total = int((time.monotonic() - t0) * 1000)
-                st.caption(f"Retrieval: {retrieval_ms} ms · Total: {latency_total} ms · Session: (streaming)")
+                st.caption(
+                    f"Retrieval: {retrieval_ms} ms · Total: {latency_total} ms · "
+                    f"Evidence: {evidence_score:.0%}"
+                )
 
                 # Store result with full response for expander display below
                 from dataclasses import replace as _dc_replace

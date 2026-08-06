@@ -22,6 +22,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -111,6 +112,7 @@ def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
     msg = ac.messages.create(
         model=MODEL_ID_LLM,
         max_tokens=150,
+        temperature=0.0,  # deterministic — prevents ranking variance between eval runs
         messages=[{"role": "user", "content": (
             f"Write 2-3 sentences from a GDPR DPA enforcement decision that answers: "
             f"{query_text}\nFocus on {articles}. Write as excerpt, no commentary."
@@ -316,9 +318,8 @@ def _build_filter_clause(filters: dict) -> tuple[str, list]:
         params.append(filters["source"])
 
     if filters.get("gdpr_article"):
-        import re as _re
         art = str(filters["gdpr_article"]).strip()
-        m = _re.search(r'\d+', art)
+        m = re.search(r'\d+', art)
         pattern = f"%{m.group()}%" if m else f"%{art}%"
         clauses.append(
             "AND EXISTS (SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s)"
@@ -427,15 +428,13 @@ def search_question_chunks(
         return []
 
 
-import re as _re
-
-_CASE_NUMBER_PATTERN = _re.compile(
+_CASE_NUMBER_PATTERN = re.compile(
     r'\b(?:'
     r'(?:PS|PD|EXP|E|TD|AN)[-/]\s*\d{4,9}[-/]\s*\d{4}'  # PS/00037/2020, EXP-202406208
     r'|EXP\d{9}'                                            # EXP202406208 (no separator)
     r'|PS-\d{5}-\d{4}'                                      # PS-00304-2024
     r')\b',
-    _re.IGNORECASE,
+    re.IGNORECASE,
 )
 
 
@@ -637,7 +636,6 @@ def build_prompt(
     memories: list[dict],
     corpus_index: dict | None = None,
 ) -> tuple[str, str]:
-    import re as _re
     system = _SYSTEM_PROMPT
     if corpus_index:
         auths = ", ".join(
@@ -662,11 +660,11 @@ def build_prompt(
         if article_summaries:
             # Collect articles mentioned in query + retrieved contexts
             mentioned: set[str] = set()
-            for m in _re.finditer(r"Art(?:icle)?\.?\s*(\d+)", query, _re.IGNORECASE):
+            for m in re.finditer(r"Art(?:icle)?\.?\s*(\d+)", query, re.IGNORECASE):
                 mentioned.add(f"Article {m.group(1)}")
             for ctx in contexts[:3]:
                 for raw in (ctx.get("gdpr_articles") or [])[:2]:
-                    m2 = _re.search(r"Art(?:icle)?\.?\s*(\d+)", raw, _re.IGNORECASE)
+                    m2 = re.search(r"Art(?:icle)?\.?\s*(\d+)", raw, re.IGNORECASE)
                     if m2:
                         mentioned.add(f"Article {m2.group(1)}")
 
@@ -1220,6 +1218,23 @@ def _print_contexts(contexts: list[dict], rrf_scores: dict[str, float]) -> None:
         print(f"    Section   : {ctx.get('section') or 'N/A'}")
         snippet = (ctx["content"] or "")[:300].replace("\n", " ")
         print(f"    Snippet   : {snippet}...")
+
+
+# ── Public CRAG API (for use from ui/catalog.py) ───────────────────────────────
+
+def evaluate_evidence_quality(query_text: str, contexts: list[dict]) -> float:
+    """Public alias for _evaluate_evidence_quality(). See docstring there."""
+    return _evaluate_evidence_quality(query_text, contexts)
+
+
+def search_gdprhub_external(query_text: str, limit: int = 5) -> list[dict]:
+    """Public alias for _search_gdprhub_external(). See docstring there."""
+    return _search_gdprhub_external(query_text, limit)
+
+
+def ingest_document_on_demand(conn: psycopg.Connection, title: str) -> bool:
+    """Public alias for _ingest_document_on_demand(). See docstring there."""
+    return _ingest_document_on_demand(conn, title)
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
