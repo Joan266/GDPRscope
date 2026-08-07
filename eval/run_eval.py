@@ -504,7 +504,7 @@ def evaluate(
             rel_score,   rel_reason   = answer_relevance_score(bedrock_client, question, response, ground_truth)
             legal_score, legal_reason = legal_precision_score(bedrock_client, response, ground_truth)
 
-            result["response"]                = response[:2000]
+            result["response"]                = response[:6000]
             result["llm_ms"]                  = llm_ms
             result["faithfulness"]            = faith_score
             result["faithfulness_reason"]     = faith_reason
