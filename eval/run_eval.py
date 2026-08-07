@@ -193,9 +193,20 @@ def retrieve_top_k(
     # Case-number direct lookup — pin at top with score 1.0
     case_hits = rag_module._fetch_chunks_for_case_numbers(cur, question)
 
+    # Query expansion for conceptual/scenario queries
+    expansion_arms: list[list[str]] = []
+    if is_conceptual and rag_module.ANTHROPIC_API_KEY:
+        variants = rag_module.expand_query(question)
+        for variant in variants:
+            v_vec = rag_module.embed_query(bedrock_client, variant)
+            v_hits = rag_module.search_vector_chunks(cur, v_vec, k * 2, filters)
+            if v_hits:
+                expansion_arms.append(v_hits)
+
     rrf_ranked  = rag_module.reciprocal_rank_fusion(
         vector_hits, text_hits, fine_hits or None,
         question_hits or None, headnote_hits or None,
+        *(arm for arm in expansion_arms),
     )
     rrf_scores  = dict(rrf_ranked)
     if case_hits:

@@ -14,6 +14,7 @@ Uso:
 import json
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -29,6 +30,14 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
+# Normalize article format: "Art. 6 GDPR" → "Article 6 GDPR"
+_ART_RE = re.compile(r"^Art\.\s*", re.IGNORECASE)
+
+
+def _normalize_article(raw: str) -> str:
+    """Normalize 'Art. 6 GDPR' → 'Article 6 GDPR'."""
+    return _ART_RE.sub("Article ", raw).strip()
+
 
 def build_index(conn: psycopg.Connection) -> dict:
     with conn.cursor() as cur:
@@ -43,15 +52,15 @@ def build_index(conn: psycopg.Connection) -> dict:
         )
         year_min, year_max = cur.fetchone()
 
-        # By authority (top 20)
+        # By jurisdiction (clean, no duplicates)
         cur.execute("""
-            SELECT COALESCE(authority_abbrev, authority, 'Unknown'), COUNT(*)
+            SELECT COALESCE(jurisdiction, 'Unknown'), COUNT(*)
             FROM documents
             GROUP BY 1
             ORDER BY 2 DESC
-            LIMIT 20
+            LIMIT 25
         """)
-        authorities: dict = {row[0]: row[1] for row in cur.fetchall()}
+        jurisdictions: dict = {row[0]: row[1] for row in cur.fetchall()}
 
         # Fine stats
         cur.execute("""
@@ -61,15 +70,20 @@ def build_index(conn: psycopg.Connection) -> dict:
         """)
         fine_min, fine_max, docs_with_fine = cur.fetchone()
 
-        # Top GDPR articles (unnest array column)
+        # Top GDPR articles (unnest + normalize in Python)
         cur.execute("""
-            SELECT article, COUNT(*) AS cnt
+            SELECT article
             FROM documents, unnest(gdpr_articles) AS article
-            GROUP BY 1
-            ORDER BY 2 DESC
-            LIMIT 10
         """)
-        top_articles: list[str] = [row[0] for row in cur.fetchall()]
+        article_counts: dict[str, int] = {}
+        for (raw_art,) in cur.fetchall():
+            norm = _normalize_article(raw_art)
+            article_counts[norm] = article_counts.get(norm, 0) + 1
+        top_articles: list[str] = [
+            k for k, _ in sorted(
+                article_counts.items(), key=lambda x: x[1], reverse=True
+            )[:10]
+        ]
 
         # By source
         cur.execute(
@@ -91,7 +105,7 @@ def build_index(conn: psycopg.Connection) -> dict:
     return {
         "total_docs":       total_docs,
         "date_range":       f"{year_min}\u2013{year_max}" if year_min else "unknown",
-        "authorities":      authorities,
+        "jurisdictions":    jurisdictions,
         "fine_range_eur":   {
             "min":           int(fine_min)       if fine_min       else None,
             "max":           int(fine_max)       if fine_max       else None,
@@ -124,7 +138,7 @@ def main() -> None:
     log.info("Escrito en %s", OUTPUT_PATH)
     log.info("  Total docs  : %d", index["total_docs"])
     log.info("  Rango anos  : %s", index["date_range"])
-    log.info("  Authorities : %s", list(index["authorities"].keys())[:5])
+    log.info("  Jurisdictions: %s", list(index["jurisdictions"].keys())[:5])
     fine = index["fine_range_eur"]
     log.info(
         "  Fine range  : EUR %s - EUR %s (%d docs con multa)",

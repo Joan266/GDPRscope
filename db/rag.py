@@ -504,6 +504,37 @@ def search_headnote_chunks(
         return []
 
 
+def expand_query(query_text: str) -> list[str]:
+    """Generates 2 alternative formulations of a conceptual/scenario query.
+    Uses Haiku for cost efficiency (~$0.001 per call).
+    Returns empty list on failure — always safe to skip."""
+    try:
+        ac = _get_anthropic_client()
+        msg = ac.messages.create(
+            model=MODEL_ID_HAIKU,
+            max_tokens=200,
+            temperature=0.0,
+            messages=[{"role": "user", "content": (
+                "Rewrite this GDPR legal query in 2 different ways that would match "
+                "DPA enforcement decisions or court judgments stored in a database. "
+                "Use different keywords, legal terms, or GDPR article references. "
+                "Return ONLY a JSON array of 2 short strings (max 30 words each).\n\n"
+                f"Query: {query_text[:300]}"
+            )}],
+        )
+        raw = msg.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        variants = json.loads(raw.strip())
+        log.info("  Query expansion: %d variants", len(variants))
+        return [str(v)[:300] for v in variants[:2]]
+    except Exception as exc:
+        log.debug("Query expansion failed: %s", exc)
+        return []
+
+
 _CASE_NUMBER_PATTERN = re.compile(
     r'\b(?:'
     r'(?:PS|PD|EXP|E|TD|AN)[-/]\s*\d{4,9}[-/]\s*\d{4}'  # PS/00037/2020, EXP-202406208
@@ -619,11 +650,23 @@ def fetch_parent_context(
             best_row_by_parent[parent_id]   = row
             best_score_by_parent[parent_id] = score
 
-    sorted_rows = sorted(
+    # Document diversity: limit max contexts per document so one verbose doc
+    # doesn't monopolise all slots (fixes cross_jurisdiction & multi-doc queries).
+    MAX_PER_DOC = 2
+    all_sorted = sorted(
         best_row_by_parent.values(),
         key=lambda r: best_score_by_parent.get(str(r[1]), 0.0),
         reverse=True,
-    )[:top_n]
+    )
+    sorted_rows: list[tuple] = []
+    doc_count: dict[str, int] = {}
+    for row in all_sorted:
+        doc_id = str(row[4])  # index 4 = d.id
+        if doc_count.get(doc_id, 0) < MAX_PER_DOC:
+            sorted_rows.append(row)
+            doc_count[doc_id] = doc_count.get(doc_id, 0) + 1
+        if len(sorted_rows) >= top_n:
+            break
 
     results = []
     for row in sorted_rows:
@@ -782,7 +825,7 @@ def build_prompt(
     system = _SYSTEM_PROMPT
     if corpus_index:
         auths = ", ".join(
-            f"{a} ({n})" for a, n in list(corpus_index.get("authorities", {}).items())[:4]
+            f"{a} ({n})" for a, n in list(corpus_index.get("jurisdictions", corpus_index.get("authorities", {})).items())[:4]
         )
         fine_r   = corpus_index.get("fine_range_eur", {})
         fine_min = fine_r.get("min")
@@ -792,7 +835,7 @@ def build_prompt(
         system += (
             f"\n\nDatabase scope: {corpus_index.get('total_docs', '?')} GDPR decisions "
             f"({corpus_index.get('date_range', '?')}). "
-            f"Authorities: {auths}. "
+            f"Jurisdictions: {auths}. "
             f"Fine range: {fine_str}. "
             f"Key articles: {arts}."
         )
@@ -1200,10 +1243,23 @@ def query(
         if case_hits:
             log.info("  Case-number direct hits: %d", len(case_hits))
 
-        # 3. N-way RRF: vector + text + fine-sort + HyPE questions [+ headnotes]
+        # 2f. Query expansion for conceptual/scenario queries — reformulate into
+        #     2 variants and run additional vector searches to bridge semantic gaps.
+        expansion_arms: list[list[str]] = []
+        if is_conceptual and ANTHROPIC_API_KEY:
+            variants = expand_query(query_text)
+            for variant in variants:
+                v_vec = embed_query(bedrock_client, variant)
+                v_hits = search_vector_chunks(cur, v_vec, K_VECTOR, filters)
+                if v_hits:
+                    expansion_arms.append(v_hits)
+                    log.info("  Expansion arm: %d hits for '%s'", len(v_hits), variant[:60])
+
+        # 3. N-way RRF: vector + text + fine-sort + HyPE questions [+ headnotes] [+ expansions]
         rrf_ranked    = reciprocal_rank_fusion(
             vector_hits, text_hits, fine_hits or None,
             question_hits or None, headnote_hits or None,
+            *(arm for arm in expansion_arms),
         )
         rrf_scores    = dict(rrf_ranked)
         # Case-number hits: pin at top with score 1.0 (above any RRF score)
