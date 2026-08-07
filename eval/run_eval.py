@@ -138,6 +138,29 @@ If the AI legitimately states it cannot answer (insufficient context), score 0.5
 Respond with ONLY a JSON object: {{"score": <float>, "reason": "<one sentence>"}}"""
 
 
+_CLAIM_VERIFICATION_PROMPT = """\
+You are a fact-checking expert for legal AI systems.
+
+## Retrieved context (source documents):
+{context}
+
+## AI response:
+{response}
+
+## Task:
+1. Extract every factual claim from the AI response (case names, fine amounts, \
+dates, GDPR articles cited, factual findings, decisions).
+2. For each claim, check if it is SUPPORTED by the retrieved context.
+3. Label each claim as:
+   - "supported" — explicitly stated in the context
+   - "unsupported" — not found in context (could be hallucinated)
+   - "abstention" — the AI explicitly said it cannot answer
+
+Respond with ONLY a JSON object:
+{{"claims": [{{"text": "<claim>", "label": "supported|unsupported|abstention"}}], \
+"supported_ratio": <float 0.0-1.0>}}"""
+
+
 # ── Retrieval helpers ──────────────────────────────────────────────────────────
 
 def retrieve_top_k(
@@ -333,6 +356,52 @@ def legal_precision_score(
     return _call_judge(bedrock_client, prompt)
 
 
+def claim_verification(
+    bedrock_client, contexts: list[dict], response: str,
+) -> tuple[float, list[dict]]:
+    """Claim-level verification: decompose response into claims, check each against context.
+    Returns (supported_ratio, list_of_claims)."""
+    def _ctx_block(i: int, ctx: dict) -> str:
+        fine = ctx.get("fine_amount")
+        fine_str = f"Fine: {ctx.get('fine_currency','EUR')} {fine:,}" if fine else ""
+        arts = ctx.get("gdpr_articles") or []
+        arts_str = f"Articles: {', '.join(arts)}" if arts else ""
+        meta = "  ".join(filter(None, [fine_str, arts_str]))
+        return (
+            f"[{i+1}] {ctx.get('title','')} | {ctx.get('authority','')}\n"
+            + (meta + "\n" if meta else "")
+            + (ctx.get("content") or "")[:600]
+        )
+
+    context_text = "\n\n".join(_ctx_block(i, ctx) for i, ctx in enumerate(contexts[:6]))
+    prompt = _CLAIM_VERIFICATION_PROMPT.format(
+        context=context_text,
+        response=response[:2000],
+    )
+    ac = rag_module._get_anthropic_client()
+    msg = ac.messages.create(
+        model=rag_module.MODEL_ID_LLM,
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    _token_counter["input"] += msg.usage.input_tokens
+    _token_counter["output"] += msg.usage.output_tokens
+    _token_counter["calls"] += 1
+    raw = msg.content[0].text.strip()
+    try:
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        data = json.loads(raw.strip())
+        claims = data.get("claims", [])
+        ratio = float(data.get("supported_ratio", 0.0))
+        return ratio, claims
+    except Exception:
+        log.debug("Claim verification parse failed: %s", raw[:200])
+        return 0.5, []
+
+
 # ── Evaluator ─────────────────────────────────────────────────────────────────
 
 def evaluate(
@@ -398,11 +467,30 @@ def evaluate(
         )
 
         if run_llm:
-            # Generar respuesta
+            # Evidence gate — same as production pipeline
+            evidence_score = 1.0
+            if rag_module.ANTHROPIC_API_KEY:
+                evidence_score = rag_module._evaluate_evidence_quality(question, contexts)
+                result["evidence_score"] = evidence_score
+                log.info("  Evidence Gate: %.2f", evidence_score)
+
+            # Generar respuesta (with evidence-aware prompt)
             llm_t0 = time.monotonic()
             try:
-                system_p, user_p = rag_module.build_prompt(question, contexts, [])
-                response = rag_module.call_llm(bedrock_client, system_p, user_p)
+                if evidence_score < 0.35:
+                    # Abstention — don't call LLM, structured response
+                    nearest = ", ".join(t[:50] for t in retrieved_titles[:3])
+                    response = (
+                        "Based on the cases retrieved from the database, I cannot find "
+                        "sufficient information to answer this question. "
+                        f"The most relevant cases found are: {nearest}. "
+                        "Try searching with different terms or a more specific query."
+                    )
+                else:
+                    system_p, user_p = rag_module.build_prompt(
+                        question, contexts, [], evidence_score=evidence_score
+                    )
+                    response = rag_module.call_llm(bedrock_client, system_p, user_p)
             except Exception as e:
                 log.error("  Error en LLM: %s", e)
                 result["llm_error"] = str(e)
@@ -425,8 +513,16 @@ def evaluate(
             result["legal_precision"]         = legal_score
             result["legal_precision_reason"]  = legal_reason
 
-            log.info("  LLM: %d ms  Faithfulness=%.2f  Answer relevance=%.2f  Legal precision=%.2f",
-                     llm_ms, faith_score, rel_score, legal_score)
+            # Claim-level verification (Level 3)
+            claim_ratio, claims = claim_verification(bedrock_client, contexts, response)
+            result["claim_supported_ratio"] = claim_ratio
+            result["claims"] = claims
+            n_supported = sum(1 for c in claims if c.get("label") == "supported")
+            n_unsupported = sum(1 for c in claims if c.get("label") == "unsupported")
+
+            log.info("  LLM: %d ms  Faith=%.2f  Relev=%.2f  Legal=%.2f  Claims=%d/%d supported",
+                     llm_ms, faith_score, rel_score, legal_score,
+                     n_supported, len(claims))
 
         results.append(result)
 
@@ -486,6 +582,25 @@ def print_report(results: list[dict]) -> None:
         print(f"  Faithfulness        : {avg_faith:.3f}  ({avg_faith*100:.1f}%)")
         print(f"  Answer Relevance    : {avg_rel:.3f}  ({avg_rel*100:.1f}%)")
         print(f"  Legal Precision     : {avg_legal:.3f}  ({avg_legal*100:.1f}%)")
+
+        # Claim-level metrics
+        claim_results = [r for r in llm_results if "claim_supported_ratio" in r]
+        if claim_results:
+            avg_claim = sum(r["claim_supported_ratio"] for r in claim_results) / len(claim_results)
+            total_claims = sum(len(r.get("claims", [])) for r in claim_results)
+            total_supported = sum(
+                sum(1 for c in r.get("claims", []) if c.get("label") == "supported")
+                for r in claim_results
+            )
+            total_unsupported = sum(
+                sum(1 for c in r.get("claims", []) if c.get("label") == "unsupported")
+                for r in claim_results
+            )
+            print(f"\n── Claim-Level Verification ───────────────────────────────")
+            print(f"  Supported ratio     : {avg_claim:.3f}  ({avg_claim*100:.1f}%)")
+            print(f"  Total claims        : {total_claims}")
+            print(f"  Supported           : {total_supported}")
+            print(f"  Unsupported (halluc): {total_unsupported}")
 
     # Per-category breakdown
     categories = sorted({r.get("category", "") for r in valid})

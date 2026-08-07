@@ -821,6 +821,7 @@ def build_prompt(
     contexts: list[dict],
     memories: list[dict],
     corpus_index: dict | None = None,
+    evidence_score: float = 1.0,
 ) -> tuple[str, str]:
     system = _SYSTEM_PROMPT
     if corpus_index:
@@ -861,6 +862,16 @@ def build_prompt(
             ]
             if relevant_summaries:
                 system += "\n\n" + "\n\n".join(relevant_summaries[:3])
+
+    # Low-confidence warning — inject when evidence is weak
+    if evidence_score < 0.50:
+        system += (
+            "\n\nWARNING — LOW EVIDENCE CONFIDENCE (score={:.2f}): The retrieved documents "
+            "may NOT contain the specific information needed to answer this query. "
+            "You MUST respond with the structured abstention message from Rule 3 above "
+            "unless you find EXPLICIT, directly citable facts in the retrieved context. "
+            "Do NOT attempt to construct an answer from tangentially related cases."
+        ).format(evidence_score)
 
     context_lines: list[str] = []
     for i, ctx in enumerate(contexts, start=1):
@@ -1286,6 +1297,7 @@ def query(
         log.info("  → %d memories", len(memories))
 
     # 4c. CRAG Evidence Gate — scored quality check + GDPRhub fallback
+    evidence_score = 0.5  # default (no gate)
     if not no_llm and ANTHROPIC_API_KEY:
         log.info("CRAG Evidence Gate...")
         evidence_score = _evaluate_evidence_quality(query_text, contexts)
@@ -1303,7 +1315,6 @@ def query(
 
             if new_titles:
                 log.info("  Auto-ingested %d new doc(s): %s", len(new_titles), new_titles)
-                # Re-retrieve: BM25 finds new docs immediately (no embedding needed)
                 filters_broad = {k: v for k, v in filters.items() if k not in ("doc_ids",)}
                 with conn.cursor() as cur2:
                     text2 = search_text_chunks(cur2, query_text, K_TEXT * 2, filters_broad)
@@ -1313,14 +1324,17 @@ def query(
                     ids2 = case2 + [cid for cid, _ in rrf2_ranked[:top_n * 3]
                                     if cid not in set(case2)]
                     ctx2 = fetch_parent_context(cur2, ids2, rrf2, top_n)
-                # New docs go first — they're likely more specific
                 existing_parents = {c["parent_id"] for c in contexts}
                 new_ctx = [c for c in ctx2 if c["parent_id"] not in existing_parents]
                 contexts = (new_ctx + contexts)[:top_n + 4]
                 rrf_scores.update(rrf2)
                 log.info("  Merged %d new contexts (total %d)", len(new_ctx), len(contexts))
-            elif evidence_score < 0.35:
-                # INCORRECT — structured abstention with nearest docs for reference
+                # Re-evaluate after merge
+                evidence_score = _evaluate_evidence_quality(query_text, contexts)
+                log.info("  Evidence Gate (post-merge): %.2f", evidence_score)
+
+            # Abstain if still below threshold after all attempts
+            if evidence_score < 0.35:
                 latency_ms = int((time.monotonic() - t_start) * 1000)
                 nearest = ", ".join(c["title"] for c in contexts[:3]) if contexts else "none"
                 return QueryResult(
@@ -1346,7 +1360,7 @@ def query(
         )
 
     # 6. Build prompt
-    system_prompt, user_prompt = build_prompt(query_text, contexts, memories, corpus_index)
+    system_prompt, user_prompt = build_prompt(query_text, contexts, memories, corpus_index, evidence_score)
 
     # 7. LLM
     log.info("Calling %s via Anthropic API...", MODEL_ID_LLM)
