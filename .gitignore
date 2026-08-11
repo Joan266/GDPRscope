@@ -5,3 +5,10 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+*.csv
+.playwright-mcp/
+.claude/
+ref_*.png
+ui_v2_*.png
+SESSION_*.md
+legaltech/
