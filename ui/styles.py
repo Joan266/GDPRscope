@@ -1,5 +1,5 @@
 """
-JurisMind UI — Design tokens and CSS.
+GDPRScope UI — Design tokens and CSS.
 Single source of truth for all visual styling.
 Warm neutral palette, serif headings, monospace numbers.
 """
@@ -196,17 +196,77 @@ h1, h2, h3, .jm-heading {
     border-radius: 0 6px 6px 0;
 }
 
-/* Stats header bar */
-.jm-stats-bar {
+/* ---- GDPRScope compact header ---- */
+.gs-header {
     display: flex;
-    gap: 32px;
-    padding: 12px 0;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 32px;
+    padding: 10px 0 12px;
     border-bottom: 1px solid var(--border-warm);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-.jm-stats-bar .jm-label {
-    margin-bottom: 0;
+.gs-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+}
+
+.gs-logo {
+    font-family: 'Lora', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--header-navy);
+    letter-spacing: -0.02em;
+}
+
+.gs-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.gs-stats {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.gs-stat strong {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.gs-stat-sep {
+    color: var(--border-warm);
+    margin: 0 2px;
+}
+
+/* ---- Section spacing ---- */
+[data-testid="stTabs"] {
+    margin-top: 4px;
+}
+
+/* Space between tab content and charts */
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
+    gap: 1rem;
+}
+
+/* Chart containers — breathing room */
+[data-testid="stVegaLiteChart"],
+[data-testid="stArrowVegaLiteChart"] {
+    background: var(--bg-card);
+    border: 1px solid var(--border-warm);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 /* Sparkline container */

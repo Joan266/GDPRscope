@@ -1,5 +1,5 @@
 """
-JurisMind — GDPR Enforcement Analyzer
+GDPRScope — Enforcement Intelligence Platform
 Streamlit entry point: page config, header, stats, tab routing.
 
 Usage:
@@ -18,13 +18,13 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ui.styles import inject_css
-from ui.views import analyzer, my_dpa, search, compare, trends, case_detail
+from ui.views import intelligence, analyzer, my_dpa, search, compare, trends, case_detail
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # ---- Page config ----
 st.set_page_config(
-    page_title="JurisMind — GDPR Enforcement Analyzer",
+    page_title="GDPRScope — Enforcement Intelligence",
     page_icon="&#9878;",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -61,44 +61,50 @@ def main() -> None:
         )
         return
 
-    # Header
-    st.markdown("# JurisMind")
-    st.markdown("GDPR Enforcement Analyzer with Persistent Memory")
-
-    # Stats bar
+    # Header — compact bar with inline stats
     try:
         conn = get_conn()
         docs, factors, jurisdictions = get_db_stats(conn)
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Enforcement Decisions", f"{docs:,}")
-        c2.metric("Extracted Factors", f"{factors:,}")
-        c3.metric("Jurisdictions", f"{jurisdictions}")
     except Exception as e:
         st.warning(f"DB connection issue: {e}")
         return
 
-    # Disclaimer
-    st.caption(
-        "Based on real enforcement decisions — not theoretical maximums. "
-        "Not legal advice."
+    st.markdown(
+        f'<div class="gs-header">'
+        f'<div class="gs-brand">'
+        f'<span class="gs-logo">GDPRScope</span>'
+        f'<span class="gs-subtitle">Enforcement Intelligence Platform</span>'
+        f'</div>'
+        f'<div class="gs-stats">'
+        f'<span class="gs-stat"><strong>{docs:,}</strong> decisions</span>'
+        f'<span class="gs-stat-sep">·</span>'
+        f'<span class="gs-stat"><strong>{factors:,}</strong> factors</span>'
+        f'<span class="gs-stat-sep">·</span>'
+        f'<span class="gs-stat"><strong>{jurisdictions}</strong> jurisdictions</span>'
+        f'</div>'
+        f'</div>',
+        unsafe_allow_html=True,
     )
 
     # Tabs
     tabs = st.tabs([
-        "Analyzer", "My DPA", "Search", "Compare", "Trends", "Case Detail",
+        "Intelligence", "Analyzer", "My DPA", "Search", "Compare",
+        "Trends", "Case Detail",
     ])
 
     with tabs[0]:
-        analyzer.render(conn)
+        intelligence.render(conn)
     with tabs[1]:
-        my_dpa.render(conn)
+        analyzer.render(conn)
     with tabs[2]:
-        search.render(conn)
+        my_dpa.render(conn)
     with tabs[3]:
-        compare.render(conn)
+        search.render(conn)
     with tabs[4]:
-        trends.render(conn)
+        compare.render(conn)
     with tabs[5]:
+        trends.render(conn)
+    with tabs[6]:
         case_detail.render(conn)
 
 

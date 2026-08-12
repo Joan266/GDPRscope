@@ -62,8 +62,8 @@ def render(conn: psycopg.Connection) -> None:
         "against real enforcement decisions."
     )
 
-    # ---- URL Auto-Profile ----
-    _render_url_section()
+    # ---- Smart Analysis (URL / paste / upload) ----
+    _render_profile_section()
 
     col_form, col_spacer, col_result = st.columns([4, 0.5, 6])
 
@@ -77,30 +77,84 @@ def render(conn: psycopg.Connection) -> None:
             _render_placeholder()
 
 
-def _render_url_section() -> None:
-    """URL input for auto-profiling from privacy policy."""
-    with st.expander("Smart Analysis — paste your company URL", expanded=False):
-        url = st.text_input(
-            "Company URL",
-            placeholder="e.g. https://stripe.com",
+def _extract_text_from_upload(uploaded_file) -> str | None:
+    """Extract text from an uploaded file (.txt or .pdf)."""
+    name = uploaded_file.name.lower()
+    if name.endswith(".txt"):
+        return uploaded_file.read().decode("utf-8", errors="replace")
+    if name.endswith(".pdf"):
+        try:
+            from PyPDF2 import PdfReader  # noqa: WPS433
+        except ImportError:
+            st.error("PyPDF2 not installed. Run `pip install PyPDF2` to enable PDF upload.")
+            return None
+        reader = PdfReader(uploaded_file)
+        pages = [p.extract_text() or "" for p in reader.pages]
+        return "\n".join(pages)
+    st.warning("Unsupported file type. Please upload a .txt or .pdf file.")
+    return None
+
+
+def _apply_profile(profile, label: str) -> None:
+    """Store profile in session state and show success/warning."""
+    if profile:
+        st.session_state["org_profile"] = profile
+        st.success(
+            f"Profile detected: **{profile.company_name or label}** "
+            f"· {profile.jurisdiction or 'Unknown'} "
+            f"· {profile.sector or 'Unknown'}"
+        )
+    else:
+        st.warning("Could not extract profile. Fill the form manually.")
+
+
+def _render_profile_section() -> None:
+    """Smart Analysis — 3 input modes: paste text, upload file, enter URL."""
+    with st.expander("Smart Analysis — auto-fill from your privacy policy", expanded=False):
+        mode = st.radio(
+            "Input method",
+            ["Paste text", "Upload file", "Enter URL"],
+            horizontal=True,
             label_visibility="collapsed",
         )
-        if st.button("Scan Privacy Policy", disabled=not url):
-            with st.spinner("Scanning privacy policy..."):
-                text = scrape_privacy_policy(url)
-                if not text:
-                    st.error("Could not find a privacy policy at that URL.")
-                    return
-                profile = extract_org_profile(text, url)
-                if profile:
-                    st.session_state["org_profile"] = profile
-                    st.success(
-                        f"Profile detected: **{profile.company_name or url}** "
-                        f"· {profile.jurisdiction or 'Unknown'} "
-                        f"· {profile.sector or 'Unknown'}"
-                    )
-                else:
-                    st.warning("Could not extract profile. Fill the form manually.")
+
+        if mode == "Paste text":
+            text = st.text_area(
+                "Privacy policy text",
+                placeholder="Paste your privacy policy text here...",
+                height=150,
+            )
+            if st.button("Analyze Policy", disabled=not text):
+                with st.spinner("Analyzing policy text..."):
+                    profile = extract_org_profile(text, "pasted-document")
+                    _apply_profile(profile, "pasted-document")
+
+        elif mode == "Upload file":
+            uploaded = st.file_uploader(
+                "Upload privacy policy",
+                type=["txt", "pdf"],
+            )
+            if st.button("Analyze Document", disabled=uploaded is None):
+                with st.spinner("Extracting text from document..."):
+                    text = _extract_text_from_upload(uploaded)
+                    if text:
+                        profile = extract_org_profile(text, uploaded.name)
+                        _apply_profile(profile, uploaded.name)
+
+        else:  # Enter URL
+            url = st.text_input(
+                "Company URL",
+                placeholder="e.g. https://stripe.com",
+                label_visibility="collapsed",
+            )
+            if st.button("Scan Privacy Policy", disabled=not url):
+                with st.spinner("Scanning privacy policy..."):
+                    text = scrape_privacy_policy(url)
+                    if not text:
+                        st.error("Could not find a privacy policy at that URL.")
+                        return
+                    profile = extract_org_profile(text, url)
+                    _apply_profile(profile, url)
 
 
 def _render_form() -> SimulationInput | None:
