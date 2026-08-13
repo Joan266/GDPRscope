@@ -69,6 +69,15 @@ def embed_text(text: str) -> list[float]:
     return vec.tolist()
 
 
+def embed_texts_batch(texts: list[str]) -> list[list[float]]:
+    """Batch embedding — 10-30x faster than one-by-one on CPU."""
+    prefixed = [("passage: " + t[:MAX_CHARS]).strip() for t in texts]
+    model = get_model()
+    vecs = model.encode(prefixed, normalize_embeddings=True, batch_size=64,
+                        show_progress_bar=False)
+    return [v.tolist() for v in vecs]
+
+
 def vector_to_pg(embedding: list[float]) -> str:
     """Serializa vector a formato literal de PostgreSQL/CockroachDB VECTOR."""
     return "[" + ",".join(f"{x:.8f}" for x in embedding) + "]"
@@ -86,6 +95,7 @@ WHERE  c.embedding IS NULL
   AND  length(c.content) > 20
 {source_filter}
 {section_filter}
+{fines_filter}
 ORDER BY c.created_at
 LIMIT  %s
 """
@@ -108,31 +118,30 @@ def _section_filter_sql(sections: list[str] | None, alias: str = "c") -> tuple[s
     return f"AND {col} IN ({placeholders})", list(sections)
 
 
-def count_chunks(conn: psycopg.Connection, sections: list[str] | None = None) -> tuple[int, int]:
+def count_chunks(conn: psycopg.Connection, sections: list[str] | None = None,
+                 fines_only: bool = False) -> tuple[int, int]:
     """Devuelve (pendientes, total), opcionalmente filtrado por sección."""
-    # sec_sql only contains hardcoded SQL fragments like "AND section IN (%s, %s)".
-    # User values go exclusively into sec_params. No injection risk.
-    sec_sql, sec_params = _section_filter_sql(sections, alias="")
+    sec_sql, sec_params = _section_filter_sql(sections, alias="c")
+    fines_sql = "AND d.fine_amount > 0" if fines_only else ""
+    base = (f"FROM chunks c JOIN documents d ON d.id = c.document_id "
+            f"WHERE length(coalesce(c.content,'')) > 20 {sec_sql} {fines_sql}")
     with conn.cursor() as cur:
-        cur.execute(
-            f"SELECT count(*) FROM chunks WHERE embedding IS NULL AND length(coalesce(content,'')) > 20 {sec_sql}",
-            sec_params,
-        )
+        cur.execute(f"SELECT count(*) {base} AND c.embedding IS NULL", sec_params)
         pending = cur.fetchone()[0]
-        cur.execute(
-            f"SELECT count(*) FROM chunks WHERE length(coalesce(content,'')) > 20 {sec_sql}",
-            sec_params,
-        )
+        cur.execute(f"SELECT count(*) {base}", sec_params)
         total = cur.fetchone()[0]
     return pending, total
 
 
-def fetch_pending(cur: psycopg.Cursor, batch: int, source: str | None, sections: list[str] | None) -> list[tuple]:
+def fetch_pending(cur: psycopg.Cursor, batch: int, source: str | None,
+                   sections: list[str] | None, fines_only: bool = False) -> list[tuple]:
     # Parameterized source filter — never interpolate user/external values into SQL strings.
     src_sql, src_params = ("AND d.source = %s", [source]) if source else ("", [])
     sec_sql, sec_params = _section_filter_sql(sections, alias="c")
+    fines_sql = "AND d.fine_amount > 0" if fines_only else ""
     cur.execute(
-        _SELECT_PENDING.format(source_filter=src_sql, section_filter=sec_sql),
+        _SELECT_PENDING.format(source_filter=src_sql, section_filter=sec_sql,
+                               fines_filter=fines_sql),
         src_params + sec_params + [batch],
     )
     return cur.fetchall()
@@ -155,7 +164,7 @@ def run(args: argparse.Namespace) -> None:
     else:
         log.info("Embebiendo TODAS las secciones (--sections all)")
 
-    pending, total = count_chunks(conn, sections)
+    pending, total = count_chunks(conn, sections, args.fines_only)
     done = total - pending
     log.info("Chunks: %d total — %d ya embebidos — %d pendientes", total, done, pending)
 
@@ -178,28 +187,34 @@ def run(args: argparse.Namespace) -> None:
 
     with conn.cursor() as cur:
         while True:
-            rows = fetch_pending(cur, args.batch_size, args.source, sections)
+            rows = fetch_pending(cur, args.batch_size, args.source, sections, args.fines_only)
             if not rows:
                 break
 
-            batch_updates: list[tuple] = []
-
+            # Prepare enriched texts for batch encoding
+            enriched_texts: list[str] = []
+            row_meta: list[tuple] = []  # (chunk_id, source, section)
             for chunk_id, content, chunk_type, section, source, title, controller, articles in rows:
-                try:
-                    # Inyectar contexto del documento para distinguir entidades específicas
-                    articles_str = ", ".join(articles) if articles else ""
-                    meta_prefix = " | ".join(filter(None, [title, controller, articles_str]))
-                    enriched = f"{meta_prefix}\n{content}" if meta_prefix else content
-                    vector    = embed_text(enriched)
-                    vector_pg = vector_to_pg(vector)
-                    batch_updates.append((vector_pg, MODEL_NAME, EMBEDDING_VERSION, chunk_id))
-                    n_ok += 1
-                except Exception as e:
-                    log.warning("chunk %s [%s/%s]: ERROR — %s", chunk_id, source, section, e)
-                    n_err += 1
-                    continue
+                articles_str = ", ".join(articles) if articles else ""
+                meta_prefix = " | ".join(filter(None, [title, controller, articles_str]))
+                enriched = f"{meta_prefix}\n{content}" if meta_prefix else content
+                enriched_texts.append(enriched)
+                row_meta.append((chunk_id, source, section))
 
-            # Actualizar en batch
+            # Batch encode all texts at once (10-30x faster than one-by-one)
+            try:
+                vectors = embed_texts_batch(enriched_texts)
+            except Exception as e:
+                log.warning("Batch encode failed (%d texts): %s", len(enriched_texts), e)
+                n_err += len(enriched_texts)
+                continue
+
+            batch_updates: list[tuple] = []
+            for (chunk_id, source, section), vector in zip(row_meta, vectors):
+                vector_pg = vector_to_pg(vector)
+                batch_updates.append((vector_pg, MODEL_NAME, EMBEDDING_VERSION, chunk_id))
+                n_ok += 1
+
             if batch_updates:
                 cur.executemany(_UPDATE_CHUNK, batch_updates)
 
@@ -234,6 +249,8 @@ def main() -> None:
     parser.add_argument("--sections", default="teaser,facts,dispute,headnote",
                         help="Secciones a embeber, separadas por coma. "
                              "'all' = sin filtro (default: teaser,facts,dispute,headnote)")
+    parser.add_argument("--fines-only", action="store_true",
+                        help="Solo embeber chunks de documentos con fine_amount > 0")
     args = parser.parse_args()
     run(args)
 

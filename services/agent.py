@@ -295,6 +295,16 @@ def create_tools(conn: psycopg.Connection) -> list:
         if not contexts:
             return "No matching precedents found for this query."
 
+        # Compute retrieval confidence from top scores
+        top_scores = sorted(rrf_scores.values(), reverse=True)[:3]
+        avg_top = sum(top_scores) / len(top_scores) if top_scores else 0
+        if avg_top >= 0.6:
+            confidence = "HIGH"
+        elif avg_top >= 0.3:
+            confidence = "MEDIUM"
+        else:
+            confidence = "LOW"
+
         # Format results
         results = []
         for i, ctx in enumerate(contexts, 1):
@@ -308,7 +318,16 @@ def create_tools(conn: psycopg.Connection) -> list:
                 f"   Outcome: {ctx.get('outcome', 'N/A')}"
             )
 
-        return f"Found {len(contexts)} matching precedents:\n\n" + "\n\n".join(results)
+        header = f"Found {len(contexts)} precedents (relevance: {confidence}):\n\n"
+        footer = ""
+        if confidence == "LOW":
+            footer = (
+                "\n\n⚠️ LOW relevance — results may not match the query well. "
+                "Consider: (1) rephrasing with different terms, "
+                "(2) using search_by_article or search_by_entity instead, "
+                "(3) trying broader/narrower keywords."
+            )
+        return header + "\n\n".join(results) + footer
 
     @tool
     def search_by_article(

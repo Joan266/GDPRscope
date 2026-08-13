@@ -18,7 +18,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ui.styles import inject_css
-from ui.views import intelligence, analyzer, my_dpa, search, compare, trends, case_detail
+from ui.views import intelligence, analyzer, my_dpa, search, compare, trends, case_detail, research
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
@@ -88,23 +88,25 @@ def main() -> None:
 
     # Tabs
     tabs = st.tabs([
-        "Intelligence", "Analyzer", "My DPA", "Search", "Compare",
-        "Trends", "Case Detail",
+        "Research", "Intelligence", "Analyzer", "My DPA", "Search",
+        "Compare", "Trends", "Case Detail",
     ])
 
     with tabs[0]:
-        intelligence.render(conn)
+        research.render(conn)
     with tabs[1]:
-        analyzer.render(conn)
+        intelligence.render(conn)
     with tabs[2]:
-        my_dpa.render(conn)
+        analyzer.render(conn)
     with tabs[3]:
-        search.render(conn)
+        my_dpa.render(conn)
     with tabs[4]:
-        compare.render(conn)
+        search.render(conn)
     with tabs[5]:
-        trends.render(conn)
+        compare.render(conn)
     with tabs[6]:
+        trends.render(conn)
+    with tabs[7]:
         case_detail.render(conn)
 
 

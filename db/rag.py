@@ -30,18 +30,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import anthropic
+import openai
 import psycopg
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
-DATABASE_URL      = os.environ.get("DATABASE_URL", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-MODEL_NAME_EMBED  = "intfloat/e5-large-v2"    # 1024 dims, local
-MODEL_ID_LLM      = "claude-sonnet-4-6"        # Anthropic API directa — generación principal
-MODEL_ID_HAIKU    = "claude-haiku-4-5-20251001"  # Clasificación/overhead — 10x más barato
+DATABASE_URL       = os.environ.get("DATABASE_URL", "")
+ANTHROPIC_API_KEY  = os.environ.get("ANTHROPIC_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+MODEL_NAME_EMBED   = "intfloat/e5-large-v2"    # 1024 dims, local
+MODEL_ID_LLM       = "claude-sonnet-4-6"        # Anthropic API directa — generación principal
+MODEL_ID_HAIKU     = "claude-haiku-4-5-20251001"  # Clasificación/overhead — 10x más barato
+MODEL_ID_ROUTER    = "moonshotai/kimi-k2"       # OpenRouter fallback — intent/HyDE/expansion
 EMBED_DIMS        = 1024
-K_VECTOR          = 20    # chunks por rama de búsqueda
-K_TEXT            = 20
+K_VECTOR          = 50    # chunks por rama de búsqueda (increased from 20 for better recall)
+K_TEXT            = 30
 K_MEMORY          = 5     # memorias de usuario a recuperar
 RRF_K             = 60    # constante RRF estándar
 TOP_N_CONTEXT     = 8     # chunks padre enviados al LLM tras RRF
@@ -109,20 +112,34 @@ def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
     """HyDE: generates a hypothetical GDPR decision excerpt, then embeds it as a passage.
     Improves retrieval for article_lookup queries by producing an embedding closer
     to real decision chunks."""
-    ac = _get_anthropic_client()
     articles = ", ".join(intent.gdpr_articles[:3]) if intent.gdpr_articles else "GDPR"
-    msg = ac.messages.create(
-        model=MODEL_ID_HAIKU,
+    hypothetical = _call_light_llm(
+        f"Write 2-3 sentences from a GDPR DPA enforcement decision that answers: "
+        f"{query_text}\nFocus on {articles}. Write as excerpt, no commentary.",
         max_tokens=150,
-        temperature=0.0,  # deterministic — prevents ranking variance between eval runs
-        messages=[{"role": "user", "content": (
-            f"Write 2-3 sentences from a GDPR DPA enforcement decision that answers: "
-            f"{query_text}\nFocus on {articles}. Write as excerpt, no commentary."
-        )}],
     )
-    log.debug("HyDE tokens: %d in / %d out", msg.usage.input_tokens, msg.usage.output_tokens)
-    hypothetical = msg.content[0].text.strip()
-    # HyDE: embed as passage (not query) — synthetic doc should match stored passage embeddings
+    if not hypothetical:
+        raise RuntimeError("LLM call failed for HyDE")
+    text = ("passage: " + hypothetical[:MAX_CHARS_QUERY]).strip()
+    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
+
+
+def hyde_headnote(query_text: str) -> list[float]:
+    """HyDE variant for conceptual/scenario queries: generates a hypothetical
+    headnote (legal principle summary), then embeds it as a passage.
+    Headnotes are terse legal summaries like 'The DPA found that the controller
+    violated Art. 32 GDPR by failing to implement adequate security measures.'
+    This embedding is closer to stored headnote chunks than a raw user query."""
+    hypothetical = _call_light_llm(
+        "Write a 2-sentence legal headnote for a GDPR enforcement decision "
+        "that would answer this question. Write as a terse DPA summary, "
+        "starting with 'The DPA found that...' or 'The controller...'.\n\n"
+        f"Question: {query_text[:300]}",
+        max_tokens=120,
+    )
+    if not hypothetical:
+        raise RuntimeError("LLM call failed for HyDE-headnote")
+    log.debug("HyDE-headnote: %s", hypothetical[:100])
     text = ("passage: " + hypothetical[:MAX_CHARS_QUERY]).strip()
     return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
@@ -213,18 +230,13 @@ Query: """
 
 
 def extract_intent(query_text: str) -> QueryIntent | None:
-    """Calls Claude to extract structured search parameters from the query.
+    """Calls LLM to extract structured search parameters from the query.
+    Uses OpenRouter (Kimi K2) or Anthropic Haiku as fallback.
     Returns None on any failure — always safe to skip."""
     try:
-        ac = _get_anthropic_client()
-        msg = ac.messages.create(
-            model=MODEL_ID_HAIKU,
-            max_tokens=150,
-            temperature=0.0,
-            messages=[{"role": "user", "content": _INTENT_PROMPT + query_text}],
-        )
-        log.debug("Intent tokens: %d in / %d out", msg.usage.input_tokens, msg.usage.output_tokens)
-        raw = msg.content[0].text.strip()
+        raw = _call_light_llm(_INTENT_PROMPT + query_text, max_tokens=200)
+        if not raw:
+            return None
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -440,6 +452,83 @@ ORDER BY c.embedding <=> %s::VECTOR({dims})
 LIMIT  %s
 """
 
+_SQL_VECTOR_SECTION = """
+SELECT c.id
+FROM   chunks c
+JOIN   documents d ON d.id = c.document_id
+WHERE  c.chunk_type = 'child'
+  AND  c.embedding  IS NOT NULL
+  AND  c.section    = %s
+  {filter_clause}
+ORDER BY c.embedding <=> %s::VECTOR({dims})
+LIMIT  %s
+"""
+
+
+# ── Section-aware routing ─────────────────────────────────────────────────────
+
+# Query types derived from intent analysis
+QUERY_TYPE_ENTITY       = "entity"         # about a specific controller/company
+QUERY_TYPE_ARTICLE      = "article"        # about a GDPR article
+QUERY_TYPE_CONCEPTUAL   = "conceptual"     # abstract legal concept
+QUERY_TYPE_SCENARIO     = "scenario"       # hypothetical fact pattern
+QUERY_TYPE_FINE_SORT    = "fine_sort"      # highest/largest fine queries
+QUERY_TYPE_CROSS_JURIS  = "cross_juris"   # comparing across jurisdictions
+
+# Section routing: query_type → (sections to search, K per section)
+SECTION_ROUTING: dict[str, list[tuple[str, int]]] = {
+    QUERY_TYPE_ENTITY:     [("facts", 20), ("teaser", 20)],
+    QUERY_TYPE_ARTICLE:    [("headnote", 20), ("holding", 20), ("dispute", 10)],
+    QUERY_TYPE_CONCEPTUAL: [("headnote", 25), ("dispute", 15), ("holding", 10)],
+    QUERY_TYPE_SCENARIO:   [("headnote", 20), ("holding", 20), ("facts", 10)],
+    QUERY_TYPE_FINE_SORT:  [("teaser", 20), ("facts", 10)],
+    QUERY_TYPE_CROSS_JURIS:[("headnote", 20), ("holding", 20), ("teaser", 10)],
+}
+
+
+def classify_query_type(intent: "QueryIntent | None", query_text: str) -> str:
+    """Classify query into a type for section-aware routing.
+    Uses already-extracted intent to avoid extra LLM calls."""
+    if intent:
+        if intent.controller_name:
+            return QUERY_TYPE_ENTITY
+        if intent.sort_by == "fine_desc":
+            return QUERY_TYPE_FINE_SORT
+        if intent.gdpr_articles:
+            return QUERY_TYPE_ARTICLE
+    # Heuristic for cross-jurisdiction: mentions comparing countries
+    cross_patterns = r'\b(compar|across|between|differ|countries|jurisdictions)\b'
+    if re.search(cross_patterns, query_text, re.I):
+        return QUERY_TYPE_CROSS_JURIS
+    # Heuristic for scenario: hypothetical phrasing
+    scenario_patterns = r'\b(what if|imagine|suppose|scenario|would.*be fined|company that|if a company)\b'
+    if re.search(scenario_patterns, query_text, re.I):
+        return QUERY_TYPE_SCENARIO
+    return QUERY_TYPE_CONCEPTUAL
+
+
+def search_vector_by_sections(
+    cur: "psycopg.Cursor",
+    query_vec: list[float],
+    sections: list[tuple[str, int]],
+    filters: dict,
+) -> dict[str, list[str]]:
+    """Run vector search filtered by specific sections.
+    Returns dict mapping section name → list of chunk IDs."""
+    results: dict[str, list[str]] = {}
+    clause, params = _build_filter_clause(filters)
+    sql = _SQL_VECTOR_SECTION.format(filter_clause=clause, dims=EMBED_DIMS)
+    vec_pg = vector_to_pg(query_vec)
+    for section, k in sections:
+        try:
+            cur.execute(sql, [section] + params + [vec_pg, k])
+            hits = [str(row[0]) for row in cur.fetchall()]
+            if hits:
+                results[section] = hits
+        except Exception as exc:
+            log.debug("section search '%s' failed: %s", section, exc)
+    return results
+
 
 def search_vector_chunks(
     cur: psycopg.Cursor, query_vec: list[float], k: int, filters: dict
@@ -506,23 +595,18 @@ def search_headnote_chunks(
 
 def expand_query(query_text: str) -> list[str]:
     """Generates 2 alternative formulations of a conceptual/scenario query.
-    Uses Haiku for cost efficiency (~$0.001 per call).
     Returns empty list on failure — always safe to skip."""
     try:
-        ac = _get_anthropic_client()
-        msg = ac.messages.create(
-            model=MODEL_ID_HAIKU,
+        raw = _call_light_llm(
+            "Rewrite this GDPR legal query in 2 different ways that would match "
+            "DPA enforcement decisions or court judgments stored in a database. "
+            "Use different keywords, legal terms, or GDPR article references. "
+            "Return ONLY a JSON array of 2 short strings (max 30 words each).\n\n"
+            f"Query: {query_text[:300]}",
             max_tokens=200,
-            temperature=0.0,
-            messages=[{"role": "user", "content": (
-                "Rewrite this GDPR legal query in 2 different ways that would match "
-                "DPA enforcement decisions or court judgments stored in a database. "
-                "Use different keywords, legal terms, or GDPR article references. "
-                "Return ONLY a JSON array of 2 short strings (max 30 words each).\n\n"
-                f"Query: {query_text[:300]}"
-            )}],
         )
-        raw = msg.content[0].text.strip()
+        if not raw:
+            return []
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -984,6 +1068,7 @@ def build_prompt(
 # ── LLM call (Anthropic API directa) ─────────────────────────────────────────
 
 _anthropic_client = None
+_openrouter_client = None
 
 
 def _get_anthropic_client() -> anthropic.Anthropic:
@@ -991,6 +1076,35 @@ def _get_anthropic_client() -> anthropic.Anthropic:
     if _anthropic_client is None:
         _anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY or None)
     return _anthropic_client
+
+
+def _get_openrouter_client() -> openai.OpenAI:
+    global _openrouter_client
+    if _openrouter_client is None:
+        _openrouter_client = openai.OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=OPENROUTER_API_KEY,
+        )
+    return _openrouter_client
+
+
+def _call_light_llm(prompt: str, max_tokens: int = 200) -> str | None:
+    """Call a lightweight LLM for intent/HyDE/expansion tasks.
+    Uses OpenRouter (Kimi K2) if available, falls back to Anthropic Haiku."""
+    if OPENROUTER_API_KEY:
+        try:
+            client = _get_openrouter_client()
+            resp = client.chat.completions.create(
+                model=MODEL_ID_ROUTER,
+                max_tokens=max_tokens,
+                temperature=0.0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return resp.choices[0].message.content.strip()
+        except Exception as exc:
+            log.debug("OpenRouter call failed: %s", exc)
+    # Anthropic fallback disabled — no credit, each 400 wastes ~1s
+    return None
 
 
 def call_llm(client, system_prompt: str, user_prompt: str) -> str:
@@ -1237,8 +1351,9 @@ def query(
 
     # 0. Corpus index + intent extraction
     corpus_index = _load_corpus_index()
+    _has_llm = bool(OPENROUTER_API_KEY or ANTHROPIC_API_KEY)
     intent: QueryIntent | None = None
-    if ANTHROPIC_API_KEY:
+    if _has_llm:
         log.info("Extracting query intent...")
         intent = extract_intent(query_text)
         if intent:
@@ -1249,20 +1364,34 @@ def query(
                 intent.gdpr_articles, intent.jurisdiction,
             )
 
-    # 1. Embed query (HyDE only for article_lookup queries)
+    # 1. Classify query type for section-aware routing
+    query_type = classify_query_type(intent, query_text)
+    is_conceptual = query_type in (QUERY_TYPE_CONCEPTUAL, QUERY_TYPE_SCENARIO,
+                                   QUERY_TYPE_CROSS_JURIS, QUERY_TYPE_ARTICLE)
+    log.info("Query type: %s (section-aware routing)", query_type)
+
+    # 1b. Embed query — HyDE headnote for conceptual/scenario, HyDE article for article_lookup
     log.info("Embedding query...")
-    if intent and intent.gdpr_articles and ANTHROPIC_API_KEY:
+    if query_type in (QUERY_TYPE_CONCEPTUAL, QUERY_TYPE_SCENARIO) and _has_llm:
+        log.info("  Using HyDE-headnote (conceptual/scenario query)")
+        try:
+            hyde_vec = hyde_headnote(query_text)
+        except Exception as exc:
+            log.debug("HyDE-headnote failed: %s", exc)
+            hyde_vec = None
+    elif query_type == QUERY_TYPE_ARTICLE and intent and intent.gdpr_articles and _has_llm:
         log.info("  Using HyDE (article_lookup detected: %s)", intent.gdpr_articles)
         try:
-            query_vec = hyde_embed(query_text, intent)
+            hyde_vec = hyde_embed(query_text, intent)
         except Exception as exc:
-            log.debug("HyDE failed, falling back to direct embed: %s", exc)
-            query_vec = embed_query(bedrock_client, query_text)
+            log.debug("HyDE failed: %s", exc)
+            hyde_vec = None
     else:
-        query_vec = embed_query(bedrock_client, query_text)
+        hyde_vec = None
+    query_vec = embed_query(bedrock_client, query_text)
 
     with conn.cursor() as cur:
-        # 1b. Controller pre-filter: if intent has a specific company/entity,
+        # 1c. Controller pre-filter: if intent has a specific company/entity,
         #     find matching doc IDs and restrict hybrid search to those docs.
         if intent and intent.controller_name:
             doc_ids = _find_controller_docs(cur, intent.controller_name)
@@ -1273,57 +1402,79 @@ def query(
                     len(doc_ids), intent.controller_name,
                 )
 
-        # 2. Hybrid search
-        log.info("Vector search (C-SPANN)...")
-        vector_hits = search_vector_chunks(cur, query_vec, K_VECTOR, filters)
-        log.info("  → %d vector hits", len(vector_hits))
+        # 2. Section-aware hybrid search
+        target_sections = SECTION_ROUTING.get(query_type, [("holding", 10), ("headnote", 10)])
+        log.info("Section routing: %s", [(s, k) for s, k in target_sections])
 
+        # 2a. Section-filtered vector search (primary arm — uses HyDE vec if available)
+        search_vec = hyde_vec if hyde_vec is not None else query_vec
+        section_results = search_vector_by_sections(cur, search_vec, target_sections, filters)
+        for sec, hits in section_results.items():
+            log.info("  Section '%s': %d hits", sec, len(hits))
+
+        # 2b. Unfiltered vector search (secondary arm — catches cross-section matches)
+        vector_hits = search_vector_chunks(cur, query_vec, K_VECTOR, filters)
+        log.info("  Unfiltered vector: %d hits", len(vector_hits))
+
+        # 2c. Text search (tsvector BM25)
         log.info("Text search (tsvector)...")
         text_hits = search_text_chunks(cur, query_text, K_TEXT, filters)
         log.info("  → %d text hits", len(text_hits))
 
-        # 2b. Fine-sort injection
+        # 2d. Fine-sort injection
         fine_hits: list[str] = []
         if intent and intent.sort_by == "fine_desc":
             fine_hits = _fetch_fine_sorted_chunks(cur, K_VECTOR, filters)
             log.info("  Fine-sort injection: %d chunks", len(fine_hits))
 
-        # 2c. HyPE question arm — separate vector search against enrichment chunks
+        # 2e. HyPE question arm — separate vector search against enrichment chunks
         question_hits = search_question_chunks(cur, query_vec, K_VECTOR, filters)
         if question_hits:
             log.info("  HyPE question hits: %d", len(question_hits))
 
-        # 2d. Headnote arm — legal principles for conceptual queries.
-        #     Only activate when no specific controller/sort is detected,
-        #     otherwise the extra RRF arm dilutes fine_sort and controller signals.
-        headnote_hits: list[str] = []
-        is_conceptual = not (intent and (intent.controller_name or intent.sort_by))
-        if is_conceptual:
-            headnote_hits = search_headnote_chunks(cur, query_vec, K_VECTOR, filters)
-            if headnote_hits:
-                log.info("  Headnote hits: %d (conceptual query)", len(headnote_hits))
-
-        # 2e. Case-number direct lookup — guarantees explicit case refs are retrieved
+        # 2f. Case-number direct lookup — guarantees explicit case refs are retrieved
         case_hits = _fetch_chunks_for_case_numbers(cur, query_text)
         if case_hits:
             log.info("  Case-number direct hits: %d", len(case_hits))
 
-        # 2f. Query expansion for conceptual/scenario queries — reformulate into
-        #     2 variants and run additional vector searches to bridge semantic gaps.
+        # 2g. Soft-filter arms — jurisdiction + article as separate RRF arms
+        #     These don't replace the main search; they ADD boosted candidates
+        #     from the filtered space so relevant docs surface higher in RRF.
+        soft_arms: list[list[str]] = []
+        if intent and intent.jurisdiction:
+            soft_filters = {**filters, "jurisdiction": intent.jurisdiction}
+            soft_juris = search_vector_chunks(cur, search_vec, 15, soft_filters)
+            if soft_juris:
+                soft_arms.append(soft_juris)
+                log.info("  Soft-filter jurisdiction='%s': %d hits", intent.jurisdiction, len(soft_juris))
+        if intent and intent.gdpr_articles:
+            for art in intent.gdpr_articles[:2]:
+                soft_filters = {**filters, "gdpr_article": art}
+                soft_art = search_vector_chunks(cur, search_vec, 15, soft_filters)
+                if soft_art:
+                    soft_arms.append(soft_art)
+                    log.info("  Soft-filter article='%s': %d hits", art, len(soft_art))
+
+        # 2h. Query expansion for conceptual/scenario queries
         expansion_arms: list[list[str]] = []
-        if is_conceptual and ANTHROPIC_API_KEY:
+        if is_conceptual and _has_llm:
             variants = expand_query(query_text)
             for variant in variants:
                 v_vec = embed_query(bedrock_client, variant)
-                v_hits = search_vector_chunks(cur, v_vec, K_VECTOR, filters)
-                if v_hits:
-                    expansion_arms.append(v_hits)
-                    log.info("  Expansion arm: %d hits for '%s'", len(v_hits), variant[:60])
+                # Expansion also uses section-filtered search
+                v_section_results = search_vector_by_sections(cur, v_vec, target_sections, filters)
+                for sec, hits in v_section_results.items():
+                    if hits:
+                        expansion_arms.append(hits)
+                log.info("  Expansion: %d arms for '%s'", len(v_section_results), variant[:60])
 
-        # 3. N-way RRF: vector + text + fine-sort + HyPE questions [+ headnotes] [+ expansions]
+        # 3. N-way RRF: section + unfiltered + text + fine + HyPE + soft-filters + expansions
+        section_arms = list(section_results.values())
         rrf_ranked    = reciprocal_rank_fusion(
+            *section_arms,
             vector_hits, text_hits, fine_hits or None,
-            question_hits or None, headnote_hits or None,
+            question_hits or None,
+            *(arm for arm in soft_arms),
             *(arm for arm in expansion_arms),
         )
         rrf_scores    = dict(rrf_ranked)
@@ -1335,24 +1486,23 @@ def query(
                                      if cid not in set(case_hits)]
         log.info("RRF: %d unique chunks (using top %d as candidates)", len(rrf_ranked), len(top_child_ids))
 
-        # 3b. Cross-encoder reranking for conceptual/scenario queries
-        if is_conceptual:
-            non_pinned = [cid for cid in top_child_ids if cid not in set(case_hits)]
-            if len(non_pinned) > top_n:
-                log.info("Cross-encoder reranking %d candidates...", len(non_pinned))
-                reranked = rerank_with_cross_encoder(
-                    cur, query_text, non_pinned[:20], top_n=top_n * 2,
-                )
-                if reranked:
-                    reranked_ids = [cid for cid, _ in reranked]
-                    top_child_ids = case_hits + reranked_ids
-                    # Normalize CE scores to (0, 0.99) so case_hits (1.0) stay pinned
-                    ce_scores = [s for _, s in reranked]
-                    s_min, s_max = min(ce_scores), max(ce_scores)
-                    span = (s_max - s_min) or 1.0
-                    for cid, s in reranked:
-                        rrf_scores[cid] = 0.01 + 0.98 * (s - s_min) / span
-                    log.info("  → %d candidates after cross-encoder", len(reranked_ids))
+        # 3b. Cross-encoder reranking — all query types
+        non_pinned = [cid for cid in top_child_ids if cid not in set(case_hits)]
+        if len(non_pinned) > top_n:
+            log.info("Cross-encoder reranking %d candidates...", len(non_pinned))
+            reranked = rerank_with_cross_encoder(
+                cur, query_text, non_pinned[:30], top_n=top_n * 2,
+            )
+            if reranked:
+                reranked_ids = [cid for cid, _ in reranked]
+                top_child_ids = case_hits + reranked_ids
+                # Normalize CE scores to (0, 0.99) so case_hits (1.0) stay pinned
+                ce_scores = [s for _, s in reranked]
+                s_min, s_max = min(ce_scores), max(ce_scores)
+                span = (s_max - s_min) or 1.0
+                for cid, s in reranked:
+                    rrf_scores[cid] = 0.01 + 0.98 * (s - s_min) / span
+                log.info("  → %d candidates after cross-encoder", len(reranked_ids))
 
         # 4. Parent context
         log.info("Fetching parent context...")

@@ -1,6 +1,8 @@
-# GDPRScope — Plan Final Hackathon
+# GDPRScope — Plan Hackathon
 
-**Deadline: 18 agosto 2026 (6 dias restantes)**
+**Hackathon: Agents for Humans (AWS/Strands) — Professional Agents track**
+**Deadline: ~septiembre 2026 (~30 dias)**
+**Pivot: CockroachDB → AWS (Strands Agents SDK + Bedrock + Aurora)**
 
 ## Que tenemos (DONE)
 
@@ -10,80 +12,74 @@
 | D2 | Perfiles DPA + comparador | `services/dpa_profiles.py` + `ui/views/my_dpa.py` + `ui/views/compare.py` |
 | D3 | Buscador de casos con filtros | `ui/views/search.py` |
 | D4 | Detalle de caso + factores Art. 83(2) | `ui/views/case_detail.py` |
-| D5 | RAG motor backend (hybrid search + HyDE + intent + RRF) | `db/rag.py` |
+| D5 | RAG motor backend (hybrid search + HyDE + intent + RRF + cross-encoder) | `db/rag.py` |
 | D6 | Privacy policy scraper (por URL) | `services/profile_scraper.py` |
 | D7 | UI design system (warm palette, componentes) | `ui/styles.py` + `ui/components/` |
-| D13 | Rebrand JurisMind → GDPRScope + compact header | `ui/app.py` + `ui/styles.py` |
-| D8 | Ingesta base 6,751 docs (Tracker + GDPRhub) | `db/ingest.py` |
-| D9 | 68K embeddings e5-large-v2 | `db/embed.py` |
+| D8 | Ingesta base 8,077 docs (Tracker + GDPRhub + EDPB OSS) | `db/ingest.py` |
+| D9 | 168K embeddings e5-large-v2 (+138K holdings en progreso) | `db/embed.py` |
 | D10 | 765 factores Art. 83(2) extraidos con LLM | `db/extract_factors.py` |
 | D11 | Memory service backend | `services/memory.py` |
 | D12 | Schema v2 (canonical + medallion) | `db/schema.sql` |
+| D13 | Rebrand JurisMind → GDPRScope | `ui/app.py` + `ui/styles.py` |
+| D14 | Ingesta noyb: 889 quejas estrategicas | `db/ingest_noyb.py` |
+| D15 | Ingesta EDPB OSS: 1,326 decisiones cross-border | `db/ingest_edpb.py` |
+| D16 | LangGraph ReAct agent: 9 tools, streaming, CRAG-light | `services/agent.py` |
+| D17 | Agent eval pipeline: HR@5 85.1% (47q, 9 categorias) | `eval/eval_agent.py` |
+| D18 | Ingesta GDPR law + recitals (99 + 173) | `db/ingest_gdpr_law.py` |
 
-## Que falta — Tareas
-
-### GRUPO 1 — Paralelo (sin dependencias entre si)
-
-| Tarea | Doc | Esfuerzo | Valor |
-|---|---|---|---|
-| RAG en UI | [T1-rag-ui.md](T1-rag-ui.md) | 3-4h | ALTO |
-| ~~Trends con filtros~~ | [T2-trends-filtros.md](T2-trends-filtros.md) | ~~1-2h~~ | DONE |
-| ~~Scraper UX (textarea/upload)~~ | [T3-scraper-ux.md](T3-scraper-ux.md) | ~~2-3h~~ | DONE |
-| Ingesta noyb | [T4-ingesta-noyb.md](T4-ingesta-noyb.md) | 4-6h | MEDIO |
-| Ingesta DPcuria | [T5-ingesta-dpcuria.md](T5-ingesta-dpcuria.md) | 3-4h | MEDIO |
-
-### GRUPO 2 — Depende de que Grupo 1 este estable
-
-| Tarea | Doc | Esfuerzo | Valor |
-|---|---|---|---|
-| Testing + polish UI | [T6-testing-polish.md](T6-testing-polish.md) | 3-4h | ALTO |
-| Embeddings restantes | [T7-embeddings.md](T7-embeddings.md) | 4-8h (compute) | MEDIO |
-
-### GRUPO 3 — Deploy (secuencial)
-
-| Tarea | Doc | Esfuerzo | Valor |
-|---|---|---|---|
-| CockroachDB nueva cuenta | [T8-cockroachdb.md](T8-cockroachdb.md) | 4-6h | OBLIGATORIO |
-| Deploy AWS | [T9-deploy-aws.md](T9-deploy-aws.md) | 4-6h | OBLIGATORIO |
-| Video demo | [T10-video.md](T10-video.md) | 2-3h | OBLIGATORIO |
-
-## SKIP (no hacer en hackathon)
-
-| Tarea | Razon |
-|---|---|
-| Research Memory UI | Sin usuarios reales, no hay que mostrar |
-| AEPD masiva (46K resoluciones) | 16-24h, post-hackathon |
-| CookieFines.eu | Solapa con datos existentes, licencia NC |
-| Chat conversacional libre | Riesgo de alucinaciones |
-| Cruce scraper con sanciones previas | Nice-to-have, no game-changer |
-
-## Timeline sugerida
+## Eval Progression (confirmado)
 
 ```
-Dia 12 (hoy):  T1 (RAG UI) + T2 (filtros trends)
-Dia 13:        T3 (scraper UX) + T4/T5 (ingestas)
-Dia 14:        T6 (testing) + T7 (embeddings corriendo)
-Dia 15:        T8 (CockroachDB)
-Dia 16:        T9 (deploy AWS)
-Dia 17:        T10 (video) + buffer
+Single-query RAG:       ~50% HR@5  (confirmado, 163q)
+Agente v2 multi-turn:    68% HR@5  (60q, 3 categorias)
+Agente v3 + fixes:       85% HR@5  (47q, 9 categorias) ← ACTUAL
+  Siguiente: embeddings completos → ~90%+ (7 misses por holdings sin embeber)
 ```
 
-## Datos en DB (2026-08-12)
+## Que falta — Tareas para AWS hackathon
 
-| Tabla | Registros | Post-ingesta |
+### GRUPO 1 — Migrar a Strands Agents SDK
+
+| Tarea | Esfuerzo | Valor |
 |---|---|---|
-| documents | 6,751 | ~7,832 (+900 noyb +181 CJEU) |
-| chunks | 309,195 (68K con embeddings) | ~315,000 |
-| case_factors | 765 | 765 |
-| gdpr_law + recitals | 99 + 173 | 99 + 173 |
-| noyb_complaints | 0 | ~900 |
+| Swap LangGraph → Strands Agents SDK | 4-6h | OBLIGATORIO (hackathon AWS) |
+| Conectar Bedrock (LLM) | 2-3h | OBLIGATORIO |
+| Aurora PostgreSQL + pgvector | 4-6h | OBLIGATORIO (reemplaza Docker local) |
 
-## Diferenciador competitivo (confirmado)
+### GRUPO 2 — Completar embeddings + eval
+
+| Tarea | Esfuerzo | Valor |
+|---|---|---|
+| Completar 138K holding embeddings | ~16h compute (overnight) | ALTO — rescata 7 misses |
+| Re-eval post-embeddings | 30min | Confirmar mejora |
+| Testing + polish UI | 3-4h | ALTO |
+
+### GRUPO 3 — Deploy AWS
+
+| Tarea | Esfuerzo | Valor |
+|---|---|---|
+| Deploy en AWS (ECS/Lambda + Aurora) | 4-6h | OBLIGATORIO |
+| S3 para datos/modelos | 1-2h | MEDIO |
+| Video demo | 2-3h | OBLIGATORIO |
+
+## Datos en DB (2026-08-13)
+
+| Tabla | Registros | Fuentes |
+|---|---|---|
+| documents | **8,077** | Tracker 3,202 + GDPRhub 3,549 + EDPB OSS 1,326 |
+| chunks | 309,195 (168K embebidos, 138K holding en progreso) | |
+| case_factors | 765 | |
+| gdpr_law + recitals | 99 + 173 | |
+| noyb_complaints | **889** | 36 paises, 15 statuses |
+
+## Diferenciador competitivo
 
 Nadie combina:
 1. Prediccion de multas basada en datos reales (3,841 multas)
 2. Perfiles de comportamiento de DPAs
 3. Memoria persistente cross-session
-4. Busqueda hibrida sobre jurisprudencia GDPR
+4. Busqueda hibrida sobre jurisprudencia GDPR (85% HR@5)
+5. Agente multi-turn con CRAG-light (adaptive retrieval)
 
-Todas las calculadoras existentes (DeFine, Acompli, CalcBee, GDPRFine.com) usan formulas teoricas sobre maximos legales. GDPRScope usa estadistica sobre decisiones reales.
+Todas las calculadoras existentes usan formulas teoricas sobre maximos legales.
+GDPRScope usa estadistica sobre decisiones reales.
