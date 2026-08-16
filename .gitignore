@@ -12,3 +12,13 @@ ref_*.png
 ui_v2_*.png
 SESSION_*.md
 legaltech/
+
+# Data artifacts
+*.npy
+*.csv.gz
+eval/results_*.json
+eval/*_log.txt
+eval/recalldb_runs.log
+
+# Research screenshots
+research/*.png
