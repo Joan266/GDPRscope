@@ -1,0 +1,302 @@
+[
+  {
+    "id": "gs5-031",
+    "category": "article_lookup",
+    "question": "Does a landlord have to tell a tenant what third parties they shared their personal data with under GDPR right of access?",
+    "relevant_source_ids": [
+      "BGH - VI ZR 14/21"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-040",
+    "category": "conceptual",
+    "question": "Can a telecom company refuse a data subject access request because they didn't follow the company's internal procedure?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 20/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-041",
+    "category": "conceptual",
+    "question": "Can noyb represent data subjects in GDPR complaints before the Spanish DPA, or do they need special accreditation?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202210347"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-044",
+    "category": "conceptual",
+    "question": "Can a company be fined for not allowing users to withdraw consent for specific purposes like marketing while keeping it for others?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00385/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-051",
+    "category": "conceptual",
+    "question": "Can a marketing agency be held liable for GDPR violations when they're just acting on behalf of another company under contract?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00274/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-060",
+    "category": "conceptual",
+    "question": "Can a processor be held liable under GDPR for sharing personal data without consent if they were acting on behalf of another controller?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 42/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-066",
+    "category": "scenario",
+    "question": "Can someone post a video of me online from when I was a minor without my consent, and what are the GDPR penalties for this?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202105344"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-069",
+    "category": "scenario",
+    "question": "Can an employer access a former employee's work emails after termination to use as evidence in a legal dispute without violating GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9518890"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-077",
+    "category": "scenario",
+    "question": "Can a telecom company process my billing data without my consent if they claim I authorized a contract I never signed?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00010/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-086",
+    "category": "scenario",
+    "question": "Can I delete personal data that's no longer needed even if there's an ongoing judicial request for it, or would I face criminal sanctions?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2024-015"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-164",
+    "category": "article_lookup",
+    "question": "How did the Dutch DPA interpret the scope of Article 32(1) and 32(2) GDPR regarding security measures required for social insurance data processing?",
+    "relevant_source_ids": [
+      "Dutch Supervisory Authority for Data Protection (AP) \u2014 Dutch Social Insurance Institution (SVB) (The Netherlands)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-167",
+    "category": "article_lookup",
+    "question": "How does the Spanish Data Protection Authority interpret the lawful basis requirements under Article 6 GDPR when determining if processing is justified?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) \u2014 Company (Spain) [ET-1507, 2022-11-29, \u20ac3000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-207",
+    "category": "article_lookup",
+    "question": "How was Article 58(1)(a) of the GDPR interpreted regarding the scope of investigative powers that data protection authorities can exercise in enforcement proceedings?",
+    "relevant_source_ids": [
+      "Polish National Personal Data Protection Office (UODO) \u2014 Unknown (Poland) [ET-2152, 2023-08-30, \u20ac13000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-213",
+    "category": "conceptual",
+    "question": "Does GDPR require a company to respond to a data subject access request even if it claims to hold no data about the individual?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202202889"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-214",
+    "category": "conceptual",
+    "question": "Does GDPR require a company to prove that internal confidentiality measures actually stopped an employee from further unauthorized data access, or is implementing measures sufficient after discovering a breach?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 69/2024"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-215",
+    "category": "conceptual",
+    "question": "Does GDPR allow a balance between intellectual property enforcement and personal data privacy rights when seeking subscriber information from internet service providers?",
+    "relevant_source_ids": [
+      "CJEU - C-557/07 - LSG-Gesellschaft zur Wahrnehmung von Leistungsschutzrechten"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-220",
+    "category": "scenario",
+    "question": "What if a company registered in one EU member state operates a website targeting users in another member state and processes their personal data there\u2014which data protection authority has jurisdiction to investigate complaints?",
+    "relevant_source_ids": [
+      "CJEU - C-230/14 - Weltimmo"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-223",
+    "category": "scenario",
+    "question": "What if a citizen contacts our DPO asking why their national register data was accessed, and we fail to respond within the one-month deadline under Article 12(3)? Would we be violating their right of access under Article 15 even if we eventually provide the information later?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 17/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-251",
+    "category": "article_lookup",
+    "question": "How does Article 5(1)(a) GDPR on lawfulness of processing apply when determining whether data processing meets the fairness and transparency requirements in enforcement cases?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) \u2014 Borgo Fonte Scura s.r.l. (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-253",
+    "category": "conceptual",
+    "question": "Can a company use personal data obtained from a third party for telemarketing without verifying the legal basis for processing?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10086536"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-254",
+    "category": "conceptual",
+    "question": "Does GDPR require companies to delete personal data of former customers who have unsubscribed?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - Gyldendal A/S"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-256",
+    "category": "conceptual",
+    "question": "Does GDPR require data controllers to verify that processors implement adequate identity verification procedures to prevent fraudulent access to personal data?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Vodafone Rom\u00e2nia SA"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-257",
+    "category": "conceptual",
+    "question": "Can a data controller appeal a supervisory authority's decision advising on measures to comply with data subject rights under GDPR?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 39/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-295",
+    "category": "conceptual",
+    "question": "Does GDPR require a privacy policy to provide complete information about data subject rights including access, rectification, erasure, and information requests?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS-00393-2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-338",
+    "category": "article_lookup",
+    "question": "How does Article 21 GDPR apply to telephone marketing where consumers have not given prior consent and actively object to such calls?",
+    "relevant_source_ids": [
+      "BfDI (Germany) - 11.02.2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-342",
+    "category": "conceptual",
+    "question": "Can a company refuse a data subject access request if the personal data was unlawfully deleted before the request was made?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 36/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-347",
+    "category": "scenario",
+    "question": "What if a customer from another EU country repeatedly requests access to their data and also demands damages, but we've already provided the information and their requests seem disproportionate\u2014can we reject further requests as excessive and avoid liability for damages?",
+    "relevant_source_ids": [
+      "AG Arnsberg - 42 C 434/23"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-384",
+    "category": "article_lookup",
+    "question": "How is Article 6(1)(e) GDPR interpreted when determining whether sharing personal data with third parties is \"necessary for the performance of a task carried out in the public interest\"?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 72/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-388",
+    "category": "article_lookup",
+    "question": "How does Article 32 GDPR apply to law firms using cloud-based servers regarding technical measures for ensuring confidentiality of processing systems?",
+    "relevant_source_ids": [
+      "ICO (UK) - Levales Solicitors LLP"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-390",
+    "category": "scenario",
+    "question": "What if our HR department accidentally sends an email to all job applicants using the 'To' field instead of 'BCC', exposing everyone's email addresses to each other? Would this be a GDPR violation even if we had no malicious intent and it was a one-time mistake by an employee?",
+    "relevant_source_ids": [
+      "ICO (UK) - Ministry of Defence"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  }
+]
