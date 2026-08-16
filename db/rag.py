@@ -495,11 +495,11 @@ QUERY_TYPE_CROSS_JURIS  = "cross_juris"   # comparing across jurisdictions
 # Section routing: query_type → (sections to search, K per section)
 SECTION_ROUTING: dict[str, list[tuple[str, int]]] = {
     QUERY_TYPE_ENTITY:     [("facts", 20), ("teaser", 20), ("holding_summary", 10)],
-    QUERY_TYPE_ARTICLE:    [("holding_summary", 25), ("holding_decision", 15), ("facts", 15), ("dispute", 10)],
-    QUERY_TYPE_CONCEPTUAL: [("facts", 20), ("holding_summary", 20), ("holding_decision", 10), ("dispute", 10)],
-    QUERY_TYPE_SCENARIO:   [("facts", 25), ("holding_summary", 20)],
+    QUERY_TYPE_ARTICLE:    [("holding_summary", 25), ("dispute", 20), ("holding_decision", 15), ("facts", 15)],
+    QUERY_TYPE_CONCEPTUAL: [("dispute", 25), ("facts", 20), ("holding_summary", 20), ("holding_decision", 10)],
+    QUERY_TYPE_SCENARIO:   [("facts", 25), ("dispute", 25), ("holding_summary", 20)],
     QUERY_TYPE_FINE_SORT:  [("teaser", 20), ("facts", 10), ("holding_summary", 10)],
-    QUERY_TYPE_CROSS_JURIS:[("holding_summary", 20), ("facts", 20), ("teaser", 10)],
+    QUERY_TYPE_CROSS_JURIS:[("holding_summary", 20), ("facts", 20), ("dispute", 15), ("teaser", 10)],
 }
 
 
