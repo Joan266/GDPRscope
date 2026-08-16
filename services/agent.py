@@ -78,12 +78,13 @@ gives you clues:
 - **Year mentioned** → use year filter
 - **Small/low fines** → use sort_by="fine_asc" or max_fine
 - **Recent cases** → use sort_by="date_desc"
-- **Cases without fines** → use include_no_fine=True
+- **Only enforcement fines** → use only_with_fine=True
 
 Examples:
 - "Vodafone fined €150 in Greece" → search_by_entity("Vodafone", jurisdiction="Greece", max_fine=500)
-- "Latest Article 32 fines" → search_by_article("32", sort_by="date_desc")
-- "Small GDPR fines under €1000" → search_by_article("5", max_fine=1000, sort_by="fine_asc")
+- "Latest Article 32 decisions" → search_by_article("32", sort_by="date_desc")
+- "Article 15 court rulings" → search_by_article("15") (includes court decisions by default)
+- "Small GDPR fines under €1000" → search_by_article("5", max_fine=1000, sort_by="fine_asc", only_with_fine=True)
 
 ### Query Decomposition — For Complex/Conceptual Queries
 When the query involves a LEGAL CONCEPT (not a specific entity/case), decompose it
@@ -709,27 +710,28 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
     def search_by_article(
         article_number: str,
         jurisdiction: str | None = None,
-        sort_by: str = "fine_desc",
+        sort_by: str = "date_desc",
         min_fine: int | None = None,
         max_fine: int | None = None,
         year: int | None = None,
-        include_no_fine: bool = False,
+        only_with_fine: bool = False,
         limit: int = 10,
     ) -> str:
-        """Search enforcement decisions that cite a specific GDPR article via SQL.
+        """Search ALL decisions (enforcement + court) citing a GDPR article via SQL.
 
-        This is a DIRECT database lookup — much more reliable than semantic search
-        for article-specific queries. Use this when the user asks about a specific
-        GDPR article (e.g. "Article 32 fines", "Art. 17 enforcement").
+        Returns enforcement cases, DPA decisions, AND court rulings (e.g. BGH,
+        CJEU). Use this when the user asks about a specific GDPR article.
+        By default includes cases without fines (court decisions, reprimands).
+        Set only_with_fine=True to filter to enforcement cases with fines only.
 
         Args:
             article_number: Article number (e.g. "32", "5", "6(1)")
             jurisdiction: Optional country filter (e.g. "Spain")
-            sort_by: Sort order — "fine_desc" (default), "fine_asc", "date_desc", "date_asc"
+            sort_by: Sort order — "date_desc" (default), "date_asc", "fine_desc", "fine_asc"
             min_fine: Minimum fine amount filter (e.g. 10000)
             max_fine: Maximum fine amount filter (e.g. 50000)
             year: Filter by decision year (e.g. 2023)
-            include_no_fine: Include cases without fines (default False)
+            only_with_fine: Only return cases with fines (default False)
             limit: Max results (default 10)
         """
         import re
@@ -746,7 +748,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         if jurisdiction:
             where_clauses.append("d.jurisdiction = %s")
             params.append(jurisdiction)
-        if not include_no_fine:
+        if only_with_fine:
             where_clauses.append("d.fine_amount IS NOT NULL AND d.fine_amount > 0")
         if min_fine is not None:
             where_clauses.append("d.fine_amount >= %s")
@@ -759,12 +761,12 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             params.append(year)
 
         sort_map = {
-            "fine_desc": "d.fine_amount DESC NULLS LAST",
-            "fine_asc": "d.fine_amount ASC NULLS LAST",
             "date_desc": "d.decision_date DESC NULLS LAST",
             "date_asc": "d.decision_date ASC NULLS LAST",
+            "fine_desc": "d.fine_amount DESC NULLS LAST",
+            "fine_asc": "d.fine_amount ASC NULLS LAST",
         }
-        order = sort_map.get(sort_by, sort_map["fine_desc"])
+        order = sort_map.get(sort_by, sort_map["date_desc"])
 
         cur.execute(f"""
             SELECT d.title, d.authority, d.jurisdiction,
@@ -802,27 +804,26 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
     def search_by_entity(
         entity_name: str,
         jurisdiction: str | None = None,
-        sort_by: str = "fine_desc",
+        sort_by: str = "date_desc",
         min_fine: int | None = None,
         max_fine: int | None = None,
         year: int | None = None,
-        include_no_fine: bool = False,
+        only_with_fine: bool = False,
         limit: int = 10,
     ) -> str:
-        """Search enforcement decisions against a specific company or controller.
+        """Search ALL decisions (enforcement + court) against a specific company or controller.
 
         Direct SQL lookup on controller_name — more reliable than semantic search
-        for company-specific queries. Use when the user asks about a specific
-        organization (e.g. "Google fines", "what happened to Vodafone").
+        for company-specific queries. Includes court rulings without fines by default.
 
         Args:
             entity_name: Company or controller name (e.g. "Google", "Vodafone", "Meta")
             jurisdiction: Optional country filter (e.g. "Greece", "Spain")
-            sort_by: Sort order — "fine_desc" (default), "fine_asc", "date_desc", "date_asc"
+            sort_by: Sort order — "date_desc" (default), "date_asc", "fine_desc", "fine_asc"
             min_fine: Minimum fine amount filter (e.g. 10000)
             max_fine: Maximum fine amount filter (e.g. 500)
             year: Filter by decision year (e.g. 2022)
-            include_no_fine: Include cases without fines (default False)
+            only_with_fine: Only return cases with fines (default False)
             limit: Max results (default 10)
         """
         from db.rag import resolve_entity_alias
@@ -838,7 +839,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         if jurisdiction:
             where_clauses.append("d.jurisdiction = %s")
             params.append(jurisdiction)
-        if not include_no_fine:
+        if only_with_fine:
             where_clauses.append("d.fine_amount IS NOT NULL AND d.fine_amount > 0")
         if min_fine is not None:
             where_clauses.append("d.fine_amount >= %s")
@@ -851,12 +852,12 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             params.append(year)
 
         sort_map = {
-            "fine_desc": "d.fine_amount DESC NULLS LAST",
-            "fine_asc": "d.fine_amount ASC NULLS LAST",
             "date_desc": "d.decision_date DESC NULLS LAST",
             "date_asc": "d.decision_date ASC NULLS LAST",
+            "fine_desc": "d.fine_amount DESC NULLS LAST",
+            "fine_asc": "d.fine_amount ASC NULLS LAST",
         }
-        order = sort_map.get(sort_by, sort_map["fine_desc"])
+        order = sort_map.get(sort_by, sort_map["date_desc"])
 
         cur.execute(f"""
             SELECT d.title, d.authority, d.jurisdiction,
