@@ -85,14 +85,42 @@ Examples:
 - "Latest Article 32 fines" → search_by_article("32", sort_by="date_desc")
 - "Small GDPR fines under €1000" → search_by_article("5", max_fine=1000, sort_by="fine_asc")
 
-### After First Results — Refine if Needed
-1. **Self-reflect**: Do the results actually answer the question?
-2. **If insufficient**: try different keywords, remove filters, or decompose further
-3. **Decompose complex queries**: multiple countries/topics → separate searches
+### Query Decomposition — For Complex/Conceptual Queries
+When the query involves a LEGAL CONCEPT (not a specific entity/case), decompose it
+into sub-queries BEFORE searching. This is critical for conceptual, scenario, and
+article_lookup queries.
+
+Example: "Can a controller refuse access because data is blocked?"
+→ Plan:
+  1. search_by_article("Art. 15") — understand access rights
+  2. search_precedents("controller refuse access request grounds") — find refusal cases
+  3. search_precedents("data blocking restriction processing Art. 18") — find blocking cases
+Execute steps 1-2 in parallel, then step 3 if needed.
+
+Example: "Does GDPR require companies to delete data of former customers who unsubscribed?"
+→ Plan:
+  1. search_by_article("Art. 17") — right to erasure
+  2. search_precedents("erasure former customer data retention unsubscribe")
+  3. search_precedents("delete personal data marketing opt-out")
+Execute all in parallel.
+
+### After First Results — Score-Aware Refinement
+1. **Read the scores**: Check the Score values in the results.
+   - If top scores are similar (e.g., all 0.3-0.4): many equally relevant results
+     → synthesize across all of them, don't fixate on finding one "perfect" case
+   - If scores drop sharply (e.g., #1=0.8, #3=0.2): only top results are relevant
+   - If ALL scores are low (<0.2): results are poor → MUST reformulate
+2. **Check the relevance tag**: HIGH/MEDIUM/LOW tells you retrieval confidence
+3. **If MEDIUM or LOW**: decompose the query differently, try synonyms, or search
+   by a different GDPR article that may be implied but not stated
+4. **Delta search**: Only search for what the first results DON'T cover. Don't
+   repeat the same type of search — try a different angle.
 
 ### Key Rules
+- **Plan first for complex queries** — think about sub-concepts before searching
 - **Parallel first, serial only if needed** — don't wait for results before
   starting independent searches
+- **Score-aware**: use the score distribution to decide your next action
 - Try different angles on failure: rephrase, broaden, use different tools
 - Ask the user when stuck after 2-3 attempts
 
@@ -494,8 +522,9 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         if not contexts:
             return "No matching precedents found for this query."
 
-        # Compute retrieval confidence from top scores
-        top_scores = sorted(rrf_scores.values(), reverse=True)[:3]
+        # Compute retrieval confidence from score distribution
+        all_scores_sorted = sorted(rrf_scores.values(), reverse=True)
+        top_scores = all_scores_sorted[:3]
         avg_top = sum(top_scores) / len(top_scores) if top_scores else 0
 
         # Log for cross-query rewrite learning within the session
@@ -507,6 +536,30 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             confidence = "MEDIUM"
         else:
             confidence = "LOW"
+
+        # Score distribution analysis for the agent
+        score_analysis = ""
+        if len(all_scores_sorted) >= 5:
+            top1 = all_scores_sorted[0]
+            top5 = all_scores_sorted[4]
+            top10 = all_scores_sorted[min(9, len(all_scores_sorted) - 1)]
+            spread = top1 - top5
+            if spread < 0.05:
+                score_analysis = (
+                    f"\n\n📊 Score pattern: PLATEAU (top1={top1:.3f}, top5={top5:.3f}, "
+                    f"spread={spread:.3f}). Multiple results are equally relevant — "
+                    f"synthesize across all rather than seeking one perfect match."
+                )
+            elif spread > 0.2:
+                score_analysis = (
+                    f"\n\n📊 Score pattern: SHARP DROP (top1={top1:.3f}, top5={top5:.3f}, "
+                    f"spread={spread:.3f}). Only the top 1-2 results are strongly relevant."
+                )
+            else:
+                score_analysis = (
+                    f"\n\n📊 Score pattern: GRADUAL (top1={top1:.3f}, top5={top5:.3f}, "
+                    f"top10={top10:.3f}). Good spread of relevant results."
+                )
 
         # Format results
         results = []
@@ -650,7 +703,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             except Exception as e:
                 log.debug("RecallDB learn failed: %s", e)
 
-        return header + "\n\n".join(results) + footer + strategy_hint
+        return header + "\n\n".join(results) + score_analysis + footer + strategy_hint
 
     @tool
     def search_by_article(
