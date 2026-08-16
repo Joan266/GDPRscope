@@ -393,7 +393,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                     f"LIMIT 20",
                     art_patterns,
                 )
-                factor_doc_ids = [r[0] for r in cur.fetchall()]
+                factor_doc_ids = [str(r[0]) for r in cur.fetchall()]
                 if factor_doc_ids:
                     doc_placeholders = ",".join(["%s"] * len(factor_doc_ids))
                     cur.execute(
@@ -402,7 +402,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                         f"LIMIT 30",
                         factor_doc_ids,
                     )
-                    factor_hits = [r[0] for r in cur.fetchall()]
+                    factor_hits = [str(r[0]) for r in cur.fetchall()]
                     if factor_hits:
                         log.info("Case factors arm: %d chunks from %d docs (arts: %s)",
                                  len(factor_hits), len(factor_doc_ids),
@@ -485,7 +485,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                 cur.execute("SELECT document_id FROM chunks WHERE id = %s", (cid,))
                 row = cur.fetchone()
                 if row:
-                    top_doc_ids.add(row[0])
+                    top_doc_ids.add(str(row[0]))
             if top_doc_ids:
                 placeholders = ",".join(["%s"] * len(top_doc_ids))
                 cur.execute(
@@ -496,7 +496,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                     f"WHERE target_document_id IN ({placeholders})",
                     list(top_doc_ids) + list(top_doc_ids),
                 )
-                linked_doc_ids = {r[0] for r in cur.fetchall()} - top_doc_ids
+                linked_doc_ids = {str(r[0]) for r in cur.fetchall()} - top_doc_ids
                 if linked_doc_ids:
                     link_placeholders = ",".join(["%s"] * len(linked_doc_ids))
                     cur.execute(
@@ -505,7 +505,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                         f"LIMIT 20",
                         list(linked_doc_ids),
                     )
-                    linked_chunks = [r[0] for r in cur.fetchall()]
+                    linked_chunks = [str(r[0]) for r in cur.fetchall()]
                     for cid in linked_chunks:
                         if cid not in rrf_scores:
                             # Boost slightly below lowest RRF score
