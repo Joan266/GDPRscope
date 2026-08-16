@@ -38,7 +38,8 @@ import psycopg
 DATABASE_URL       = os.environ.get("DATABASE_URL", "")
 ANTHROPIC_API_KEY  = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-MODEL_NAME_EMBED   = "intfloat/e5-large-v2"    # 1024 dims, local
+MODEL_NAME_EMBED   = "BAAI/bge-m3"              # 1024 dims, local
+EMBEDDING_VERSION  = "bge-m3-1024"
 MODEL_ID_LLM       = "claude-sonnet-4-6"        # Anthropic API directa — generación principal
 MODEL_ID_HAIKU     = "claude-haiku-4-5-20251001"  # Clasificación/overhead — 10x más barato
 MODEL_ID_ROUTER    = "moonshotai/kimi-k2"       # OpenRouter fallback — intent/HyDE/expansion
@@ -83,14 +84,19 @@ class QueryIntent:
 
 # ── Embeddings (sentence-transformers local) ───────────────────────────────────
 
+import threading
+
 _st_model = None
+_model_lock = threading.RLock()  # Reentrant — embed_query calls _get_st_model under lock
 
 
 def _get_st_model():
     global _st_model
     if _st_model is None:
-        from sentence_transformers import SentenceTransformer
-        _st_model = SentenceTransformer(MODEL_NAME_EMBED)
+        with _model_lock:
+            if _st_model is None:  # double-check after lock
+                from sentence_transformers import SentenceTransformer
+                _st_model = SentenceTransformer(MODEL_NAME_EMBED)
     return _st_model
 
 
@@ -100,12 +106,13 @@ def make_bedrock_client():
 
 
 def embed_query(client, text: str) -> list[float]:
-    """Embed via e5-large-v2. El parámetro client se ignora (compatibilidad).
-    e5-large-v2 requiere prefijo 'query: ' en consultas."""
-    text = ("query: " + text[:MAX_CHARS_QUERY]).strip()
+    """Embed via BGE-M3. El parámetro client se ignora (compatibilidad).
+    BGE-M3 no requiere prefijo."""
+    text = text[:MAX_CHARS_QUERY].strip()
     if not text:
         raise ValueError("Query vacía")
-    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
+    with _model_lock:
+        return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
 
 def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
@@ -120,28 +127,31 @@ def hyde_embed(query_text: str, intent: "QueryIntent") -> list[float]:
     )
     if not hypothetical:
         raise RuntimeError("LLM call failed for HyDE")
-    text = ("passage: " + hypothetical[:MAX_CHARS_QUERY]).strip()
-    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
+    text = hypothetical[:MAX_CHARS_QUERY].strip()
+    with _model_lock:
+        return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
 
 def hyde_headnote(query_text: str) -> list[float]:
     """HyDE variant for conceptual/scenario queries: generates a hypothetical
-    headnote (legal principle summary), then embeds it as a passage.
-    Headnotes are terse legal summaries like 'The DPA found that the controller
-    violated Art. 32 GDPR by failing to implement adequate security measures.'
-    This embedding is closer to stored headnote chunks than a raw user query."""
+    case fact pattern, then embeds it as a passage.
+    Facts contain specific details (names, platforms, actions) that match
+    better than generic legal principles."""
     hypothetical = _call_light_llm(
-        "Write a 2-sentence legal headnote for a GDPR enforcement decision "
-        "that would answer this question. Write as a terse DPA summary, "
-        "starting with 'The DPA found that...' or 'The controller...'.\n\n"
+        "Write a 2-sentence factual summary of a GDPR enforcement case "
+        "that would be relevant to this question. Include specific details "
+        "like the type of company, what they did, and what data was involved. "
+        "Write as a DPA case summary starting with 'The DPA investigated...' "
+        "or 'A complaint was filed against...'.\n\n"
         f"Question: {query_text[:300]}",
         max_tokens=120,
     )
     if not hypothetical:
         raise RuntimeError("LLM call failed for HyDE-headnote")
     log.debug("HyDE-headnote: %s", hypothetical[:100])
-    text = ("passage: " + hypothetical[:MAX_CHARS_QUERY]).strip()
-    return _get_st_model().encode(text, normalize_embeddings=True).tolist()
+    text = hypothetical[:MAX_CHARS_QUERY].strip()
+    with _model_lock:
+        return _get_st_model().encode(text, normalize_embeddings=True).tolist()
 
 
 def vector_to_pg(embedding: list[float]) -> str:
@@ -311,7 +321,7 @@ def _fetch_fine_sorted_chunks(cur: psycopg.Cursor, k: int, filters: dict) -> lis
     FROM   chunks c
     JOIN   documents d ON d.id = c.document_id
     WHERE  c.chunk_type = 'child'
-      AND  c.embedding  IS NOT NULL
+      AND  c.embedding_version = 'bge-m3-1024'
       AND  d.fine_amount IS NOT NULL
       AND  d.fine_amount > 0
       {clause}
@@ -344,7 +354,7 @@ def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str
         JOIN chunks c ON c.document_id = d.id
         WHERE ({placeholders})
           AND c.chunk_type = 'child'
-          AND c.embedding IS NOT NULL
+          AND c.embedding_version = 'bge-m3-1024'
         LIMIT 50
         """,
         params,
@@ -410,7 +420,7 @@ SELECT c.id
 FROM   chunks c
 JOIN   documents d ON d.id = c.document_id
 WHERE  c.chunk_type = 'child'
-  AND  c.embedding  IS NOT NULL
+  AND  c.embedding_version = 'bge-m3-1024'
   {filter_clause}
 ORDER BY c.embedding <=> %s::VECTOR({dims})
 LIMIT  %s
@@ -434,7 +444,7 @@ FROM   chunks c
 JOIN   documents d ON d.id = c.document_id
 WHERE  c.chunk_type = 'child'
   AND  c.section    = 'enrichment'
-  AND  c.embedding  IS NOT NULL
+  AND  c.embedding_version = 'bge-m3-1024'
   {filter_clause}
 ORDER BY c.embedding <=> %s::VECTOR({dims})
 LIMIT  %s
@@ -446,7 +456,7 @@ FROM   chunks c
 JOIN   documents d ON d.id = c.document_id
 WHERE  c.chunk_type = 'child'
   AND  c.section    = 'headnote'
-  AND  c.embedding  IS NOT NULL
+  AND  c.embedding_version = 'bge-m3-1024'
   {filter_clause}
 ORDER BY c.embedding <=> %s::VECTOR({dims})
 LIMIT  %s
@@ -457,7 +467,7 @@ SELECT c.id
 FROM   chunks c
 JOIN   documents d ON d.id = c.document_id
 WHERE  c.chunk_type = 'child'
-  AND  c.embedding  IS NOT NULL
+  AND  c.embedding_version = 'bge-m3-1024'
   AND  c.section    = %s
   {filter_clause}
 ORDER BY c.embedding <=> %s::VECTOR({dims})
@@ -477,12 +487,12 @@ QUERY_TYPE_CROSS_JURIS  = "cross_juris"   # comparing across jurisdictions
 
 # Section routing: query_type → (sections to search, K per section)
 SECTION_ROUTING: dict[str, list[tuple[str, int]]] = {
-    QUERY_TYPE_ENTITY:     [("facts", 20), ("teaser", 20)],
-    QUERY_TYPE_ARTICLE:    [("headnote", 20), ("holding", 20), ("dispute", 10)],
-    QUERY_TYPE_CONCEPTUAL: [("headnote", 25), ("dispute", 15), ("holding", 10)],
-    QUERY_TYPE_SCENARIO:   [("headnote", 20), ("holding", 20), ("facts", 10)],
-    QUERY_TYPE_FINE_SORT:  [("teaser", 20), ("facts", 10)],
-    QUERY_TYPE_CROSS_JURIS:[("headnote", 20), ("holding", 20), ("teaser", 10)],
+    QUERY_TYPE_ENTITY:     [("facts", 20), ("teaser", 20), ("holding_summary", 10)],
+    QUERY_TYPE_ARTICLE:    [("holding_summary", 25), ("holding_decision", 15), ("facts", 15), ("dispute", 10)],
+    QUERY_TYPE_CONCEPTUAL: [("facts", 20), ("holding_summary", 20), ("holding_decision", 10), ("dispute", 10)],
+    QUERY_TYPE_SCENARIO:   [("facts", 25), ("holding_summary", 20)],
+    QUERY_TYPE_FINE_SORT:  [("teaser", 20), ("facts", 10), ("holding_summary", 10)],
+    QUERY_TYPE_CROSS_JURIS:[("holding_summary", 20), ("facts", 20), ("teaser", 10)],
 }
 
 
@@ -644,7 +654,7 @@ def _fetch_chunks_for_case_numbers(cur: psycopg.Cursor, query_text: str) -> list
             FROM chunks c
             JOIN documents d ON d.id = c.document_id
             WHERE c.chunk_type = 'child'
-              AND c.embedding IS NOT NULL
+              AND c.embedding_version = 'bge-m3-1024'
               AND ({placeholders})
             LIMIT 20
             """,
@@ -675,13 +685,16 @@ def reciprocal_rank_fusion(
 # ── Cross-encoder reranker ────────────────────────────────────────────────────
 
 _cross_encoder = None
+_ce_lock = threading.Lock()
 
 
 def _get_cross_encoder():
     global _cross_encoder
     if _cross_encoder is None:
-        from sentence_transformers import CrossEncoder
-        _cross_encoder = CrossEncoder("BAAI/bge-reranker-v2-m3")
+        with _ce_lock:
+            if _cross_encoder is None:
+                from sentence_transformers import CrossEncoder
+                _cross_encoder = CrossEncoder("BAAI/bge-reranker-v2-m3")
     return _cross_encoder
 
 
@@ -714,7 +727,8 @@ def rerank_with_cross_encoder(
         return []
 
     model = _get_cross_encoder()
-    scores = model.predict(pairs)
+    with _ce_lock:
+        scores = model.predict(pairs)
 
     ranked = sorted(zip(valid_ids, scores), key=lambda x: x[1], reverse=True)
     return ranked[:top_n]
@@ -747,9 +761,16 @@ SELECT p.content, p.section,
        d.headnotes, d.outcome
 FROM   chunks p
 JOIN   documents d ON d.id = p.document_id
-WHERE  d.id = %s AND p.chunk_type = 'parent' AND p.section IN ('facts', 'holding')
-ORDER BY CASE p.section WHEN 'facts' THEN 1 WHEN 'holding' THEN 2 ELSE 3 END
+WHERE  d.id = %s AND p.chunk_type = 'parent' AND p.section IN ('facts', 'holding', 'holding_summary', 'holding_decision')
+ORDER BY CASE p.section WHEN 'facts' THEN 1 WHEN 'holding_summary' THEN 2 WHEN 'holding' THEN 3 WHEN 'holding_decision' THEN 4 ELSE 5 END
 LIMIT  1
+"""
+
+_SQL_LINKED_DOC_IDS = """
+SELECT CASE WHEN dl.doc_a = %s THEN dl.doc_b ELSE dl.doc_a END AS linked_id
+FROM   document_links dl
+WHERE  (dl.doc_a = %s OR dl.doc_b = %s)
+  AND  dl.link_type = 'same_case'
 """
 
 
@@ -837,10 +858,10 @@ def fetch_parent_context(
             "outcome":          outcome,
         }
 
-        # Canonical swap: if Tracker doc has a linked GDPRhub version,
-        # replace the shallow Tracker card with the full GDPRhub context.
-        if canonical_id and content_depth == "summary":
-            ctx = _swap_canonical(cur, ctx, str(canonical_id))
+        # Link swap: if this is a shallow doc (Tracker summary), check
+        # document_links for a richer version (GDPRhub full text).
+        if content_depth == "summary":
+            ctx = _swap_linked(cur, ctx)
 
         results.append(ctx)
 
@@ -879,6 +900,26 @@ def _swap_canonical(
     # Keep Tracker's fine_amount if GDPRhub doesn't have it
     if fine_amount:
         ctx["fine_amount"] = fine_amount
+    return ctx
+
+
+def _swap_linked(cur: psycopg.Cursor, ctx: dict) -> dict:
+    """Check document_links for a richer version of this doc.
+    If found, swap the shallow content with the full GDPRhub context."""
+    doc_id = ctx["doc_id"]
+    cur.execute(_SQL_LINKED_DOC_IDS, (doc_id, doc_id, doc_id))
+    linked_ids = [str(row[0]) for row in cur.fetchall()]
+    if not linked_ids:
+        return ctx
+
+    # Try each linked doc — pick the first one with actual parent chunks
+    for linked_id in linked_ids:
+        cur.execute(_SQL_CANONICAL_CONTEXT, (linked_id,))
+        row = cur.fetchone()
+        if row:
+            log.info("Link swap: %s → %s", ctx["title"][:40], row[3][:40] if row[3] else "?")
+            return _swap_canonical(cur, ctx, linked_id)
+
     return ctx
 
 
@@ -1403,7 +1444,7 @@ def query(
                 )
 
         # 2. Section-aware hybrid search
-        target_sections = SECTION_ROUTING.get(query_type, [("holding", 10), ("headnote", 10)])
+        target_sections = SECTION_ROUTING.get(query_type, [("holding_summary", 15), ("holding_decision", 10), ("facts", 10)])
         log.info("Section routing: %s", [(s, k) for s, k in target_sections])
 
         # 2a. Section-filtered vector search (primary arm — uses HyDE vec if available)

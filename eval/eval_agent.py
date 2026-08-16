@@ -124,35 +124,117 @@ def reciprocal_rank(retrieved: list[str], relevant: list[str]) -> float:
     return 0.0
 
 
+def _normalize_dpa(text: str) -> str:
+    """Normalize DPA authority names for comparison."""
+    t = text.lower()
+    # Strip common prefixes/suffixes
+    for prefix in ("the ", "national "):
+        if t.startswith(prefix):
+            t = t[len(prefix):]
+    return t
+
+
+def _extract_case_numbers(text: str) -> set[str]:
+    """Extract case/reference numbers like SAN-2021-020, C-311/18, APD/GBA 81/2020."""
+    patterns = [
+        r'[A-Z]{2,}-\d{4}-\d+',          # SAN-2021-020 (full, match first)
+        r'C-\d+/\d+',                     # CJEU: C-311/18
+        r'\d+/\d{4}',                     # 81/2020
+        r'ET-\d+',                        # Enforcement Tracker ID
+        r'EXP\d{8,}',                     # EXP202210347
+        r'PS/\d{5}/\d{4}',               # PS/00268/2020
+    ]
+    nums = set()
+    for p in patterns:
+        for m in re.finditer(p, text, re.IGNORECASE):
+            nums.add(m.group(0).upper())
+    return nums
+
+
+def _extract_controller(text: str) -> str | None:
+    """Extract controller/company name from title formats."""
+    # "Authority — COMPANY (Country)" format (tracker)
+    m = re.search(r'—\s*(.+?)\s*\(', text)
+    if m:
+        name = m.group(1).strip()
+        if name.lower() not in ("unknown",):
+            return name
+    # "Authority - CASE_NUMBER" format — no controller
+    return None
+
+
 def fuzzy_match(retrieved: list[str], relevant: list[str]) -> list[str]:
-    """Try fuzzy matching: check if relevant_id is a substring of any retrieved title or vice versa."""
+    """Fuzzy matching with case number, controller name, and DPA normalization."""
     matched: list[str] = []
     for rid in relevant:
         rid_lower = rid.lower()
+        rid_case_nums = _extract_case_numbers(rid)
+        rid_controller = _extract_controller(rid)
+
         for title in retrieved:
             title_lower = title.lower()
-            # Exact match
+
+            # 1. Exact match
             if rid_lower == title_lower:
                 if title not in matched:
                     matched.append(title)
                 break
-            # Substring: relevant_id contained in title
-            if rid_lower in title_lower:
+
+            # 2. Substring: relevant_id contained in title or vice versa
+            if rid_lower in title_lower or title_lower in rid_lower:
                 if title not in matched:
                     matched.append(title)
                 break
-            # Substring: title contained in relevant_id
-            if title_lower in rid_lower:
+
+            # 3. Case number overlap (SAN-2021-020, C-311/18, etc.)
+            title_case_nums = _extract_case_numbers(title)
+            if rid_case_nums and title_case_nums and rid_case_nums & title_case_nums:
                 if title not in matched:
                     matched.append(title)
                 break
-            # Case number match: extract case numbers and compare
-            rid_nums = set(re.findall(r'[\w/-]+\d{2,}[\w/-]*', rid))
-            title_nums = set(re.findall(r'[\w/-]+\d{2,}[\w/-]*', title))
-            if rid_nums and title_nums and rid_nums & title_nums:
+
+            # 4. Controller name match (e.g. relevant has "SLIMPAY",
+            #    retrieved has "... SLIMPAY ...")
+            if rid_controller and rid_controller.lower() in title_lower:
                 if title not in matched:
                     matched.append(title)
                 break
+            title_controller = _extract_controller(title)
+            if title_controller and title_controller.lower() in rid_lower:
+                if title not in matched:
+                    matched.append(title)
+                break
+
+            # 5. Token overlap: if 3+ significant tokens match (handles
+            #    "HAN University of Applied Sciences" vs "Arnhem and Nijmegen
+            #    University of Applied Sciences")
+            _stop = {"the", "of", "and", "in", "for", "a", "an", "by", "on",
+                     "data", "protection", "authority", "dpa", "supervisory",
+                     "national", "commission", "office", "commissioner",
+                     "federal", "personal", "information",
+                     # Countries
+                     "france", "germany", "spain", "italy", "belgium",
+                     "netherlands", "austria", "greece", "poland", "ireland",
+                     "sweden", "denmark", "finland", "norway", "portugal",
+                     "hungary", "romania", "czech", "slovakia", "slovenia",
+                     "croatia", "bulgaria", "latvia", "lithuania", "estonia",
+                     "malta", "cyprus", "luxembourg", "liechtenstein",
+                     "french", "spanish", "italian", "dutch", "greek",
+                     "german", "belgian", "swedish", "danish", "norwegian",
+                     # DPA names and common words in their titles
+                     "cnil", "aepd", "garante", "apd", "gba", "bfdi",
+                     "datatilsynet", "unknown", "gdpr",
+                     "per", "dei", "dati", "personali", "protezione",
+                     "hellenic", "supervisory", "processing",
+                     "freedom", "telecoms", "provider"}
+            rid_tokens = {w for w in re.findall(r'\b\w{3,}\b', rid_lower) if w not in _stop}
+            title_tokens = {w for w in re.findall(r'\b\w{3,}\b', title_lower) if w not in _stop}
+            overlap = rid_tokens & title_tokens
+            if len(overlap) >= 3:
+                if title not in matched:
+                    matched.append(title)
+                break
+
     return matched
 
 
@@ -160,27 +242,29 @@ EVAL_SYSTEM_PROMPT = """\
 You are a GDPR enforcement search assistant. Your ONLY job is to find
 the most relevant enforcement decisions for the user's query.
 
-Tools:
-- search_precedents: semantic + filtered search (returns relevance: HIGH/MEDIUM/LOW)
+Use your search tools strategically:
+- search_precedents: semantic + filtered search (full RAG pipeline)
 - search_by_article: SQL lookup by GDPR article number
 - search_by_entity: SQL lookup by company/controller name
 
 Strategy:
-1. Identify query type (entity, article, conceptual) and use the best tool first.
-2. Check the relevance indicator in the response:
-   - HIGH → results are strong. You may respond or do one more search to confirm.
-   - MEDIUM → results are partial. Try a second search with a different tool or angle.
-   - LOW → results don't match well. You MUST retry with rephrased query or different tool.
-3. For entity queries: search_by_entity first, then search_precedents if needed.
-4. For article queries: search_by_article first, then search_precedents.
-5. For conceptual/scenario queries: search_precedents, then rephrase if LOW/MEDIUM.
+1. Identify what type of query it is (entity, article, conceptual).
+2. Use the BEST tool for that type first.
+3. ALWAYS use at least 2 different tools or angles before responding.
+   - If query mentions a company/entity: try search_by_entity AND search_precedents.
+   - If query mentions a GDPR article: try search_by_article AND search_precedents.
+   - If conceptual: try search_precedents with different phrasings or angles.
+4. If first search returns generic results (not the specific case asked about),
+   reformulate and try a different tool. Do NOT give up after one search.
+5. Once you have results that clearly match the specific case/entity, respond.
 
-IMPORTANT: 2-3 tool calls is the sweet spot. NEVER exceed 5 total.
-Do NOT call simulate_fine, dpa_profile, lookup_law, or memory tools.
+IMPORTANT: 2-3 tool calls is the sweet spot. NEVER exceed 6 tool calls total.
+If after 3-4 searches you haven't found the specific case, respond with what
+you have. Do NOT call simulate_fine, dpa_profile, lookup_law, or memory tools.
 """
 
 
-def _create_eval_agent(conn: psycopg.Connection):
+def _create_eval_agent(conn: psycopg.Connection, recalldb_memory=None):
     """Create a slim agent with only search tools (cheaper, faster)."""
     import os
     from langgraph.checkpoint.memory import MemorySaver
@@ -199,7 +283,7 @@ def _create_eval_agent(conn: psycopg.Connection):
     else:
         raise RuntimeError("OPENROUTER_API_KEY required for agent eval")
 
-    all_tools = create_tools(conn)
+    all_tools = create_tools(conn, recalldb_memory=recalldb_memory)
     search_tools = [t for t in all_tools if t.name in (
         "search_precedents", "search_by_article", "search_by_entity",
     )]
@@ -212,132 +296,201 @@ def _create_eval_agent(conn: psycopg.Connection):
     )
 
 
+def _eval_single_query(
+    item: dict,
+    idx: int,
+    total: int,
+    tracker_map: dict,
+    db_url: str,
+    recalldb_memory=None,
+) -> dict:
+    """Evaluate a single query — thread-safe (own DB conn + agent)."""
+    qid = item["id"]
+    question = item["question"]
+    relevant_raw = item["relevant_source_ids"]
+    relevant = resolve_relevant_ids(relevant_raw, tracker_map)
+
+    log.info("[%d/%d] %s — %s", idx, total, qid, question[:80])
+
+    conn = psycopg.connect(db_url, autocommit=True)
+    agent = _create_eval_agent(conn, recalldb_memory=recalldb_memory)
+
+    t0 = time.monotonic()
+    try:
+        thread_id = f"eval-{qid}"
+        config = {"configurable": {"thread_id": thread_id}, "recursion_limit": 14}
+        invoke_result = agent.invoke(
+            {"messages": [HumanMessage(content=question)]},
+            config=config,
+        )
+        final = invoke_result["messages"][-1]
+        result = {
+            "content": final.content,
+            "thread_id": thread_id,
+            "messages_count": len(invoke_result["messages"]),
+        }
+        elapsed_ms = int((time.monotonic() - t0) * 1000)
+    except Exception as e:
+        log.error("  [%s] Agent error: %s", qid, e)
+        conn.close()
+        return {"id": qid, "error": str(e)}
+
+    # Extract titles from conversation state
+    all_messages = []
+    try:
+        state = agent.get_state({"configurable": {"thread_id": f"eval-{qid}"}})
+        all_messages = state.values.get("messages", [])
+    except Exception:
+        all_messages = []
+
+    conn.close()
+
+    retrieved_titles = extract_titles_from_messages(all_messages)
+    fuzzy_extra = fuzzy_match(retrieved_titles, relevant)
+
+    # Build full trace for debugging — every LLM decision and tool I/O
+    trace: list[dict] = []
+    tool_calls = 0
+    for msg in all_messages:
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            tool_calls += len(msg.tool_calls)
+            # LLM decided to call tools — capture reasoning + tool args
+            reasoning = getattr(msg, "content", "") or ""
+            for tc in msg.tool_calls:
+                trace.append({
+                    "type": "tool_call",
+                    "tool": tc.get("name", "?"),
+                    "args": tc.get("args", {}),
+                    "reasoning": reasoning[:500] if reasoning else "",
+                })
+        elif hasattr(msg, "name") and msg.name:
+            # Tool response
+            content = getattr(msg, "content", "") or ""
+            trace.append({
+                "type": "tool_result",
+                "tool": msg.name,
+                "output_preview": content[:1000],
+            })
+        elif hasattr(msg, "content") and not hasattr(msg, "tool_calls"):
+            content = getattr(msg, "content", "") or ""
+            msg_type = type(msg).__name__
+            if msg_type == "AIMessage" and content:
+                trace.append({
+                    "type": "llm_response",
+                    "content_preview": content[:1000],
+                })
+
+    response_text = result.get("content", "")
+    source_in_response = any(
+        rid.lower() in response_text.lower() for rid in relevant
+    )
+
+    hr_exact = {k: hit_rate(retrieved_titles, relevant, k) for k in K_VALUES}
+    rr_exact = reciprocal_rank(retrieved_titles, relevant)
+
+    # Fuzzy match only against retrieved_titles (NOT response text).
+    # The LLM may "remember" cases from training data — that's hallucination,
+    # not retrieval. Only count docs the system actually retrieved.
+    if hr_exact[5] == 0 and fuzzy_extra:
+        hr_final = {k: 1.0 for k in K_VALUES}
+        rr_final = 0.5
+    else:
+        hr_final = hr_exact
+        rr_final = rr_exact
+
+    entry: dict = {
+        "id": qid,
+        "category": item.get("category", ""),
+        "question": question,
+        "relevant_ids": relevant,
+        "relevant_ids_raw": relevant_raw,
+        "retrieved_titles": retrieved_titles[:15],
+        "retrieval_ms": elapsed_ms,
+        "messages_count": result.get("messages_count", 0),
+        "tool_calls": tool_calls,
+        "hit_rate_exact": hr_exact,
+        "mrr_exact": rr_exact,
+        "hit_rate": hr_final,
+        "mrr": rr_final,
+        "source_in_response": source_in_response,
+        "fuzzy_matched": bool(fuzzy_extra) and hr_exact[5] == 0,
+        "response_preview": response_text[:2000],
+        "trace": trace,
+    }
+
+    status = "HIT" if hr_final[5] > 0 else "MISS"
+    log.info(
+        "  [%s] HR@5=%.0f  MRR=%.3f  tools=%d  msgs=%d  %s",
+        qid, hr_final[5], rr_final,
+        tool_calls, result.get("messages_count", 0), status,
+    )
+
+    return entry
+
+
 def evaluate_agent(
     golden_set: list[dict],
     conn: psycopg.Connection,
     limit: int | None = None,
+    recalldb_memory=None,
+    parallel: int = 1,
 ) -> list[dict]:
-    """Run each golden set query through the agent and measure retrieval."""
+    """Run each golden set query through the agent and measure retrieval.
+
+    Args:
+        parallel: Number of queries to run concurrently (default 1 = serial).
+    """
     if limit:
         golden_set = golden_set[:limit]
 
-    # Fix 1: Load tracker ID map to resolve numeric relevant_source_ids
     tracker_map = load_tracker_id_map()
+    db_url = os.environ.get("DATABASE_URL", "")
 
-    agent = _create_eval_agent(conn)
-    results: list[dict] = []
     eval_t0 = time.monotonic()
 
-    for i, item in enumerate(golden_set, start=1):
-        qid = item["id"]
-        question = item["question"]
-        relevant_raw = item["relevant_source_ids"]
-        relevant = resolve_relevant_ids(relevant_raw, tracker_map)
-
-        log.info("[%d/%d] %s — %s", i, len(golden_set), qid, question[:80])
-
-        t0 = time.monotonic()
-        try:
-            # Use recursion_limit to cap tool calls (each tool call = 2 steps: call + result)
-            thread_id = f"eval-{qid}"
-            config = {"configurable": {"thread_id": thread_id}, "recursion_limit": 14}
-            invoke_result = agent.invoke(
-                {"messages": [HumanMessage(content=question)]},
-                config=config,
+    if parallel <= 1:
+        # Serial mode (original behavior)
+        results = []
+        for i, item in enumerate(golden_set, start=1):
+            entry = _eval_single_query(
+                item, i, len(golden_set), tracker_map, db_url, recalldb_memory,
             )
-            final = invoke_result["messages"][-1]
-            result = {
-                "content": final.content,
-                "thread_id": thread_id,
-                "messages_count": len(invoke_result["messages"]),
-            }
-            elapsed_ms = int((time.monotonic() - t0) * 1000)
-        except Exception as e:
-            log.error("  Agent error: %s", e)
-            results.append({"id": qid, "error": str(e)})
-            continue
+            results.append(entry)
+    else:
+        # Parallel mode — pre-load models to avoid thread deadlocks
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        log.info("Parallel mode: %d workers — pre-loading models...", parallel)
+        from db.rag import _get_st_model, _get_cross_encoder
+        _get_st_model()       # SentenceTransformer e5-large-v2
+        _get_cross_encoder()  # BAAI/bge-reranker-v2-m3
+        log.info("Models pre-loaded, starting workers")
 
-        # Extract titles from all messages in the conversation
-        all_messages = []
-        # run_agent returns content + messages_count but not raw messages
-        # We need to get messages from the agent's state
-        # Re-invoke to get full state
-        try:
-            state = agent.get_state({"configurable": {"thread_id": f"eval-{qid}"}})
-            all_messages = state.values.get("messages", [])
-        except Exception:
-            all_messages = []
+        results = [None] * len(golden_set)
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = {}
+            for i, item in enumerate(golden_set):
+                future = executor.submit(
+                    _eval_single_query,
+                    item, i + 1, len(golden_set), tracker_map, db_url,
+                    recalldb_memory,
+                )
+                futures[future] = i
 
-        retrieved_titles = extract_titles_from_messages(all_messages)
+            for future in as_completed(futures):
+                idx = futures[future]
+                try:
+                    results[idx] = future.result()
+                except Exception as e:
+                    log.error("Worker error: %s", e)
+                    results[idx] = {"id": golden_set[idx]["id"], "error": str(e)}
 
-        # Also check fuzzy matches (agent might format titles slightly differently)
-        fuzzy_extra = fuzzy_match(retrieved_titles, relevant)
-
-        # Count tool calls
-        tool_calls = 0
-        for msg in all_messages:
-            if hasattr(msg, "tool_calls") and msg.tool_calls:
-                tool_calls += len(msg.tool_calls)
-
-        # Also try: check if relevant source_id appears anywhere in the response
-        response_text = result.get("content", "")
-        source_in_response = any(
-            rid.lower() in response_text.lower() for rid in relevant
-        )
-
-        # Compute metrics — use retrieved_titles order
-        hr = {k: hit_rate(retrieved_titles, relevant, k) for k in K_VALUES}
-        rr = reciprocal_rank(retrieved_titles, relevant)
-
-        # If exact match failed, try fuzzy
-        if hr[5] == 0 and fuzzy_extra:
-            # Fuzzy match found — count as hit but with lower rank
-            hr_fuzzy = {k: 1.0 for k in K_VALUES}
-            rr_fuzzy = 0.5  # conservative rank estimate
-        else:
-            hr_fuzzy = hr
-            rr_fuzzy = rr
-
-        # If even fuzzy failed but source appears in final response
-        if hr_fuzzy[5] == 0 and source_in_response:
-            hr_response = {k: 1.0 for k in K_VALUES}
-            rr_response = 0.25  # appeared but maybe not in search results
-        else:
-            hr_response = hr_fuzzy
-            rr_response = rr_fuzzy
-
-        entry: dict = {
-            "id": qid,
-            "category": item.get("category", ""),
-            "question": question,
-            "relevant_ids": relevant,
-            "relevant_ids_raw": relevant_raw,
-            "retrieved_titles": retrieved_titles[:15],
-            "retrieval_ms": elapsed_ms,
-            "messages_count": result.get("messages_count", 0),
-            "tool_calls": tool_calls,
-            "hit_rate_exact": hr,
-            "mrr_exact": rr,
-            "hit_rate": hr_response,
-            "mrr": rr_response,
-            "source_in_response": source_in_response,
-            "fuzzy_matched": bool(fuzzy_extra) and hr[5] == 0,
-            "response_preview": response_text[:500],
-        }
-
-        log.info(
-            "  HR@5=%.0f  MRR=%.3f  tools=%d  msgs=%d  titles=%d  %s",
-            hr_response[5], rr_response,
-            tool_calls, result.get("messages_count", 0),
-            len(retrieved_titles),
-            "HIT" if hr_response[5] > 0 else "MISS",
-        )
-
-        results.append(entry)
+        # Progress summary
+        done = sum(1 for r in results if r is not None)
+        hits = sum(1 for r in results if r and r.get("hit_rate", {}).get(5, 0) > 0)
+        log.info("Parallel eval done: %d/%d queries, %d hits", done, len(golden_set), hits)
 
     total_s = time.monotonic() - eval_t0
 
-    # Add meta
     results.append({
         "_meta": True,
         "total_eval_s": round(total_s, 1),
@@ -422,6 +575,10 @@ def main() -> None:
     parser.add_argument("--output", default=None, help="Save results to JSON")
     parser.add_argument("--limit", type=int, default=None, help="Limit to N queries")
     parser.add_argument("--category", default=None, help="Filter by category")
+    parser.add_argument("--parallel", type=int, default=1,
+                        help="Run N queries concurrently (default: 1 = serial)")
+    parser.add_argument("--recalldb", action="store_true",
+                        help="Enable RecallDB retrieval learning")
     args = parser.parse_args()
 
     if not DATABASE_URL:
@@ -441,7 +598,28 @@ def main() -> None:
     log.info("Golden set: %d queries", len(golden_set))
 
     conn = psycopg.connect(DATABASE_URL, autocommit=True)
-    results = evaluate_agent(golden_set, conn, limit=args.limit)
+
+    recalldb_mem = None
+    if args.recalldb:
+        try:
+            from recalldb import RetrievalMemory
+            from db.rag import embed_query
+            recalldb_mem = RetrievalMemory(
+                connection_string=DATABASE_URL,
+                embedding_fn=lambda text: embed_query(None, text),
+                vector_dims=1024,
+                domain="gdpr",
+            )
+            recalldb_mem.initialize()
+            log.info("RecallDB enabled — retrieval learning active")
+        except ImportError:
+            log.error("RecallDB not installed. Run: pip install -e ../recalldb")
+            sys.exit(1)
+
+    results = evaluate_agent(
+        golden_set, conn, limit=args.limit,
+        recalldb_memory=recalldb_mem, parallel=args.parallel,
+    )
     conn.close()
 
     print_report(results)

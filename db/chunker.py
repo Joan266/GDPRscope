@@ -1,39 +1,48 @@
 """
-JurisMind — Text chunker (parent-child pattern)
+JurisMind — Text chunker (semantic sections)
 
-Patrón:
-  - chunk 'parent': sección completa (500-3000 chars) → enviado al LLM como contexto
-  - chunk 'child':  ventana deslizante de ~600 chars con 20% overlap → usado para embedding/retrieval
+Patron:
+  - chunk 'parent': seccion completa → enviado al LLM como contexto
+  - chunk 'child':  trozo para embedding/retrieval
+
+Secciones GDPRhub:
+  - holding_summary:  resumen editorial (campo summary_holding) → 1 child entero
+  - holding_decision: texto completo de la decision (campo holding_full_text) → children de 2500 chars
+  - facts:            teaser + facts → 1 child si <3000, sino split
+  - dispute:          1 child entero
+  - teaser:           enforcement_tracker/eurlex → 1 child entero
 
 Los UUIDs se generan en Python para poder insertar parents e hijos en el mismo batch.
 """
 
 import uuid
 
-CHILD_SIZE    = 600   # chars ≈ 150 tokens
-CHILD_OVERLAP = 120   # 20% overlap
+# Child sizes by section type
+CHILD_SIZE_DEFAULT  = 2500   # chars ~625 tokens — for long decision text
+CHILD_OVERLAP       = 500    # 20% overlap
+CHILD_MAX_NOSPLIT   = 3000   # sections shorter than this → 1 child, no splitting
 
 
 def _new_id() -> str:
     return str(uuid.uuid4())
 
 
-def _windows(text: str) -> list[str]:
-    """Sliding windows sobre texto. Devuelve [text] si cabe en un solo chunk."""
-    if len(text) <= CHILD_SIZE:
+def _windows(text: str, child_size: int = CHILD_SIZE_DEFAULT, overlap: int = CHILD_OVERLAP) -> list[str]:
+    """Sliding windows over text. Returns [text] if it fits in a single chunk."""
+    if len(text) <= child_size:
         return [text]
     result, start = [], 0
     while start < len(text):
-        end = min(start + CHILD_SIZE, len(text))
+        end = min(start + child_size, len(text))
         result.append(text[start:end])
         if end == len(text):
             break
-        start += CHILD_SIZE - CHILD_OVERLAP
+        start += child_size - overlap
     return result
 
 
 def _parents_for_doc(doc: dict) -> list[tuple[str, str]]:
-    """Devuelve lista de (section_name, content) para un documento normalizado."""
+    """Returns list of (section_name, content) for a normalized document."""
     source = doc["source"]
 
     if source == "gdprhub":
@@ -41,12 +50,27 @@ def _parents_for_doc(doc: dict) -> list[tuple[str, str]]:
             doc.get("summary_teaser"),
             doc.get("summary_facts"),
         ])).strip()
-        sections = [
-            ("facts",   facts_text),
-            ("holding", (doc.get("summary_holding") or "").strip()),
-            ("dispute", (doc.get("summary_dispute") or "").strip()),
-        ]
-        return [(name, text) for name, text in sections if len(text) >= 80]
+
+        sections: list[tuple[str, str]] = []
+
+        if len(facts_text) >= 80:
+            sections.append(("facts", facts_text))
+
+        # holding_summary from summary_holding (editorial, already split in DB)
+        holding_summary = (doc.get("summary_holding") or "").strip()
+        if len(holding_summary) >= 80:
+            sections.append(("holding_summary", holding_summary))
+
+        # holding_decision from holding_full_text (raw decision, already split in DB)
+        holding_decision = (doc.get("holding_full_text") or "").strip()
+        if len(holding_decision) >= 80:
+            sections.append(("holding_decision", holding_decision))
+
+        dispute_text = (doc.get("summary_dispute") or "").strip()
+        if len(dispute_text) >= 80:
+            sections.append(("dispute", dispute_text))
+
+        return sections
 
     if source == "enforcement_tracker":
         articles = ", ".join(doc.get("gdpr_articles") or [])
@@ -78,9 +102,15 @@ def _parents_for_doc(doc: dict) -> list[tuple[str, str]]:
 
 def make_chunks(doc_id: str, doc: dict) -> list[dict]:
     """
-    Genera chunks parent + child para un documento.
-    Devuelve lista de dicts listos para insertar en la tabla chunks.
-    Los UUIDs están pre-generados — se pueden insertar en batch sin round-trips adicionales.
+    Generate parent + child chunks for a document.
+    Returns list of dicts ready to insert into the chunks table.
+
+    Chunking strategy per section:
+      - holding_summary: 1 child (no split) — editorial summary, ~2100 chars
+      - holding_decision: children of 2500 chars — full decision text, ~40K chars
+      - facts: 1 child if <3000 chars, else split at 2500
+      - dispute: 1 child (usually <500 chars)
+      - teaser: 1 child (usually <400 chars)
     """
     chunks: list[dict] = []
     chunk_index = 0
@@ -100,9 +130,18 @@ def make_chunks(doc_id: str, doc: dict) -> list[dict]:
         })
         chunk_index += 1
 
-        # Siempre crear al menos un child: _windows() devuelve [text] si cabe en un chunk.
-        # Sin children, el documento es invisible al RAG (busca chunk_type='child').
-        for window in _windows(parent_text):
+        # Decide child chunking strategy based on section
+        if section in ("holding_summary", "dispute", "teaser"):
+            # Short/high-value sections → 1 child, no splitting
+            windows = [parent_text]
+        elif len(parent_text) <= CHILD_MAX_NOSPLIT:
+            # Short enough to keep as single child
+            windows = [parent_text]
+        else:
+            # Long sections (holding_decision, long facts) → split
+            windows = _windows(parent_text, CHILD_SIZE_DEFAULT, CHILD_OVERLAP)
+
+        for window in windows:
             chunks.append({
                 "id":            _new_id(),
                 "document_id":   doc_id,

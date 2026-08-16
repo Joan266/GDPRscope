@@ -1,0 +1,4243 @@
+[
+  {
+    "id": "gs5-001",
+    "category": "named_entity",
+    "question": "What happened in the CNIL case where a payment company got fined for using customer data for testing and leaving it on an unsecured server?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2021-020"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-002",
+    "category": "named_entity",
+    "question": "I heard Electric Renting Groups got fined by the Spanish DPA for a data breach involving emails — what was the violation and how much was the fine?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00406/2019"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-003",
+    "category": "named_entity",
+    "question": "Did Vodafone get fined in Greece for SIM swap attacks where fraudsters replaced customers' SIM cards?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 38/2022"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-004",
+    "category": "named_entity",
+    "question": "What was the Belgian DPA's decision when a telecom provider reassigned a customer's phone number to someone else without proper identity verification, causing a data breach?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 101/2022"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-005",
+    "category": "named_entity",
+    "question": "Did the Spanish DPA fine COPE radio station for cookie consent violations?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00118/2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-006",
+    "category": "named_entity",
+    "question": "Did Equifax get fined in Spain for scraping personal data from the Official State Gazette without consent?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00240/2019"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-007",
+    "category": "named_entity",
+    "question": "A police officer in Latvia accessed government databases after hours and shared someone's personal data on Discord — what was the fine and which GDPR articles were violated?",
+    "relevant_source_ids": [
+      "DVI (Latvia) - 04.11.2025"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-008",
+    "category": "named_entity",
+    "question": "What was the fine against Asociația de Proprietari Aviației Park in Romania for GDPR violations related to courier data collection?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against Asociația de Proprietari Aviației Park"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-009",
+    "category": "named_entity",
+    "question": "Is Regione Molise responsible for GDPR violations when their sub-processor Engineering Ingegneria Informatica had a security breach in the health records system?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10095791"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-010",
+    "category": "named_entity",
+    "question": "Did Ferde AS get fined by the Norwegian DPA for data processor agreement violations?",
+    "relevant_source_ids": [
+      "851"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-011",
+    "category": "named_entity",
+    "question": "What happened when a Spanish sports club threw away player documents with minors' personal data in a public bin?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202414976"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-012",
+    "category": "named_entity",
+    "question": "What was the Italian DPA's decision about the Friuli Centrale University Health Authority's patient profiling for statistical stratification?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9845156"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-013",
+    "category": "named_entity",
+    "question": "What was the outcome of the Berlin DPA case against the photographer who posted pictures of children from a diving competition without consent?",
+    "relevant_source_ids": [
+      "BlnBDI (Berlin) - 632.276, 521.11692, 591.616"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-014",
+    "category": "named_entity",
+    "question": "Did Klarna get fined by the Swedish DPA for GDPR violations around transparency and automated decision-making?",
+    "relevant_source_ids": [
+      "IMY (Sweden) - DI-2019-4062"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-015",
+    "category": "named_entity",
+    "question": "Did Trive Credit Spain get fined by the Spanish DPA and how much was it?",
+    "relevant_source_ids": [
+      "2761"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-016",
+    "category": "named_entity",
+    "question": "What was the outcome of the AZOP case against EOS Matrix for the USB stick data breach involving debtor information?",
+    "relevant_source_ids": [
+      "AZOP (Croatia) - Decision 05-10-2023"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-017",
+    "category": "named_entity",
+    "question": "What was the outcome of ANSPDCP's investigation into Telekom Romania for fraudulent subscription contracts?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against Telekom Romania Communications"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-018",
+    "category": "named_entity",
+    "question": "Did the Dutch DPA fine HAN University of Applied Sciences for GDPR security violations?",
+    "relevant_source_ids": [
+      "2980"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-019",
+    "category": "named_entity",
+    "question": "Was Carrefour Banque fined by the CNIL for GDPR violations around transparency and information obligations?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2020-009"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-020",
+    "category": "named_entity",
+    "question": "Did the Irish DPA fine Meta €91 million for data security and breach notification failures in 2024?",
+    "relevant_source_ids": [
+      "2461"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-021",
+    "category": "named_entity",
+    "question": "Did the ICO fine the UK Cabinet Office for accidentally publishing postal addresses in the New Year Honours List CSV file?",
+    "relevant_source_ids": [
+      "ICO (UK) - Cabinet Office"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-022",
+    "category": "named_entity",
+    "question": "Did Vodafone get fined by the Italian DPA for GDPR violations related to consent and transparency?",
+    "relevant_source_ids": [
+      "1505"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-023",
+    "category": "named_entity",
+    "question": "What was the Vattenfall fine in Hamburg for not informing customers about reviewing their contract switching behavior?",
+    "relevant_source_ids": [
+      "HmbBfDI (Hamburg) - Vattenfall Europe Sales GmbH"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-024",
+    "category": "named_entity",
+    "question": "What happened in the Belgian DPA case about a father posting photos of his children and ex-partner on a travel blog when she asked for them to be deleted?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 66/2026"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-025",
+    "category": "named_entity",
+    "question": "Did the Greek Ministry of Interior get fined for GDPR violations related to data security and breach notification?",
+    "relevant_source_ids": [
+      "2556"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-026",
+    "category": "named_entity",
+    "question": "What was the fine amount when Carrefour France was sanctioned by CNIL for not respecting data deletion requests and continuing to send marketing emails?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2020-008"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-027",
+    "category": "named_entity",
+    "question": "Did Grindr get fined by the Norwegian DPA for sharing user data with advertising partners?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 20/02136"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-028",
+    "category": "named_entity",
+    "question": "Has the Spanish DPA ever fined a car number plate seller for having an insecure website and missing privacy policy?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00185/2020"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-029",
+    "category": "article_lookup",
+    "question": "When does Article 14 GDPR require information to be provided to data subjects if their data was obtained from a third party and will be used for communication?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2020-0.816.655"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-030",
+    "category": "article_lookup",
+    "question": "What was the fine amount when the Dutch DPA sanctioned TikTok for GDPR violations?",
+    "relevant_source_ids": [
+      "770"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-031",
+    "category": "article_lookup",
+    "question": "Does a landlord have to tell a tenant what third parties they shared their personal data with under GDPR right of access?",
+    "relevant_source_ids": [
+      "BGH - VI ZR 14/21"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-032",
+    "category": "article_lookup",
+    "question": "Can a Finnish municipality process background checks on volunteers working with children under GDPR Article 6(1)(c)?",
+    "relevant_source_ids": [
+      "Helsingin hallinto-oikeus (Finland) - H5259/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-033",
+    "category": "article_lookup",
+    "question": "Does Article 15 GDPR give me the right to get copies of all internal correspondence and file notes from the tax authority?",
+    "relevant_source_ids": [
+      "FG Berlin-Brandenburg - 16 K 5148/20"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-034",
+    "category": "article_lookup",
+    "question": "Can a bar in Spain install video surveillance cameras facing the public street instead of their private property?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00389/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-035",
+    "category": "article_lookup",
+    "question": "Can police collect biometric and genetic data without consent under GDPR Article 9?",
+    "relevant_source_ids": [
+      "CJEU - C-205/21 - Ministerstvo na vatreshnite raboti"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-036",
+    "category": "article_lookup",
+    "question": "Can employees give valid consent for fingerprint time tracking under GDPR Article 9?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - Boete vingerafdrukken personeel"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-037",
+    "category": "conceptual",
+    "question": "Does the Austrian DPA have jurisdiction to review GDPR compliance of the Federal Minister of Finances when they're ordered by a parliamentary inquiry committee to disclose personal data?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2022-0.083.310"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-038",
+    "category": "conceptual",
+    "question": "Can a Spanish condominium display court judgments with personal data on a notice board in common areas under GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202100764"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-039",
+    "category": "conceptual",
+    "question": "Can a DPO also perform other advisory or supervisory tasks without creating a conflict of interest under GDPR?",
+    "relevant_source_ids": [
+      "AZOP (Croatia) - UP/I-034-01/24-01/33"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-040",
+    "category": "conceptual",
+    "question": "Can a telecom company refuse a data subject access request because they didn't follow the company's internal procedure?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 20/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-041",
+    "category": "conceptual",
+    "question": "Can noyb represent data subjects in GDPR complaints before the Spanish DPA, or do they need special accreditation?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202210347"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-042",
+    "category": "conceptual",
+    "question": "Can an employer use employee consent as the legal basis for CCTV surveillance in break rooms and cloakrooms?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - S.C. Tip Top Food Industry S.R.L"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-043",
+    "category": "conceptual",
+    "question": "Can a data controller refuse a freedom of information request by just saying they 'may' hold the information, or do they need to confirm whether they actually hold it?",
+    "relevant_source_ids": [
+      "FT - FT/EA/2024/0359"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-044",
+    "category": "conceptual",
+    "question": "Can a company be fined for not allowing users to withdraw consent for specific purposes like marketing while keeping it for others?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00385/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-045",
+    "category": "conceptual",
+    "question": "Can a controller use COVID-19 pandemic disruptions as an excuse for not responding to an Article 15 GDPR access request within the Article 12(3) timeframe?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9996588"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-046",
+    "category": "conceptual",
+    "question": "Can ISPs be forced to install filtering systems to block copyright infringement, or did the Scarlet Extended case say that's not allowed?",
+    "relevant_source_ids": [
+      "CJEU - C-70/10 - Scarlet Extended"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-047",
+    "category": "conceptual",
+    "question": "Does the GDPR apply to parliamentary committees and can national DPAs investigate complaints against them?",
+    "relevant_source_ids": [
+      "CJEU - C-33/22 - Österreichische Datenschutzbehörde"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-048",
+    "category": "conceptual",
+    "question": "Can a company refuse an access request because it wasn't sent to the right email address, or do they have to accept requests through any channel they use?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202202415"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-049",
+    "category": "conceptual",
+    "question": "Can a Member State justify delayed implementation of the Data Protection Directive by pointing to existing domestic laws?",
+    "relevant_source_ids": [
+      "CJEU - C-450/00 - Commission v Luxembourg"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-050",
+    "category": "conceptual",
+    "question": "Can meeting minutes containing subjective statements about a psychiatrist's credentials be corrected under GDPR Article 16 right to rectification?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 79/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-051",
+    "category": "conceptual",
+    "question": "Can a marketing agency be held liable for GDPR violations when they're just acting on behalf of another company under contract?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00274/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-052",
+    "category": "conceptual",
+    "question": "Does a request to deactivate a corporate email account count as a GDPR erasure request even if the employee doesn't mention the GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 476/2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-053",
+    "category": "conceptual",
+    "question": "Does a data controller have a right to have their complaint dismissed by the Belgian DPA under Article 57(1)(f) GDPR?",
+    "relevant_source_ids": [
+      "Court of Appeal of Brussels (Belgium) - 2025/AR/253"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-054",
+    "category": "conceptual",
+    "question": "Can a politician be considered a data controller under GDPR for sending campaign SMS messages, and what happens if they can't prove consent?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 19/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-055",
+    "category": "conceptual",
+    "question": "Can political candidates send marketing emails and SMS without consent during election campaigns?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 10/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-056",
+    "category": "conceptual",
+    "question": "Can a company in Slovenia use video surveillance of their entire premises just for general security purposes under legitimate interest?",
+    "relevant_source_ids": [
+      "IP (Slovenia) - 0611-182/2021/23"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-057",
+    "category": "conceptual",
+    "question": "Can I rely on indirect consent assurances from a data broker without doing my own due diligence, or will the ICO fine me?",
+    "relevant_source_ids": [
+      "ICO - Monetary penalty Leads Work Limited"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-058",
+    "category": "conceptual",
+    "question": "Can a journalist be held personally liable as a data controller under GDPR for disclosing someone's vaccination status on TV, or does Article 29 mean they're just acting on instructions?",
+    "relevant_source_ids": [
+      "CPDP (Bulgaria) - PNN-01-33/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-059",
+    "category": "conceptual",
+    "question": "Can an employer legally disclose an employee's previous trade union membership to another union?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202200439"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-060",
+    "category": "conceptual",
+    "question": "Can a processor be held liable under GDPR for sharing personal data without consent if they were acting on behalf of another controller?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 42/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-061",
+    "category": "conceptual",
+    "question": "Can a school refuse to provide work notes of a school attendance officer under GDPR access requests, and what did the Dutch court rule in the AP case about this?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - AWB-21 3909"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-062",
+    "category": "conceptual",
+    "question": "Can a medical student be considered a data controller under GDPR for recording a patient with dementia?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2026-0.016.479"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-063",
+    "category": "conceptual",
+    "question": "Can a data protection authority refuse to handle a complaint under Article 77 GDPR by calling it 'excessive' under Article 57(4)?",
+    "relevant_source_ids": [
+      "CJEU - C-416/23 - Österreichische Datenschutzbehörde (Excessive requests)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-064",
+    "category": "conceptual",
+    "question": "Does the Hoge Raad decision about student loan data in the BKR register say anything about time limits for GDPR access requests?",
+    "relevant_source_ids": [
+      "Hoge Raad - 22/03293"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-065",
+    "category": "scenario",
+    "question": "Can an employer delete employee data after receiving an access request to avoid GDPR disclosure obligations?",
+    "relevant_source_ids": [
+      "Datatilsynet - JobTeam indstillet til bøde"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-066",
+    "category": "scenario",
+    "question": "Can someone post a video of me online from when I was a minor without my consent, and what are the GDPR penalties for this?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202105344"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-067",
+    "category": "scenario",
+    "question": "Can someone share personal information in a Telegram group without consent if they think the people deserve it?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202403325"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-068",
+    "category": "scenario",
+    "question": "Can I share someone's medical records with a municipality to defend against a damages claim if I obtained them in another legal proceeding?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2021-0.518.795"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-069",
+    "category": "scenario",
+    "question": "Can an employer access a former employee's work emails after termination to use as evidence in a legal dispute without violating GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9518890"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-070",
+    "category": "scenario",
+    "question": "Does a nursery school in Spain need to specify the purpose and storage location of cameras in employment contracts when workers are being recorded?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00120/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-071",
+    "category": "scenario",
+    "question": "Can a law firm share my personal address with an unrelated third party without my consent?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00194/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-072",
+    "category": "scenario",
+    "question": "What conditions did the Italian DPA set for OpenAI to lift the temporary limitation on ChatGPT processing?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9874702"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-073",
+    "category": "scenario",
+    "question": "Can an employer secretly observe and document an employee's physical condition like their gait and mobility, and what GDPR articles would that violate?",
+    "relevant_source_ids": [
+      "BAG - 8 AZR 225/23"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-074",
+    "category": "scenario",
+    "question": "Can I install security cameras in my apartment building's common areas if I rent some units to tourists?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00151/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-075",
+    "category": "scenario",
+    "question": "A client exercised their right to object to direct marketing calls but the company kept calling from masked numbers anyway - what was the Belgian DPA's decision in that case?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - DOS-2019-06239"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-076",
+    "category": "scenario",
+    "question": "Can a professional nursing association publish residential addresses in a public online register under GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10192784"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-077",
+    "category": "scenario",
+    "question": "Can a telecom company process my billing data without my consent if they claim I authorized a contract I never signed?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00010/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-078",
+    "category": "scenario",
+    "question": "My employer shared my work email on the company WhatsApp as a screenshot with my name visible - which GDPR article does this violate?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202207494"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-079",
+    "category": "scenario",
+    "question": "A store asked me to show a doctor's note to prove I can't wear a mask for health reasons. Is this a GDPR violation for processing special category health data?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2021-0.410.237"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-080",
+    "category": "scenario",
+    "question": "Can a political party in Bulgaria process someone's personal data to register them as a candidate for European Parliament elections without their consent?",
+    "relevant_source_ids": [
+      "CPDP (Bulgaria) - PNN-01-433/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-081",
+    "category": "scenario",
+    "question": "A Greek politician sent me campaign emails using contact info from my business card. Can they do that without consent under GDPR?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 38/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-082",
+    "category": "scenario",
+    "question": "Can a Greek company use customer data collected during purchases to send marketing emails if they claim they got oral consent at the point of sale?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 48/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-083",
+    "category": "scenario",
+    "question": "Can a processor refuse GDPR access requests if the controller company has gone bankrupt?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 20/02911-20"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-084",
+    "category": "scenario",
+    "question": "Has any Danish company been fined for accidentally giving out personal data on USB drives?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2019-441-1480"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-085",
+    "category": "scenario",
+    "question": "Can an employer require employees to email their entire team about sick leave, or does that violate GDPR?",
+    "relevant_source_ids": [
+      "HmbBfDI (Hamburg) - Beschäftigtendatenschutz: Information von Arbeitgeber:innen über krankheitsbedingte Abwesenheiten"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-086",
+    "category": "scenario",
+    "question": "Can I delete personal data that's no longer needed even if there's an ongoing judicial request for it, or would I face criminal sanctions?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2024-015"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-087",
+    "category": "scenario",
+    "question": "Was there a case where a police officer got fined for looking up his future spouse's medical records out of curiosity?",
+    "relevant_source_ids": [
+      "AKI (Estonia) - 17.08.2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-088",
+    "category": "scenario",
+    "question": "What happens if a Spanish company doesn't have a Privacy Policy link on their website? Is that a GDPR violation?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00268/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-089",
+    "category": "scenario",
+    "question": "Can a public school in Italy publish a teacher's employment termination on its website without specific legal authorization?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9828059"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-090",
+    "category": "scenario",
+    "question": "Can a betting company in Austria use video surveillance cameras that film public parking areas and passing cars without notifying people?",
+    "relevant_source_ids": [
+      "DSB (Austria) - D550.038/0003-DSB/2018"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-091",
+    "category": "scenario",
+    "question": "Can a municipality publish employment records showing someone failed probation without violating GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10183000"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-092",
+    "category": "scenario",
+    "question": "Can a DPO also lead Operational Risk Management at a bank, or is that a conflict of interest under GDPR?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 141/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-093",
+    "category": "fine_lookup",
+    "question": "What was the fine amount when CNIL found Dedalus Biologie violated processor obligations under Article 28 GDPR after a data breach affecting nearly 500,000 patients?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2022-009"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-094",
+    "category": "fine_lookup",
+    "question": "Did Ambitious People Group get fined by the Dutch DPA for not complying with GDPR erasure requests?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - z2019-28837"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-095",
+    "category": "fine_lookup",
+    "question": "Was Sambla Group Oy fined by the Finnish DPA for GDPR violations and how much?",
+    "relevant_source_ids": [
+      "2506"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-096",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in the Dutch DPA case against an orthodontic practice for failing to encrypt patient registration forms?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - 4.02.2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-097",
+    "category": "fine_lookup",
+    "question": "Did the Norwegian Public Roads Administration get fined for keeping toll road data too long?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 18/04147"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-098",
+    "category": "fine_lookup",
+    "question": "What was the fine amount when Aylo Social LTD failed to respond to a data deletion request within the required timeframe?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 11.17.001.009.100"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-099",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in that Malta case where a bank failed to respond to an access request and initially lied to the DPA about it?",
+    "relevant_source_ids": [
+      "IDPC (Malta) - EDPBI:MT:OSS:D:2019:70"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-100",
+    "category": "fine_lookup",
+    "question": "What was the ICO fine against HIV Scotland for and how much was it?",
+    "relevant_source_ids": [
+      "ICO (UK) - HIV Scotland"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-101",
+    "category": "fine_lookup",
+    "question": "What happened in the Spanish DPA case where someone was fined €300 for inadequate signage on CCTV cameras that were filming public space?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202209175"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-102",
+    "category": "fine_lookup",
+    "question": "Did Lääkäriklinikka Estetic Oy successfully overturn the €5,000 fine for failing to comply with a data subject access request?",
+    "relevant_source_ids": [
+      "Helsingin hallinto-oikeus (Finland) - 3620/2023"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-103",
+    "category": "fine_lookup",
+    "question": "Has Luxembourg's CNPD ever fined a company for not appointing a DPO with the right professional qualifications?",
+    "relevant_source_ids": [
+      "CNPD (Luxembourg) - Délibération n° 36FR/2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-104",
+    "category": "fine_lookup",
+    "question": "Did Spotify get fined by the Swedish DPA for GDPR violations related to access requests, and how much was the fine?",
+    "relevant_source_ids": [
+      "IMY (Sweden) - DI-2019-6696"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-105",
+    "category": "fine_lookup",
+    "question": "What was the fine amount when Berlin DPA found a company violated Article 38(6) GDPR regarding DPO requirements?",
+    "relevant_source_ids": [
+      "1398"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-106",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in the Trumf loyalty program case where someone could register other people's bank accounts?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 20/03046"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-107",
+    "category": "fine_lookup",
+    "question": "Did the Spanish DPA ever issue a decision about a company that showed wrong customer data when someone logged into their online account, and was there a fine?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00212/2019"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-108",
+    "category": "fine_lookup",
+    "question": "What was the fine against Vodafone in Spain for SIM swap fraud where they failed to verify customer identity?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00001/2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-109",
+    "category": "fine_lookup",
+    "question": "What was the fine amount when Lejre Municipality in Denmark failed to implement access controls for meeting minutes containing sensitive personal data?",
+    "relevant_source_ids": [
+      "Datatilsynet - Fine against Lejre Municipality"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-110",
+    "category": "fine_lookup",
+    "question": "Did Gladsaxe Kommune get fined for failing to withdraw terminated employees' access rights to personal data?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2021-423-0235"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-111",
+    "category": "fine_lookup",
+    "question": "Did Elpedison get fined by the Greek DPA for spam calls made by their call centre processors?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 9/2024"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-112",
+    "category": "fine_lookup",
+    "question": "Can a Spanish company be fined for not responding to unsubscribe requests from marketing emails?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202406716"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-113",
+    "category": "fine_lookup",
+    "question": "Did the Greek DPA fine Hellenic Post around 3 million euros for security failures under Articles 5 and 32?",
+    "relevant_source_ids": [
+      "2284"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-114",
+    "category": "fine_lookup",
+    "question": "What was the €390 million fine against Meta for in Ireland in early 2023 and which GDPR articles were violated?",
+    "relevant_source_ids": [
+      "1543"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-115",
+    "category": "fine_lookup",
+    "question": "Did TIM get fined by the Italian DPA for GDPR violations around 2020, and what was the amount?",
+    "relevant_source_ids": [
+      "189"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-116",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in the KiKxxl case where a German call center made marketing calls without proper consent?",
+    "relevant_source_ids": [
+      "BfDI (Germany) - 17.02.2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-117",
+    "category": "fine_lookup",
+    "question": "What was the fine amount for the insurance company that violated GDPR security and breach notification rules in Luxembourg?",
+    "relevant_source_ids": [
+      "866"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-118",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in the Portuguese CNPD case about missing CCTV signage where a business failed to display transparency notices under Article 13 GDPR?",
+    "relevant_source_ids": [
+      "CNPD (Portugal) - Deliberação 2019/207"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-119",
+    "category": "fine_lookup",
+    "question": "What was the fine amount in the Belgian DPA case against Charleroi Airport for using thermal cameras to check passenger temperatures during COVID-19?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 47/2022"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-120",
+    "category": "fine_lookup",
+    "question": "Was Amazon Italia Transport fined by the Italian DPA for failing to respond to an employee's data access request?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9960875"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-121",
+    "category": "cross_jurisdiction",
+    "question": "Did the Dutch DPA fine TikTok for violating transparency requirements under Article 12 of the GDPR?",
+    "relevant_source_ids": [
+      "770"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-122",
+    "category": "cross_jurisdiction",
+    "question": "Does the one-stop shop mechanism apply when the French DPA investigates Amazon for ePrivacy directive violations, or is that handled separately by national authorities?",
+    "relevant_source_ids": [
+      "CE - 451423"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-123",
+    "category": "cross_jurisdiction",
+    "question": "What was the outcome of the Belgian DPA's investigation into Rossel Group's cookie practices on sudinfo and other media websites?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 103/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-124",
+    "category": "cross_jurisdiction",
+    "question": "Can Bulgarian prosecutors access location and traffic data under national criminal law, or does EU law prevent this?",
+    "relevant_source_ids": [
+      "CJEU - C-350/21 - Spetsializirana prokuratura (Retention of traffic and location data)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-125",
+    "category": "cross_jurisdiction",
+    "question": "What happened in the Belgian DPA case where a controller was fined for not cooperating during an Article 56 procedure about an erasure request from a French complaint?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 94/2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-126",
+    "category": "cross_jurisdiction",
+    "question": "Can a data subject appeal the ICO's decision on the merits of their complaint under Section 166 DPA 2018?",
+    "relevant_source_ids": [
+      "First-tier Tribunal - Dennerlein v The Information Commissioner (2023) UKFTT 942 (GRC)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-127",
+    "category": "named_entity",
+    "question": "Can an Italian school publish staff absence registers mentioning Law 104 without violating GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9811361"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-128",
+    "category": "named_entity",
+    "question": "Can a telecom company keep sending me payment reminder emails every month even when I pay my bills on time? I want to opt out but they claim it's necessary for the contract.",
+    "relevant_source_ids": [
+      "ADA (Lithuania) - 2024-02-23"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-129",
+    "category": "named_entity",
+    "question": "Did Rossel Group get fined for cookie consent violations in Belgium?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 103/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-130",
+    "category": "edge_case",
+    "question": "Can I appeal to the First-tier Tribunal if the ICO refuses to take action on my data protection complaint against my bank?",
+    "relevant_source_ids": [
+      "First-tier Tribunal - Dennerlein v The Information Commissioner (2023) UKFTT 942 (GRC)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-131",
+    "category": "edge_case",
+    "question": "Can a bar in Spain install surveillance cameras facing the public street if they have a sign notifying people?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00389/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-132",
+    "category": "edge_case",
+    "question": "Can an insurance company in Belgium use customer health data for training employees and quality monitoring under legitimate interest?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 57/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-133",
+    "category": "edge_case",
+    "question": "Does GDPR apply to video recordings by private individuals of their neighbors in a residential garage?",
+    "relevant_source_ids": [
+      "BVwG - W258 2242162-1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-134",
+    "category": "edge_case",
+    "question": "Did AMEX get fined by the ICO for sending servicing emails that were actually marketing?",
+    "relevant_source_ids": [
+      "ICO (UK) - AMEX"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-135",
+    "category": "false_premise",
+    "question": "Did the Spanish DPA fine GSMA for GDPR violations at the Mobile World Congress 2022?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202201608"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-136",
+    "category": "false_premise",
+    "question": "Did the CNIL fine Free Mobile €300,000 for GDPR violations in 2021?",
+    "relevant_source_ids": [
+      "972"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-137",
+    "category": "false_premise",
+    "question": "Did SWDE get fined by the Belgian DPA for illegally transferring call recordings to third countries?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 102/2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-138",
+    "category": "false_premise",
+    "question": "Was Lindqvist fined by the CJEU for putting parishioner information on her church website?",
+    "relevant_source_ids": [
+      "CJEU - C-101/01 - Lindqvist"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-139",
+    "category": "false_premise",
+    "question": "Did Clearview AI get fined by the Italian DPA for scraping facial images from the web?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9751362"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-140",
+    "category": "false_premise",
+    "question": "Did the Danish DPA fine the IT University of Copenhagen for using ProctorExam with US-based subprocessors like AWS and Google Cloud after Schrems II?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2020-432-0034"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-141",
+    "category": "false_premise",
+    "question": "Was Vodafone actually fined by Romania's DPA for ignoring GDPR data subject access requests, or did they get off with just a warning?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against Vodafone Romania SA"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-142",
+    "category": "false_premise",
+    "question": "Did the Italian DPA fine Rome's municipality for GDPR violations with parking meters?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9698724"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-143",
+    "category": "false_premise",
+    "question": "Was Replika fined by the Italian DPA for processing children's data without proper legal basis?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9852214"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-144",
+    "category": "false_premise",
+    "question": "Was Austria fined by the European Commission for not having an independent data protection authority?",
+    "relevant_source_ids": [
+      "CJEU - C-614/10 - Commission v. Austria"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-145",
+    "category": "false_premise",
+    "question": "Didn't the Spanish data protection authority fine Poste Italiane around €6 million for GDPR violations recently?",
+    "relevant_source_ids": [
+      "3178"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-146",
+    "category": "false_premise",
+    "question": "Didn't the Spanish data protection authority fine Clearview AI €20 million for GDPR violations around 2022?",
+    "relevant_source_ids": [
+      "1268"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-147",
+    "category": "false_premise",
+    "question": "Did Groupon get fined by the Irish DPC for making people upload ID documents to delete their account?",
+    "relevant_source_ids": [
+      "DPC - C-XX-X-XX Groupon International Limited - December 2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-148",
+    "category": "false_premise",
+    "question": "Did UiPath get fined by the Romanian DPA for the data breach in 2023?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - 21.08.2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-149",
+    "category": "false_premise",
+    "question": "Did Swedish Customs get fined by the data protection authority for personal data breaches?",
+    "relevant_source_ids": [
+      "Datainspektionen - DI-2019-13112"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-150",
+    "category": "false_premise",
+    "question": "Did the Italian DPA fine Rinascente for violating data protection by design principles under Article 35?",
+    "relevant_source_ids": [
+      "2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-151",
+    "category": "false_premise",
+    "question": "Did Concevis get fined by the Swiss DPA for the ransomware attack on Federal Statistical Office data?",
+    "relevant_source_ids": [
+      "EDÖB/PFPDT/IFPDT (Switzerland) - Concevis"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-152",
+    "category": "false_premise",
+    "question": "Did Hearst Magazine Media get fined by the Austrian DPA for their cookie banner on Elle.com?",
+    "relevant_source_ids": [
+      "DSB (Austria) - D130.1178 2023-0.631.894"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-153",
+    "category": "false_premise",
+    "question": "Did Bürgerforum Schweiz get fined for the Pfarrer-Check campaign where they published church personnel's theological views?",
+    "relevant_source_ids": [
+      "EDÖB/PFPDT/IFPDT (Switzerland) - EDÖB-A-26B43401/1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-154",
+    "category": "false_premise",
+    "question": "I heard there was a Spanish case where a trade union got fined for sharing worker data on WhatsApp — what was the actual violation and how much was the fine?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00188/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-155",
+    "category": "false_premise",
+    "question": "Did the Danish DPA fine the Municipality of Odense for failing to respond to data subject access requests within the one month deadline?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2019-423-0202"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-156",
+    "category": "false_premise",
+    "question": "If someone publishes my CV from a public trial in a Facebook group, is that legal under GDPR since the document was already public?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - A/00291/2017"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-157",
+    "category": "false_premise",
+    "question": "Did the Greek DPA fine Omilos Iatriki Diagnosi for a data breach when a diagnostic centre employee called a patient's father with test results?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 3/2024"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-158",
+    "category": "false_premise",
+    "question": "Does Article 15(1)(h) GDPR require explaining the logic of automated decision-making even when Article 22 GDPR isn't triggered?",
+    "relevant_source_ids": [
+      "BVwG - W256 2233303-1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-159",
+    "category": "false_premise",
+    "question": "Did the Andalusian education ministry get fined for its Microsoft 365 schools contract?",
+    "relevant_source_ids": [
+      "CTPDA (Spain) - RPS-2025/082"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-160",
+    "category": "false_premise",
+    "question": "Didn't Latvia fine a processor €300,000 for a massive data breach affecting municipalities under Article 28 instead of Article 32?",
+    "relevant_source_ids": [
+      "DVI (Latvia) - SIA “ZZ Dats”"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-161",
+    "category": "false_premise",
+    "question": "Was the Madrid Health Department fined for the medical data breach where a third party unlawfully accessed patient files?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS-00587-2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-162",
+    "category": "false_premise",
+    "question": "Did the Italian DPA fine the Municipality of Verona for accidentally sharing an employee's health data about FFP2 mask request with warehouse staff?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10068155"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-163",
+    "category": "named_entity",
+    "question": "What was the GDPR fine imposed on Pagamastarde S.L. by the Spanish Data Protection Authority?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Pagamastarde S.L. (Spain)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-164",
+    "category": "article_lookup",
+    "question": "How did the Dutch DPA interpret the scope of Article 32(1) and 32(2) GDPR regarding security measures required for social insurance data processing?",
+    "relevant_source_ids": [
+      "Dutch Supervisory Authority for Data Protection (AP) — Dutch Social Insurance Institution (SVB) (The Netherlands)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-165",
+    "category": "article_lookup",
+    "question": "How did the BfDI interpret the security requirements under Article 32 GDPR regarding authentication measures for telecoms providers?",
+    "relevant_source_ids": [
+      "The Federal Commissioner for Data Protection and Freedom of Information (BfDI) — Telecoms provider (1&1 Telecom GmbH) (Germany)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-166",
+    "category": "article_lookup",
+    "question": "How was Article 6 GDPR interpreted regarding lawful basis for processing in the Italian Archery Federation case involving special category data?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Italian Archery Federation (FITARCO) (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-167",
+    "category": "article_lookup",
+    "question": "How does the Spanish Data Protection Authority interpret the lawful basis requirements under Article 6 GDPR when determining if processing is justified?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Company (Spain) [ET-1507, 2022-11-29, €3000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-168",
+    "category": "article_lookup",
+    "question": "How was Article 6 GDPR interpreted when determining whether publishing a signed delivery receipt on social media constitutes lawful processing without consent?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202406574"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-169",
+    "category": "conceptual",
+    "question": "Does GDPR allow professional associations to refuse access to personal data about members' qualifications based on privacy protections?",
+    "relevant_source_ids": [
+      "AKI (Estonia) - 2.1-3/22/2542"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-170",
+    "category": "conceptual",
+    "question": "Can a public authority refuse to disclose information about individuals under data protection laws when responding to freedom of information requests?",
+    "relevant_source_ids": [
+      "ICO - FS50839431"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-171",
+    "category": "conceptual",
+    "question": "Does GDPR require providing Article 13 information when collecting personal data for public health purposes through government portals?",
+    "relevant_source_ids": [
+      "IP - 0610-376/2020/35"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-172",
+    "category": "conceptual",
+    "question": "Does GDPR require erasure of personal data in police records after legal rehabilitation of the data subject?",
+    "relevant_source_ids": [
+      "CJEU - C-118/22 - Direktor na Glavna direktsia ‘Natsionalna politsia’ pri MVR – Sofia"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-173",
+    "category": "scenario",
+    "question": "What if we want to use a hosting provider for our whistleblowing platform and they claim they're just a sub-processor with no GDPR obligations to us—can we rely on that arrangement or do we need a direct contract with them as well?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9768387"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-174",
+    "category": "scenario",
+    "question": "What if our organization has been consistently responding to only 45% of subject access requests within the one-month deadline over the past three years, with the rest taking up to 90 days or more—could we face regulatory action even if we're making efforts to improve our processes?",
+    "relevant_source_ids": [
+      "ICO (UK) - Plymouth City Council"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-175",
+    "category": "scenario",
+    "question": "Can I process an employee's criminal record data that I lawfully obtained from a public prosecutor's office to terminate their employment contract, and can I share this information with our internal board of directors and external legal counsel?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 10/2025"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-176",
+    "category": "fine_lookup",
+    "question": "How much was ULPIA TRAJANA ALAMEDA S.L. fined for violating Articles 5 and 9 of the GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — ULPIA TRAJANA ALAMEDA S.L. (Spain)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-177",
+    "category": "fine_lookup",
+    "question": "How much was UAB MisterTango fined for violating GDPR articles 5, 32, and 33?",
+    "relevant_source_ids": [
+      "Lithuanian Data Protection Authority (VDAI) — Payment service provider UAB MisterTango (Lithuania)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-178",
+    "category": "fine_lookup",
+    "question": "How much was KVIKU SPAIN fined for violating GDPR Article 5?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — KVIKU SPAIN, S.L. (Spain) [ET-3052, 2026-01-10, €8000]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-179",
+    "category": "fine_lookup",
+    "question": "How much was the Spanish property owner fined for violating GDPR data accuracy requirements?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Property Owner (Spain) [ET-300, 2020-06-09, €2000]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-180",
+    "category": "fine_lookup",
+    "question": "How much was Vodafone fined by the Spanish Data Protection Authority for violating Article 6 of the GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Vodafone EspaÃ±a, S.A.U. (Spain) [ET-886, 2021-10-26, €64000]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-181",
+    "category": "cross_jurisdiction",
+    "question": "How does the Spanish Data Protection Authority's approach to GDPR Article 32 security violations compare to the UK ICO's enforcement, particularly regarding fines for companies failing to implement adequate technical safeguards?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — EVERIS SPAIN S.L (Spain)",
+      "Information Commissioner (ICO) — Ticketmaster UK Limited (United Kingdom)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-182",
+    "category": "cross_jurisdiction",
+    "question": "How does CNPD Portugal's approach to GDPR violations involving improper data sharing without legal basis compare to CNPD Luxembourg's handling of similar cases where controllers disclosed personal data to third parties, particularly regarding whether fines were imposed and which articles were found violated?",
+    "relevant_source_ids": [
+      "CNPD (Portugal) - Deliberação 2021/1569",
+      "CNPD (Luxembourg) - Délibération n° 18/FR/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-183",
+    "category": "cross_jurisdiction",
+    "question": "How does Luxembourg's CNPD approach to fining violations of Articles 5 and 13 GDPR compare to Slovenia's Supervisory Authority approach for similar transparency and information provision breaches?",
+    "relevant_source_ids": [
+      "National Commission for Data Protection (CNPD) — Unknown (Luxembourg) [ET-1001, 2021-12-01, €6800]",
+      "Slovenian Supervisory Authority (Informacijski pooblaÅ¡Äenec) — Legal Entity (Slovenia) [ET-3011, 2025-12-08, €5100]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-184",
+    "category": "cross_jurisdiction",
+    "question": "How does the EDPB's approach to transparency and information obligations violations compare to Datatilsynet's enforcement in similar GDPR cases, particularly regarding the level of fines imposed?",
+    "relevant_source_ids": [
+      "EDPB - Binding Decision 1/2021 - 'WhatsApp'",
+      "Datatilsynet (Norway) - 20/01648"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-185",
+    "category": "named_entity",
+    "question": "Was Orange Espagne fined by the Spanish Data Protection Authority for lawful basis violations under GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Orange Espagne S.A.U. (Spain) [ET-1701, 2023-03-23, €70000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-186",
+    "category": "named_entity",
+    "question": "Did the AEPD sanction a company for GDPR violations related to surveillance cameras and IoT devices?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00356/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-187",
+    "category": "named_entity",
+    "question": "Was ALBOR ENERGÍA S.L. fined by the Spanish Data Protection Authority for violating Article 28 GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — ALBOR ENERGÃA S.L. (Spain)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-188",
+    "category": "named_entity",
+    "question": "What was the Belgian DPA decision in case 09/2023 regarding right to erasure violations?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 09/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-189",
+    "category": "named_entity",
+    "question": "Was a Croatian information and communication company fined by the DPA for GDPR violations?",
+    "relevant_source_ids": [
+      "Croatian Data Protection Authority (azop) — Information and Communication Company (Croatia)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-190",
+    "category": "named_entity",
+    "question": "Did the Italian Garante fine Zito Auto di Gianfranco Zito for data processing violations?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Zito Auto di Gianfranco Zito (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-191",
+    "category": "edge_case",
+    "question": "Why was a EUR 16.6 million GDPR fine against Reddit dismissed with no outcome despite multiple article violations including children's data protection?",
+    "relevant_source_ids": [
+      "Information Commissioner (ICO) — Reddit, Inc. (United Kingdom)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-192",
+    "category": "edge_case",
+    "question": "When does GDPR Article 58(2) apply to private individuals rather than data controllers or processors?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Private individual (Spain) [ET-2319, 2024-02-19, €400]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-193",
+    "category": "edge_case",
+    "question": "When does a signed TV participation agreement fail to qualify as GDPR consent for data processing despite appearing to authorize filming?",
+    "relevant_source_ids": [
+      "CPDP (Bulgaria) - PPN-01-88/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-194",
+    "category": "edge_case",
+    "question": "Can a regional office of a public authority be considered a separate controller from the national body under Article 4(7) GDPR, and what happens if the DPA incorrectly identifies the controller in a GDPR complaint?",
+    "relevant_source_ids": [
+      "BVwG - W256 2232894-1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-195",
+    "category": "edge_case",
+    "question": "When does a GDPR violation result in no fine despite findings of multiple Article 5, 6, and 32 breaches for improper employee ID card transfers to third parties?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against Profi Rom Food Srl"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-196",
+    "category": "edge_case",
+    "question": "Can drivers demand information about automated decision-making when gig platforms deactivate their accounts under Article 15(1)(h) GDPR?",
+    "relevant_source_ids": [
+      "GHAMS - 200.295.742/01"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-197",
+    "category": "edge_case",
+    "question": "Can a healthcare provider be fined under GDPR for failing to conduct risk assessments before granting employee access to patient records under national Patient Data Act requirements?",
+    "relevant_source_ids": [
+      "Datainspektionen - DI-2019-3844"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-198",
+    "category": "false_premise",
+    "question": "Was a medical institute in Spain fined 50,000 euros by the AEPD for revealing health data and criminal history when responding to a Google review?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202206316"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-199",
+    "category": "false_premise",
+    "question": "What was the €50,000 fine imposed by the Italian DPA on the Turin University Hospital for the medical research studies involving deceased patients?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9963509"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-200",
+    "category": "multi_target",
+    "question": "How has Google LLC been challenged across different EU member states regarding data protection compliance, and what legal grounds have been used to justify or reject data subject rights requests?",
+    "relevant_source_ids": [
+      "Helsingin hallinto-oikeus (Finland) - H6072/2021",
+      "AEPD (Spain) - EXP202202000",
+      "CNIL (France) - SAN-2021-004"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-201",
+    "category": "multi_target",
+    "question": "What fines has the Czech Data Protection Authority imposed on legal persons for violations of Articles 6 and 14 GDPR, and how do the penalty amounts compare across different cases?",
+    "relevant_source_ids": [
+      "Czech Data Protection Auhtority (UOOU) — Legal Person (Czech Republic) [ET-2796, 2020-11-19, €4800]",
+      "Czech Data Protection Auhtority (UOOU) — Legal Person (Czech Republic) [ET-2803, 2020-12-18, €8800]",
+      "Czech Data Protection Auhtority (UOOU) — Legal Person (Czech Republic) [ET-2792, 2021-01-20, €26710]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-202",
+    "category": "multi_target",
+    "question": "What enforcement patterns can be seen in how the Greek DPA handles cases involving Article 5 GDPR violations, particularly comparing when fines are imposed versus when they are not?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 9/2025",
+      "HDPA (Greece) - 6/2020",
+      "HDPA (Greece) - 42/2024"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-203",
+    "category": "multi_target",
+    "question": "How many times was DIGI SPAIN TELECOM fined by the Spanish DPA in 2023 and what was the total amount for Article 6 GDPR violations?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — DIGI SPAIN TELECOM, S.L. (Spain) [ET-1881, 2023-06-13, €70000]",
+      "Spanish Data Protection Authority (aepd) — DIGI SPAIN TELECOM, S.L. (Spain) [ET-2042, 2023-09-26, €70000]",
+      "Spanish Data Protection Authority (aepd) — DIGI SPAIN TELECOM, S.L. (Spain) [ET-1790, 2023-04-25, €70000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-204",
+    "category": "named_entity",
+    "question": "Was there a case where the Berlin-Brandenburg tax office was ordered to pay damages under Article 82 GDPR related to a self-employment audit?",
+    "relevant_source_ids": [
+      "FG Berlin-Brandenburg - 16 K 16155/21"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-205",
+    "category": "named_entity",
+    "question": "What did the Hamburg data protection authority decide in the case involving a private individual acting as a data controller?",
+    "relevant_source_ids": [
+      "Data Protection Authority of Hamburg — Private individual (Germany) [ET-2439]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-206",
+    "category": "named_entity",
+    "question": "What did the Norwegian data protection authority decide in the Disqus case about GDPR compliance?",
+    "relevant_source_ids": [
+      "Norwegian Supervisory Authority (Datatilsynet) — Disqus Inc. (Norway)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-207",
+    "category": "article_lookup",
+    "question": "How was Article 58(1)(a) of the GDPR interpreted regarding the scope of investigative powers that data protection authorities can exercise in enforcement proceedings?",
+    "relevant_source_ids": [
+      "Polish National Personal Data Protection Office (UODO) — Unknown (Poland) [ET-2152, 2023-08-30, €13000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-208",
+    "category": "article_lookup",
+    "question": "How was Article 32 GDPR interpreted regarding technical and organizational security measures in this Hamburg enforcement decision?",
+    "relevant_source_ids": [
+      "Data Protection Authority of Hamburg — Company (Germany) [ET-1045]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-209",
+    "category": "article_lookup",
+    "question": "How was Article 6 GDPR interpreted when assessing whether retaining customer data after a corporate merger without obtaining new consent constitutes a valid legal basis for processing?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9860553"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-210",
+    "category": "article_lookup",
+    "question": "How was Article 32 GDPR interpreted by the Italian DPA regarding the requirement for appropriate security measures to prevent credential sharing in CRM systems?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9988710"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-211",
+    "category": "article_lookup",
+    "question": "How was Article 32 interpreted regarding technical and organizational security measures in the Croatian Data Protection Authority's September 2024 enforcement decision against the company fined €35,700?",
+    "relevant_source_ids": [
+      "Croatian Data Protection Authority (azop) — Company (Croatia) [ET-2495, 2024-09-13, €35700]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-212",
+    "category": "conceptual",
+    "question": "Can a company use video surveillance of employees based on legitimate interest under GDPR, and what safeguards must be implemented?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2020-431-0115"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-213",
+    "category": "conceptual",
+    "question": "Does GDPR require a company to respond to a data subject access request even if it claims to hold no data about the individual?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202202889"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-214",
+    "category": "conceptual",
+    "question": "Does GDPR require a company to prove that internal confidentiality measures actually stopped an employee from further unauthorized data access, or is implementing measures sufficient after discovering a breach?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 69/2024"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-215",
+    "category": "conceptual",
+    "question": "Does GDPR allow a balance between intellectual property enforcement and personal data privacy rights when seeking subscriber information from internet service providers?",
+    "relevant_source_ids": [
+      "CJEU - C-557/07 - LSG-Gesellschaft zur Wahrnehmung von Leistungsschutzrechten"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-216",
+    "category": "conceptual",
+    "question": "Does GDPR allow member states to mandate automatic collection and transfer of passenger data to government authorities without individual consent?",
+    "relevant_source_ids": [
+      "Constitutional Court (Belgium) - 135/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-217",
+    "category": "conceptual",
+    "question": "Can an administrative fine for data protection violations be considered criminal in nature under EU law?",
+    "relevant_source_ids": [
+      "CJEU - C‑27/22 - Volkswagen Group Italia and Volkswagen Aktiengesellschaft"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-218",
+    "category": "conceptual",
+    "question": "Does GDPR require informing job applicants when background checks are conducted using public sources rather than directly from the applicant?",
+    "relevant_source_ids": [
+      "BAG - 8 AZR 117/24"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-219",
+    "category": "scenario",
+    "question": "What if our company is required by national law to publish beneficial ownership information in a public register, but shareholders object citing GDPR privacy rights—can we legally disclose this data to the general public under EU law?",
+    "relevant_source_ids": [
+      "CJEU - C‑37/20 and C‑601/20 - Luxembourg Business Registers (Joined Cases)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-220",
+    "category": "scenario",
+    "question": "What if a company registered in one EU member state operates a website targeting users in another member state and processes their personal data there—which data protection authority has jurisdiction to investigate complaints?",
+    "relevant_source_ids": [
+      "CJEU - C-230/14 - Weltimmo"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-221",
+    "category": "scenario",
+    "question": "What if a data subject submits an access request with a qualified electronic signature, but we require them to provide a physical ID card instead—can we refuse the request if we have doubts about their identity even though we already have their full name, address and email from previous correspondence?",
+    "relevant_source_ids": [
+      "BVwG - W214 2228346-1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-222",
+    "category": "scenario",
+    "question": "What if we want to use a US-based analytics service that relies on standard contractual clauses for data transfers—would that comply with GDPR if unique identifiers from cookies are sent to servers in the US?",
+    "relevant_source_ids": [
+      "IMY (Sweden) - DI-2020-11397"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-223",
+    "category": "scenario",
+    "question": "What if a citizen contacts our DPO asking why their national register data was accessed, and we fail to respond within the one-month deadline under Article 12(3)? Would we be violating their right of access under Article 15 even if we eventually provide the information later?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 17/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-224",
+    "category": "fine_lookup",
+    "question": "How much was Romanian Post fined for violating Article 32 GDPR security requirements?",
+    "relevant_source_ids": [
+      "Romanian National Supervisory Authority for Personal Data Processing (ANSPDCP) — Romanian Post (Romania)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-225",
+    "category": "fine_lookup",
+    "question": "How much was the private individual fined by the Spanish Data Protection Authority for violating data accuracy and information obligations?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Private individual (Spain) [ET-2387, 2024-06-05, €800]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-226",
+    "category": "fine_lookup",
+    "question": "How much was the Spanish company fined for violating Article 5(1)(c) GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Company (Spain) [ET-1466, 2022-10-24, €240]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-227",
+    "category": "fine_lookup",
+    "question": "How much was the private individual fined for violating Article 13 GDPR in the Spanish Data Protection Authority case?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Private individual (Spain) [ET-2499, 2024-12-03, €300]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-228",
+    "category": "cross_jurisdiction",
+    "question": "How does the Dutch Supervisory Authority's approach to GDPR violations involving unlawful processing compare to Bulgaria's Commission for Personal Data Protection, particularly regarding fine amounts and which articles are emphasized in enforcement?",
+    "relevant_source_ids": [
+      "Dutch Supervisory Authority for Data Protection (AP) — Dutch Tax and Customs Administration (The Netherlands)",
+      "Commission for Personal Data Protection (KZLD) — Commercial representative of telecommunication service provider (Bulgaria)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-229",
+    "category": "cross_jurisdiction",
+    "question": "How does the ICO's approach to public interest data access requests compare to Cyprus's handling of workplace surveillance cases, particularly regarding whether fines were imposed for Article 5 and Article 6 violations?",
+    "relevant_source_ids": [
+      "ICO - FS50908339",
+      "Commissioner (Cyprus) - 11.17.001.010.201"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-230",
+    "category": "cross_jurisdiction",
+    "question": "How does the UK ICO's approach to GDPR violations involving Articles 5(1)(a), 6, and 9 compare to the Italian Garante's enforcement for similar breaches, particularly regarding the significant difference in fine amounts and the inclusion of special category data violations?",
+    "relevant_source_ids": [
+      "Information Commissioner (ICO) — Easylife Ltd. (United Kingdom)",
+      "Italian Data Protection Authority (Garante) — Villabate municipality (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-231",
+    "category": "cross_jurisdiction",
+    "question": "How does the Austrian DSB's approach to fining a journalist EUR 80 for GDPR violations compare to the Polish UODO's EUR 17,600 fine against the Chief Commander of the Police for similar Article 6 breaches, and what factors explain such dramatic differences in enforcement severity between these DPAs?",
+    "relevant_source_ids": [
+      "Austrian Data Protection Authority (dsb) — Journalist (Austria)",
+      "Polish National Personal Data Protection Office (UODO) — Chief Commander of the Police (Poland)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-232",
+    "category": "cross_jurisdiction",
+    "question": "How does Spain's AEPD approach to fining GDPR transparency violations compare to the Netherlands' GHDHA approach where no fine was imposed, particularly regarding Articles 12-14 compliance requirements?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00234/2020",
+      "GHDHA - 200.290.360-01"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-233",
+    "category": "named_entity",
+    "question": "Was a Spanish homeowners association fined by the AEPD for violating data protection principles?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Homeowners Association (Spain) [ET-1166, 2022-05-11, €6000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-234",
+    "category": "named_entity",
+    "question": "Did the Italian Garante fine the Lombardy Regional Education Office for unlawful processing of sensitive data?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Ufficio Scolastico Regionale per la Lombardia, Ufficio IV - Ambito Territoriale di Brescia (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-235",
+    "category": "named_entity",
+    "question": "What did the Austrian DSB decide in case D130.200 regarding transparency and access rights?",
+    "relevant_source_ids": [
+      "DSB (Austria) - D130.200"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-236",
+    "category": "edge_case",
+    "question": "Can a single unsolicited marketing email to a lawyer constitute a GDPR violation based on interference with professional business activities rather than standard consent requirements?",
+    "relevant_source_ids": [
+      "AG Hamburg-Bergedorf - 410d C 197/20"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-237",
+    "category": "edge_case",
+    "question": "Can a GDPR violation be settled for a nominal payment without a formal fine when a company updates its outdated privacy policy?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00266/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-238",
+    "category": "edge_case",
+    "question": "When does GDPR apply to cookie consent banners versus national ePrivacy laws like LSSI",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202307483"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-239",
+    "category": "edge_case",
+    "question": "When does the Danish Datatilsynet dismiss complaints finding no GDPR violation despite alleged Article 32 security breaches by law firms?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2019-41-0026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-240",
+    "category": "edge_case",
+    "question": "When does GDPR Article 32 security violation result in no fine despite upheld finding of inadequate technical and organisational measures for employee data access controls?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - 02/07/2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-241",
+    "category": "false_premise",
+    "question": "Did the Italian Data Protection Authority fine INPS 40,000 euros for violating Articles 5 and 6 of the GDPR?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Istituto Nazionale di Previdenza Sociale (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-242",
+    "category": "false_premise",
+    "question": "Was ENERGY WINNER fined 1,200 euros by the Spanish Data Protection Authority for violating Article 58 GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — ENERGY WINNER, S.L. (Spain)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-243",
+    "category": "false_premise",
+    "question": "Was the Cypriot Ministry of Interior fined 16,000 euros by the Data Protection Commissioner for GDPR violations?",
+    "relevant_source_ids": [
+      "Cypriot Data Protection Commissioner — Cypriot Ministry of the Interior (Cyprus)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-244",
+    "category": "multi_target",
+    "question": "How have different European DPAs interpreted Article 6(1)(c) GDPR regarding lawful basis for processing in public sector contexts, and what variations exist in their enforcement approaches across tax administration, municipal government, and consumer protection authorities?",
+    "relevant_source_ids": [
+      "AG - C-175/20 - Valsts ieņēmumu dienests (Processing of personal data for tax purposes)",
+      "Garante per la protezione dei dati personali (Italy) - 10073751",
+      "ANSPDCP (Romania) - Fine to ANPC (National Authority for Consumer Protection)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-245",
+    "category": "multi_target",
+    "question": "How do different EU data protection authorities interpret and penalize violations of Article 5(1)(c) GDPR regarding data minimization and accuracy requirements?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Educationest s.r.l. (Italy)",
+      "Romanian National Supervisory Authority for Personal Data Processing (ANSPDCP) — S.C. Tip Top Food Industry S.R.L (Romania)",
+      "Hungarian National Authority for Data Protection and the Freedom of Information (NAIH) — Budapesti MÅ±szaki Ã©s GazdasÃ¡gtudomÃ¡nyi Egyetem (Budapest University of Technology and Economics) (Hungary)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-246",
+    "category": "multi_target",
+    "question": "What fines has Telefónica Móviles España received for Article 6(1) GDPR violations and what patterns exist in the Spanish DPA's penalty decisions for this company?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00182/2020",
+      "AEPD (Spain) - PS/00235/2020",
+      "AEPD (Spain) - PS/00198/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-247",
+    "category": "multi_target",
+    "question": "What legal strategies has La Quadrature du Net used in their challenges against French surveillance and data retention laws, and what outcomes have they achieved across their cases before the French administrative courts and CJEU?",
+    "relevant_source_ids": [
+      "CE - 393099",
+      "CE - N. 433539",
+      "CE - 440442 & 440445"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-248",
+    "category": "named_entity",
+    "question": "What was the outcome of the Irish DPC inquiry into Airbnb requiring users to submit ID card photos for identity verification?",
+    "relevant_source_ids": [
+      "DPC (Ireland) - Inquiry into Airbnb Ireland UC - 28 September 2023"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-249",
+    "category": "named_entity",
+    "question": "What GDPR fine did Panek SA receive from the Polish data protection authority for security violations?",
+    "relevant_source_ids": [
+      "Polish National Personal Data Protection Office (UODO) — Panek SA (Poland)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-250",
+    "category": "named_entity",
+    "question": "What did the Italian DPA decide about the Comune di Trento using AI surveillance systems Marvel and Protector?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9977020"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-251",
+    "category": "article_lookup",
+    "question": "How does Article 5(1)(a) GDPR on lawfulness of processing apply when determining whether data processing meets the fairness and transparency requirements in enforcement cases?",
+    "relevant_source_ids": [
+      "Italian Data Protection Authority (Garante) — Borgo Fonte Scura s.r.l. (Italy)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-252",
+    "category": "article_lookup",
+    "question": "How was Article 7 GDPR interpreted regarding the validity of consent when dark patterns are used to repeatedly solicit marketing consent from users who have already declined?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9870014"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-253",
+    "category": "conceptual",
+    "question": "Can a company use personal data obtained from a third party for telemarketing without verifying the legal basis for processing?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10086536"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-254",
+    "category": "conceptual",
+    "question": "Does GDPR require companies to delete personal data of former customers who have unsubscribed?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - Gyldendal A/S"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-255",
+    "category": "conceptual",
+    "question": "Can a company use personal data as evidence in civil proceedings while remaining compliant with GDPR data minimization requirements?",
+    "relevant_source_ids": [
+      "Hoge Raad - ECLI:NL:PHR:2023:935"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-256",
+    "category": "conceptual",
+    "question": "Does GDPR require data controllers to verify that processors implement adequate identity verification procedures to prevent fraudulent access to personal data?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Vodafone România SA"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-257",
+    "category": "conceptual",
+    "question": "Can a data controller appeal a supervisory authority's decision advising on measures to comply with data subject rights under GDPR?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 39/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-258",
+    "category": "scenario",
+    "question": "What if we discover during a routine security scan that an internal file drive containing employee personal data was accidentally left open with broader access permissions than intended—do we need to report this as a personal data breach even if we cannot determine whether anyone actually viewed the data?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2024-442-4149"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-259",
+    "category": "scenario",
+    "question": "What if a political party obtains patient contact information from healthcare providers and uses it to send targeted campaign materials to those individuals? Can I as a DPO for a medical association allow doctors to share patient data for electoral purposes, or would this violate purpose limitation principles under GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00449/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-260",
+    "category": "fine_lookup",
+    "question": "How much was the private individual fined by the Austrian Data Protection Authority for GDPR violations?",
+    "relevant_source_ids": [
+      "Austrian Data Protection Authority (dsb) — Private individual (Austria) [ET-2076, 2023-06-16, €1000]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-261",
+    "category": "fine_lookup",
+    "question": "How much was Viking Line fined for GDPR violations related to data protection principles?",
+    "relevant_source_ids": [
+      "Deputy Data Protection Ombudsman — Viking Line Oy Abp (Finland)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-262",
+    "category": "fine_lookup",
+    "question": "How much was Delivery Hero fined for violating Articles 15, 17, and 21 of the GDPR?",
+    "relevant_source_ids": [
+      "Data Protection Authority of Berlin — Delivery Hero (Germany)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-263",
+    "category": "fine_lookup",
+    "question": "How much was SERVICIOS INTEGRALES DEL HOGAR TENERIFE fined for violating Article 6 of the GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — SERVICIOS INTEGRALES DEL HOGAR TENERIFE, S.L. (Spain)"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-264",
+    "category": "fine_lookup",
+    "question": "How much was the private person fined by the Spanish Data Protection Authority for violating Article 5 GDPR?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Private Person (Spain) [ET-547, 2021-02-08, €5000]"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-265",
+    "category": "cross_jurisdiction",
+    "question": "How does Latvia's Data State Inspectorate approach to Article 6 GDPR violations compare to Denmark's Datatilsynet in terms of fine amounts and enforcement severity?",
+    "relevant_source_ids": [
+      "Data State Inspectorate (DSI) — Unknown (Latvia) [ET-120, €150000]",
+      "Danish Data Protection Authority (Datatilsynet) — Nordbornholms Byggeforretning Aps (Denmark)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-266",
+    "category": "cross_jurisdiction",
+    "question": "How does Spain's AEPD approach to Article 5(1)(a) GDPR violations involving public officials compare to Germany's Berlin DPA handling of similar unlawful processing cases, particularly regarding whether fines were imposed?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00113/2019",
+      "BlnBDI (Berlin) - 521.11.871"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-267",
+    "category": "cross_jurisdiction",
+    "question": "How does the Czech Data Protection Authority's approach to fining for Article 32 GDPR violations compare to Finland's Deputy Data Protection Ombudsman's handling of similar security breach cases, and why is there such a significant difference in fine amounts between these two jurisdictions?",
+    "relevant_source_ids": [
+      "Czech Data Protection Auhtority (UOOU) — Individual entrepreneur - no further details published (Czech Republic)",
+      "Deputy Data Protection Ombudsman — Travel agency (Finland)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-268",
+    "category": "cross_jurisdiction",
+    "question": "How does the Polish National Personal Data Protection Office's approach to GDPR violations compare to the Irish Data Protection Authority's when both found breaches of Articles 5(1) and 6(1), given the significant difference in fines imposed (over EUR 4 million vs EUR 550,000)?",
+    "relevant_source_ids": [
+      "Polish National Personal Data Protection Office (UODO) — ING Bank ÅlÄski (Poland)",
+      "Data Protection Authority of Ireland — Departement of Social Security (Ireland)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-269",
+    "category": "named_entity",
+    "question": "What did Datatilsynet decide in the PVN-2023-01 appeal case about legitimate interest under Article 6(1)(f) GDPR?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - PVN-2023-01"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-270",
+    "category": "edge_case",
+    "question": "Can a GDPR fine be justified when a credit rating was an honest mistake by an employee using Google search rather than intentional data misuse?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 21/02293"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-271",
+    "category": "edge_case",
+    "question": "Can waste collection data with chipped containers be processed under public interest legal basis when it creates detailed household surveillance profiles?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - Boete voor gemeente Voorschoten"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-272",
+    "category": "edge_case",
+    "question": "Can a deceased person's data subject rights be exercised by a niece or nephew who is not the legal heir or executor under GDPR Articles 15 and 17?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202201987"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-273",
+    "category": "edge_case",
+    "question": "What is the significance of a €400 fine under Article 58(2) GDPR and when do supervisory authorities impose such minimal penalties?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Private individual (Spain) [ET-2406, 2024-04-15, €400]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-274",
+    "category": "edge_case",
+    "question": "When does a public authority's publication of employee data on its website violate GDPR despite claiming public interest, especially with health data included?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9955372"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-275",
+    "category": "false_premise",
+    "question": "Was Vodafone Spain fined only 96 euros by the AEPD for unauthorized phone line registration under Article 6 GDPR in 2020?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00009/2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-276",
+    "category": "false_premise",
+    "question": "Did the AEPD fine BIZUM 50,000 euros for a data breach affecting 20,000 users under Article 32 GDPR in 2023?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202318538"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-277",
+    "category": "false_premise",
+    "question": "Danish DPA fined Copenhagen municipality €50,000 for repeatedly subscribing citizen data to CPR system after deletion requests",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2018-32-0232"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-278",
+    "category": "false_premise",
+    "question": "Was Vodafone Espana fined 80,000 euros by the Spanish Data Protection Authority for GDPR violations?",
+    "relevant_source_ids": [
+      "Spanish Data Protection Authority (aepd) — Vodafone EspaÃ±a, SAU (Spain) [ET-914, 2021-11-23, €40000]"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-279",
+    "category": "false_premise",
+    "question": "What was the fine amount when the Italian DPA fined Budapest University of Technology and Economics EUR 44,400 for GDPR violations including Articles 5 and 6?",
+    "relevant_source_ids": [
+      "Hungarian National Authority for Data Protection and the Freedom of Information (NAIH) — Budapesti MÅ±szaki Ã©s GazdasÃ¡gtudomÃ¡nyi Egyetem (Budapest University of Technology and Economics) (Hungary)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-280",
+    "category": "multi_target",
+    "question": "What patterns emerge in how the Swedish Data Protection Authority applies fines across different types of GDPR violations, and what is the typical penalty range for transparency and data breach notification failures?",
+    "relevant_source_ids": [
+      "Data Protection Authority of Sweden (Integritetsskyddsmyndigheten) — Region Stockholm (Sweden)",
+      "Data Protection Authority of Sweden (Integritetsskyddsmyndigheten) — National Government Service Centre (NGSC) (Sweden)",
+      "Data Protection Authority of Sweden (Integritetsskyddsmyndigheten) — MedHelp AB (Sweden)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-281",
+    "category": "multi_target",
+    "question": "What is the range of GDPR fines imposed by the Danish Data Protection Authority and which articles were violated in their recent enforcement actions?",
+    "relevant_source_ids": [
+      "Danish Data Protection Authority (Datatilsynet) — ILVA A/S (Denmark)",
+      "Danish Data Protection Authority (Datatilsynet) — Gyldendal A/S (Denmark)",
+      "Danish Data Protection Authority (Datatilsynet) — Municipality of Vejen (Denmark)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-282",
+    "category": "multi_target",
+    "question": "How has Google responded to right to be forgotten requests from public sector employees across different EU jurisdictions, and what legal avenues exist when data subjects disagree with the outcome?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10145853",
+      "Garante per la protezione dei dati personali (Italy) - 10132518",
+      "High Court - IEHC 577"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-283",
+    "category": "multi_target",
+    "question": "What types of GDPR violations has the Cypriot Data Protection Commissioner fined and what is the range of penalty amounts they typically impose?",
+    "relevant_source_ids": [
+      "Cypriot Data Protection Commissioner — Brivio Limited (Cyprus)",
+      "Cypriot Data Protection Commissioner — Physician (Cyprus) [ET-1267, €1500]",
+      "Cypriot Data Protection Commissioner — Hellenic Technical Enterprises Ltd. (Cyprus)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-284",
+    "category": "named_entity",
+    "question": "What did Datatilsynet decide about the legal basis for a municipality conducting a school bullying survey?",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 20/01949"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-285",
+    "category": "named_entity",
+    "question": "What was the Belgian DPA decision on the cookie consent complaint against RTBF?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 169/2022"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-286",
+    "category": "named_entity",
+    "question": "What was the AEPD decision when Caixabank required clients to consent to sharing their data with Social Security?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202300944"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-287",
+    "category": "named_entity",
+    "question": "What was the GDPR fine for Association SOS Infertility in Romania for not complying with data protection investigation?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Association SOS Infertility"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-288",
+    "category": "named_entity",
+    "question": "Datatilsynet case against Bodø Kommunale Pensjonskasse for processing medical data",
+    "relevant_source_ids": [
+      "Datatilsynet (Norway) - 20/01865"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-289",
+    "category": "named_entity",
+    "question": "Did the AEPD sanction AD735 DATA MEDIA ADVERTISING for failing to comply with a data subject access request?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202101314"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-290",
+    "category": "article_lookup",
+    "question": "How does Article 8 GDPR apply to determining controller responsibility when a processor violates data protection rules?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202307696"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-291",
+    "category": "article_lookup",
+    "question": "How was Article 6(1)(e) GDPR interpreted to justify video surveillance of private property by a public authority for security purposes?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00028/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-292",
+    "category": "article_lookup",
+    "question": "How was Article 6(1)(f) GDPR interpreted when balancing legitimate interests against data subject rights in a FOIA disclosure context involving redacted recruitment documents?",
+    "relevant_source_ids": [
+      "ICO - IC-44531-X9L7"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-293",
+    "category": "article_lookup",
+    "question": "How does Article 6 GDPR apply to the legal basis for re-using personal data that was originally disclosed in public registers for other purposes?",
+    "relevant_source_ids": [
+      "AKI (Estonia) - 2.1-1/19/4627"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-294",
+    "category": "conceptual",
+    "question": "Does GDPR require a 'refuse' option on the first level of information in a cookie banner?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 162/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-295",
+    "category": "conceptual",
+    "question": "Does GDPR require a privacy policy to provide complete information about data subject rights including access, rectification, erasure, and information requests?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS-00393-2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-296",
+    "category": "conceptual",
+    "question": "Does GDPR require companies to retain video surveillance footage when requested by a data subject for legal claims?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00267/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-297",
+    "category": "conceptual",
+    "question": "Does GDPR require a Data Protection Impact Assessment to include detailed algorithm descriptions with configuration parameters and assumptions for scientific review?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9356568"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-298",
+    "category": "scenario",
+    "question": "What if our organization wants to publish the names of candidates who passed a competitive selection process on our public website to demonstrate transparency—would this be lawful under GDPR if we also include their anonymized ID numbers and assigned categories?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202100897"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-299",
+    "category": "scenario",
+    "question": "What if a local government body receives a freedom of information request for meeting minutes and needs to decide whether redacting attendees' names is necessary to comply with data protection laws?",
+    "relevant_source_ids": [
+      "ICO - FS50777458"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-300",
+    "category": "scenario",
+    "question": "What if our marketing website places analytics and tracking cookies on visitors' devices without showing a cookie banner first, assuming we can rely on implied consent? Can we be fined even if the cookies don't collect obviously sensitive data?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against There's an AI for that S.R.L"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-301",
+    "category": "scenario",
+    "question": "What happens if our data subject appeals to court after we already accepted the DPA's ruling in their favor on a confidentiality breach complaint—can they still challenge procedural aspects or are they barred for lack of standing?",
+    "relevant_source_ids": [
+      "BVwG - W2522299666-1/6E"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-302",
+    "category": "fine_lookup",
+    "question": "How much was Ibercaja fined for violating Article 6 of the GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00241/2022"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-303",
+    "category": "fine_lookup",
+    "question": "How much was Valoris Center S.R.L. fined for violating GDPR articles 29 and 32?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Valoris Center S.R.L."
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-304",
+    "category": "fine_lookup",
+    "question": "How much was Papa John's fined by the ICO for GDPR violations?",
+    "relevant_source_ids": [
+      "ICO (UK) - Papa John's (GB) Limited"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-305",
+    "category": "fine_lookup",
+    "question": "How much was the Municipality of Bolzano fined for GDPR violations?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9669974"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-306",
+    "category": "fine_lookup",
+    "question": "How much was Leave.EU fined for the GDPR violation with Eldon Insurance?",
+    "relevant_source_ids": [
+      "ICO (UK) - Leave.EU and Eldon Insurance"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-307",
+    "category": "fine_lookup",
+    "question": "How much was B&T S.p.A. fined by the Italian data protection authority for GDPR violations?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9737185"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-308",
+    "category": "cross_jurisdiction",
+    "question": "How does Cyprus's approach to handling unauthorized social media posting of health data compare to Germany's enforcement actions for telecom contract data processing violations, particularly regarding whether fines were imposed?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 11.17.001.010.199",
+      "BGH - VI ZR 183/22"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-309",
+    "category": "cross_jurisdiction",
+    "question": "How does Cyprus's approach to GDPR enforcement for data processing without valid legal basis compare to Luxembourg's handling of similar Article 6 violations, particularly regarding whether fines were imposed?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 1.17.001.007.270",
+      "CA Luxembourg - 52757C"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-310",
+    "category": "cross_jurisdiction",
+    "question": "How does Belgium's approach to GDPR violations involving health data collection compare to Estonia's handling of consent-based image publication cases, particularly regarding fines and legal basis requirements?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 95/2023",
+      "AKI (Estonia) - 2.1.-6/20/19"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-311",
+    "category": "cross_jurisdiction",
+    "question": "How does the AEPD in Spain compare to Datatilsynet in Denmark regarding their approach to facial recognition and biometric data processing in stadiums and public venues, particularly regarding fines and Articles 5 and 9 GDPR interpretation?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202212956",
+      "Datatilsynet (Denmark) - 2023-431-0013"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-312",
+    "category": "cross_jurisdiction",
+    "question": "How does Germany's approach to enforcing GDPR transparency obligations compare to Slovenia's approach when handling violations of Article 13, and what explains the difference in fines imposed despite similar breaches?",
+    "relevant_source_ids": [
+      "BGH - VI ZR 431/24",
+      "IP (Slovenia) - 0612-91/2025/40"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-313",
+    "category": "cross_jurisdiction",
+    "question": "How does the ICO's approach to GDPR violations by credit reference agencies compare to Italy's Garante handling of data protection breaches by energy companies, particularly regarding enforcement actions without fines under Articles 5 and 6?",
+    "relevant_source_ids": [
+      "ICO - Enforcement Notice against Experian",
+      "Garante per la protezione dei dati personali (Italy) - 10238270"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-314",
+    "category": "named_entity",
+    "question": "What was the French Conseil d Etat ruling in case 467271 regarding public health data processing?",
+    "relevant_source_ids": [
+      "CE - 467271"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-315",
+    "category": "named_entity",
+    "question": "Did the Italian Garante fine a telecom company for consent and transparency violations under GDPR?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9871886"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-316",
+    "category": "named_entity",
+    "question": "What did the Austrian DSB decide in case 2025-0.960.016 regarding employee data processing and 360-degree feedback?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2025-0.960.016"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-317",
+    "category": "named_entity",
+    "question": "Was a company sanctioned by the Belgian DPA in decision 188/2022 for transparency and lawful basis violations?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 188/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-318",
+    "category": "named_entity",
+    "question": "What was the French Conseil d Etat ruling in case 472221 regarding consent violations for advertising?",
+    "relevant_source_ids": [
+      "CE - 472221"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-319",
+    "category": "edge_case",
+    "question": "When can a bank refuse to delete fraud-related data despite GDPR erasure requests under Article 21 legitimate interest balancing test",
+    "relevant_source_ids": [
+      "GHAL - 200.266.445"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-320",
+    "category": "edge_case",
+    "question": "When does GDPR require a DPIA for police use of mobile surveillance cameras in public health emergencies?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - mobiele camera-auto's Rotterdam - besluit tot boeteoplegging"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-321",
+    "category": "edge_case",
+    "question": "When can a data protection authority overrule its own investigator's recommendation and find no DPO violation despite audit concerns?",
+    "relevant_source_ids": [
+      "CNPD (Luxembourg) - Délibération n° 42FR/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-322",
+    "category": "false_premise",
+    "question": "Did Datatilsynet fine Helsingor Municipality 50,000 euros for violating Article 32 GDPR in the Google Chromebooks case?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2020-431-0061 (Helsingor decision no. 3)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-323",
+    "category": "false_premise",
+    "question": "Did the Dutch DPA fine UWV 50,000 euros for inadequate authentication on their employee health data portal?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - z2018-02009"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-324",
+    "category": "false_premise",
+    "question": "Did the CNIL fine an Italian research institution 50,000 euros for failing to conduct a DPIA under Article 35 for an epilepsy study?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2023-0076"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-325",
+    "category": "false_premise",
+    "question": "Did the Romanian DPA fine Continental Automotive Products 50,000 euros for an employee health data breach involving a spreadsheet?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - 19.01.2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-326",
+    "category": "false_premise",
+    "question": "What was the outcome when the Italian data protection authority fined Planet49 for violating Article 32 GDPR in the cookie consent lottery case",
+    "relevant_source_ids": [
+      "CJEU - C-673/17 - Planet49"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-327",
+    "category": "multi_target",
+    "question": "What GDPR violations has CaixaBank been investigated for by the Spanish data protection authority, and what types of enforcement actions were taken?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202307481",
+      "AEPD (Spain) - TD/00054/2020",
+      "AEPD (Spain) - E/08501/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-328",
+    "category": "named_entity",
+    "question": "What did the Austrian DSB decide regarding the application by A*** GmbH for accreditation of a code of conduct under Article 41 GDPR?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2020-0.605.768"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-329",
+    "category": "named_entity",
+    "question": "How much was OSL Financial Consultancy fined by the ICO for sending nuisance marketing texts during COVID-19?",
+    "relevant_source_ids": [
+      "ICO - Monetary Penality Notice on OSL Financial Consultancy"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-330",
+    "category": "named_entity",
+    "question": "What happened in the GDPR case where GSE Gestore Servizi Energetici refused to provide access to employee performance evaluation data?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10018813"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-331",
+    "category": "named_entity",
+    "question": "CRIF credit information agency GDPR case Article 15 access request Austria",
+    "relevant_source_ids": [
+      "DSB (Austria) - D124.2695/24 2025-0.328.963"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-332",
+    "category": "named_entity",
+    "question": "German financial advisory firm employee data access request Article 15 GDPR copy personal data",
+    "relevant_source_ids": [
+      "BGH - VI ZR 330/21"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-333",
+    "category": "named_entity",
+    "question": "What was the GDPR fine against Spark Car Sharing in Romania for marketing without consent",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against SC Spark Car Sharing SRL"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-334",
+    "category": "named_entity",
+    "question": "ANSPDCP decision Piramida Trade Invest employee monitoring GDPR",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against SC Piramida Trade Invest SRL"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-335",
+    "category": "named_entity",
+    "question": "GSMA LTD GDPR case Spain facial recognition event registration",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202100603"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-336",
+    "category": "article_lookup",
+    "question": "How is Article 37(7) GDPR interpreted regarding the accessibility of Data Protection Officer contact details on a controller's website?",
+    "relevant_source_ids": [
+      "CNPD (Luxembourg) - Délibération n° 38FR/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-337",
+    "category": "article_lookup",
+    "question": "How does Article 12(3) GDPR apply when a controller fails to inform a data subject of an extension within the one-month time limit for access requests?",
+    "relevant_source_ids": [
+      "IP (Slovenia) - 0602-18/2024/43"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-338",
+    "category": "article_lookup",
+    "question": "How does Article 21 GDPR apply to telephone marketing where consumers have not given prior consent and actively object to such calls?",
+    "relevant_source_ids": [
+      "BfDI (Germany) - 11.02.2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-339",
+    "category": "article_lookup",
+    "question": "How was Article 44 GDPR interpreted regarding the transfer of personal data to Facebook Inc. as a data processor when using Facebook Business Tools on third-party websites?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 11.17.001.008.229"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-340",
+    "category": "article_lookup",
+    "question": "How does Article 58(2)(b) GDPR apply when a data protection authority finds a minor infringement and chooses to issue a reprimand instead of a fine?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9547248"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-341",
+    "category": "conceptual",
+    "question": "Can a controller require additional identity verification documents for exercising GDPR rights if such documents were not required when the data was originally collected?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - TD/00013/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-342",
+    "category": "conceptual",
+    "question": "Can a company refuse a data subject access request if the personal data was unlawfully deleted before the request was made?",
+    "relevant_source_ids": [
+      "HDPA (Greece) - 36/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-343",
+    "category": "scenario",
+    "question": "What if our privacy policy lists different processing purposes than what we actually tell users during account creation and in response to access requests - would that violate GDPR information obligations even if we haven't been fined yet?",
+    "relevant_source_ids": [
+      "AP (The Netherlands) - Netflix"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-344",
+    "category": "scenario",
+    "question": "What if a courier company we contract with delivers parcels to neighbours without obtaining prior consent from the data subjects, and when we investigate, the courier claims they are merely a processor and we're solely responsible for any privacy breach—how do we establish actual controller-processor responsibilities under GDPR and what security measures must we ensure are in place?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00280/2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-345",
+    "category": "scenario",
+    "question": "What if one of our retail employees uses their phone to record CCTV footage and posts it on social media without authorization? Would we be held liable under GDPR for failing to prevent this, even if we have internal policies prohibiting such behavior?",
+    "relevant_source_ids": [
+      "AZOP (Croatia) - Decision 08-03-2022 (supermarket chain)"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-346",
+    "category": "scenario",
+    "question": "What if a user claims damages because their phone number was exposed due to privacy settings they configured themselves, even though the information was technically accessible on the platform? Can we argue that there's no compensable damage under Article 82 GDPR when the user controlled the visibility settings and the exposure was limited?",
+    "relevant_source_ids": [
+      "AG München - 178 C 13527/22"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-347",
+    "category": "scenario",
+    "question": "What if a customer from another EU country repeatedly requests access to their data and also demands damages, but we've already provided the information and their requests seem disproportionate—can we reject further requests as excessive and avoid liability for damages?",
+    "relevant_source_ids": [
+      "AG Arnsberg - 42 C 434/23"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-348",
+    "category": "scenario",
+    "question": "What if a telecommunications provider issues a duplicate SIM card to someone other than the account holder without verifying their identity, and that person uses it to commit fraud—can the provider be held liable under GDPR for lacking a valid legal basis for the processing?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202315096"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-349",
+    "category": "fine_lookup",
+    "question": "How much was the fine for violating Article 6(1) GDPR in the Spanish AEPD case?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00200/2021"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-350",
+    "category": "fine_lookup",
+    "question": "How much was EDP ENERGIA fined for violating Article 6 of the GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00132/2020"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-351",
+    "category": "cross_jurisdiction",
+    "question": "How does Sweden's approach to direct marketing consent violations compare to Italy's handling of unlawful data publication in employment contexts, particularly regarding whether fines were imposed?",
+    "relevant_source_ids": [
+      "IMY (Sweden) - DI-2020-10545",
+      "Garante per la protezione dei dati personali (Italy) - 10019523"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-352",
+    "category": "cross_jurisdiction",
+    "question": "How does Cyprus's approach to fining media companies for publishing personal data compare to Greece's handling of workplace surveillance cases, particularly regarding the application of Article 5(1)(c) GDPR and proportionality of fines?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 17.05.23",
+      "HDPA (Greece) - 12/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-353",
+    "category": "cross_jurisdiction",
+    "question": "How does Greece's approach to fining banks for unauthorized data disclosure to third parties compare to the EU's interpretation of health data processing violations in Germany?",
+    "relevant_source_ids": [
+      "CJEU - C-667/21 - Krankenversicherung Nordrhein",
+      "HDPA (Greece) - 4/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-354",
+    "category": "cross_jurisdiction",
+    "question": "How does the CJEU's approach to GDPR transparency obligations under Articles 13 and 14 compare to Romania's ANSPDCP enforcement against CCTV surveillance in businesses, particularly regarding the balance between controller obligations and data subject rights?",
+    "relevant_source_ids": [
+      "CJEU - Case C-422/24 - AB Storstockholms Lokaltrafik",
+      "ANSPDCP (Romania) - Fine against Denmar Nacrut SRL"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-355",
+    "category": "cross_jurisdiction",
+    "question": "How does France's CNIL approach to GDPR violations involving data retention and security compare to Estonia's AKI handling of similar cases, particularly regarding the use of fines versus warnings?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2020-003",
+      "AKI (Estonia) - No. 2.1-1/24/397-890-38"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-356",
+    "category": "cross_jurisdiction",
+    "question": "How does Sweden's approach to GDPR Article 5(1)(a) violations regarding incomplete data subject access responses compare to the United Kingdom's interpretation when no monetary fines were imposed in either jurisdiction?",
+    "relevant_source_ids": [
+      "Förvaltningsrätten - Mål nr 11453-22",
+      "First-tier Tribunal - 2023 UKFTT 778 GRC"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-357",
+    "category": "cross_jurisdiction",
+    "question": "How does Austria's approach to unlawful political data processing compare to Romania's handling of employee surveillance under GDPR, and why did both DPAs decide not to impose fines despite finding multiple Article 5 and 6 violations?",
+    "relevant_source_ids": [
+      "BVwG - W258 2227269-1/14E",
+      "ANSPDCP (Romania) - Fine against Glove Technology SRL"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-358",
+    "category": "cross_jurisdiction",
+    "question": "How does CNIL's approach to GDPR violations in public health contact tracing apps compare to IP Slovenia's handling of unlawful marketing communications after membership expiration?",
+    "relevant_source_ids": [
+      "IP (Slovenia) - 0600-43/2025/9",
+      "CNIL (France) - SAN-2020-056"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-359",
+    "category": "named_entity",
+    "question": "What did the German Federal Labour Court decide in case 9 AZR 383/19 about data protection officer appointments?",
+    "relevant_source_ids": [
+      "BAG - 9 AZR 383/19"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-360",
+    "category": "named_entity",
+    "question": "Did the Italian Garante issue a ruling on employment data processing violations in decision 462/2026?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 462/2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-361",
+    "category": "named_entity",
+    "question": "Did the Italian Garante fine a telecom company for data retention violations under decision 10102462?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10102462"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-362",
+    "category": "named_entity",
+    "question": "What did the CNIL decide in case 2023-097 about GDPR compliance in education and research technology?",
+    "relevant_source_ids": [
+      "CNIL (France) - 2023-097"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-363",
+    "category": "named_entity",
+    "question": "What did the Austrian BVwG decide in cases W256 2234976-1 and W256 2234976-2 about lawful basis for data processing?",
+    "relevant_source_ids": [
+      "BVwG - W256 2234976-1 and W256 2234976-2"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-364",
+    "category": "named_entity",
+    "question": "What did the Danish Datatilsynet decide in case 2021-32-2096 about special category data processing?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2021-32-2096"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-365",
+    "category": "edge_case",
+    "question": "When does a GDPR violation found by a DPA result in no fine despite multiple articles violated including consent and transparency requirements?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9706389"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-366",
+    "category": "edge_case",
+    "question": "When does a supervisory authority uphold a finding of GDPR violations but impose no monetary fine despite multiple Article 32 security breaches and Article 15 access right failures?",
+    "relevant_source_ids": [
+      "DPC - C-19-X-XXX Ryanair DAC - November 2020"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-367",
+    "category": "edge_case",
+    "question": "Can a doctor access former patient's medical records through a national health portal for litigation purposes without consent under GDPR Article 9(2)(h)?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 11.17.001.009.048"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-368",
+    "category": "edge_case",
+    "question": "When can a GDPR complaint be dismissed if the controller has already corrected the violations before the DPA rules?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 51/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-369",
+    "category": "edge_case",
+    "question": "When does publishing grant recipient data on government websites violate GDPR even with legal basis under Articles 6(1)(c) and 6(1)(e)",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9697724"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-370",
+    "category": "false_premise",
+    "question": "ICO UK GDPR case where The Crown prosecution resulted in a €50,000 fine for employees who stole data from insurance companies between 2015-2017",
+    "relevant_source_ids": [
+      "ICO (UK) - 11 February 2026"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-371",
+    "category": "false_premise",
+    "question": "Spanish DPA fined AAA €50,000 for installing six unauthorized surveillance cameras facing public highway and private spaces, violating Articles 15 and 17 GDPR",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202103746"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-372",
+    "category": "false_premise",
+    "question": "AEPD Spain case where ALBOR ENERGÍA was fined €50,000 for violating Article 28 GDPR regarding fraudulent energy contract calls",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202504911"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-373",
+    "category": "false_premise",
+    "question": "Slovenian DPA fined a controller €50,000 for publishing a criminal complaint online with inadequate security",
+    "relevant_source_ids": [
+      "IP - 0613-438/2019/16"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-374",
+    "category": "false_premise",
+    "question": "Was a Spanish union fined 3,000 euros by the AEPD for sharing an electoral census via a WhatsApp group violating Articles 5 and 6 GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00274/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-375",
+    "category": "false_premise",
+    "question": "NDR GDPR case where German DPA issued 50,000 euro fine for Article 17 right to be forgotten violation TV broadcast archive",
+    "relevant_source_ids": [
+      "BVerfG - 1 BvR 276/17"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-376",
+    "category": "false_premise",
+    "question": "Datatilsynet Denmark nemlig.com order ID data breach Article 34 fine amount",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2019-441-1578"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-377",
+    "category": "multi_target",
+    "question": "What types of GDPR violations has Facebook been involved in across different EU member states, and how have various data protection authorities handled complaints related to Facebook's data processing practices?",
+    "relevant_source_ids": [
+      "AG München - 122 C 11829/24",
+      "AEPD (Spain) - E/05270/2018 – E/08416/2018"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-378",
+    "category": "multi_target",
+    "question": "How have different European data protection authorities applied Article 32(1) GDPR security requirements in recent enforcement decisions, and what factors lead them to impose fines versus issue warnings?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS-00224-2022",
+      "Datatilsynet (Denmark) - Unknown",
+      "Datatilsynet (Norway) - 20/02137"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-379",
+    "category": "multi_target",
+    "question": "What GDPR violations and penalties has Vodafone Spain received from the Spanish DPA for issues related to unauthorized access to customer data and data security failures?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202301160",
+      "AEPD (Spain) - PS/00193/2021",
+      "AEPD (Spain) - PS/00111/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-380",
+    "category": "multi_target",
+    "question": "What GDPR violations has BBVA been investigated for by the Spanish DPA and what were the outcomes?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00427/2021",
+      "AEPD (Spain) - EXP202402432",
+      "AEPD (Spain) - EXP202201721"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-381",
+    "category": "multi_target",
+    "question": "What GDPR enforcement actions has Microsoft Ireland Operations Limited faced across different European DPAs and what articles were involved in each case?",
+    "relevant_source_ids": [
+      "DPC (Ireland) - Inquiry into Microsoft Ireland Operations Limited",
+      "CNIL (France) - Deliberation SAN-2022-024 of December 20, 2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-382",
+    "category": "multi_target",
+    "question": "How has the German Federal Court of Justice (BGH) interpreted GDPR damages claims and standing requirements for different types of plaintiffs, including consumer associations, data subjects, and employees?",
+    "relevant_source_ids": [
+      "BGH - I ZR 186/17",
+      "BGH - VI ZR 692/20",
+      "BGH - VI ZR 365/22"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-383",
+    "category": "named_entity",
+    "question": "GDPR case Medex Belgium medical records lost disability applications",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 203/2025"
+    ],
+    "expected_route": "sql",
+    "filters": {}
+  },
+  {
+    "id": "gs5-384",
+    "category": "article_lookup",
+    "question": "How is Article 6(1)(e) GDPR interpreted when determining whether sharing personal data with third parties is \"necessary for the performance of a task carried out in the public interest\"?",
+    "relevant_source_ids": [
+      "APD/GBA (Belgium) - 72/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-385",
+    "category": "article_lookup",
+    "question": "How does Article 6(1) GDPR apply to the processing of credit card CVC numbers and identity document copies in hotel booking reservations, and what constitutes a valid legal basis for such sensitive data processing?",
+    "relevant_source_ids": [
+      "AZOP (Croatia) - Decision 26-09-2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-386",
+    "category": "article_lookup",
+    "question": "How does Article 23(1)(j) GDPR apply to restrictions on data subject rights for legal persons versus natural persons in insolvency proceedings?",
+    "relevant_source_ids": [
+      "CJEU - C-620/19 - J & S Service"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-387",
+    "category": "article_lookup",
+    "question": "How was Article 82(6) GDPR interpreted regarding the complainant's standing in administrative penalty procedures versus complaints procedures under Austrian law?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2020-0.083.190"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-388",
+    "category": "article_lookup",
+    "question": "How does Article 32 GDPR apply to law firms using cloud-based servers regarding technical measures for ensuring confidentiality of processing systems?",
+    "relevant_source_ids": [
+      "ICO (UK) - Levales Solicitors LLP"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-389",
+    "category": "scenario",
+    "question": "What if our e-commerce website requires users to provide their email address before they can browse our product catalog, and we automatically install technical cookies for site functionality without asking for consent first—would this comply with GDPR and cookie consent requirements?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00276/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-390",
+    "category": "scenario",
+    "question": "What if our HR department accidentally sends an email to all job applicants using the 'To' field instead of 'BCC', exposing everyone's email addresses to each other? Would this be a GDPR violation even if we had no malicious intent and it was a one-time mistake by an employee?",
+    "relevant_source_ids": [
+      "ICO (UK) - Ministry of Defence"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-391",
+    "category": "cross_jurisdiction",
+    "question": "How does Finland's approach to health data processing violations compare to Ireland's handling of data subject rights enforcement, particularly when neither DPA imposed fines despite multiple GDPR article violations?",
+    "relevant_source_ids": [
+      "Helsingin hallinto-oikeus (Finland) - 116/2024",
+      "DPC (Ireland) - Groupon Ireland Operations Limited"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-392",
+    "category": "cross_jurisdiction",
+    "question": "How does Spain's approach to fining for transparency and consent violations compare to Slovenia's approach where no fine was imposed for similar Article 13 GDPR breaches?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00247/2020",
+      "IP (Slovenia) - 0603-46/2023/13"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-393",
+    "category": "cross_jurisdiction",
+    "question": "How does the French DPA's approach to data retention violations involving administrative databases compare to Portugal's enforcement against public sector controllers for transparency failures, particularly regarding the differences in fines imposed?",
+    "relevant_source_ids": [
+      "CE - FR:CECHS:2025:492344.20251128",
+      "CNPD (Portugal) - Deliberação 2022/140"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-394",
+    "category": "cross_jurisdiction",
+    "question": "How does the EDPB's approach to WhatsApp's consent mechanisms compare to CNPD Luxembourg's handling of surveillance systems regarding Article 13 transparency violations, and why did one result in no fine while the other imposed EUR 12,500?",
+    "relevant_source_ids": [
+      "EDPB - Binding Decision 5/2022 - 'Whatsapp'",
+      "CNPD (Luxembourg) - Délibération n°24FR/2021"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-395",
+    "category": "cross_jurisdiction",
+    "question": "How does Italy's approach to video surveillance GDPR violations compare to Portugal's handling of excessive data access by healthcare staff, particularly regarding the level of fines imposed?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 9746047",
+      "CNPD (Portugal) - Deliberação 2018/984"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-396",
+    "category": "cross_jurisdiction",
+    "question": "How does Cyprus's approach to consent violations in employment contexts compare to Romania's enforcement against unlawful data processing by political parties? Have both DPAs imposed fines or do they differ in sanctioning severity?",
+    "relevant_source_ids": [
+      "Commissioner (Cyprus) - 11.17.001.008.042",
+      "ANSPDCP (Romania) - AUR Data Breach and Unlawful Processing"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-397",
+    "category": "cross_jurisdiction",
+    "question": "How does Luxembourg's CNPD approach to video surveillance enforcement compare to Slovenia's IP when handling data minimization violations under Article 5(1)(c) GDPR, particularly regarding whether fines are imposed for non-compliant workplace monitoring systems?",
+    "relevant_source_ids": [
+      "CNPD (Luxembourg) - Délibération n° 16FR/2022",
+      "IP - 07120-1/2020/345"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-398",
+    "category": "named_entity",
+    "question": "Did the AEPD investigate a data breach notification case under reference E/08452/2019?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - E/08452/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-399",
+    "category": "named_entity",
+    "question": "Was United Lincolnshire Teaching Hospitals NHS Trust sanctioned by the ICO for GDPR violations?",
+    "relevant_source_ids": [
+      "ICO (UK) - United Lincolnshire Teaching Hospitals NHS Trust"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-400",
+    "category": "named_entity",
+    "question": "Did the Romanian DPA fine Automobile Bavaria SRL for GDPR security violations?",
+    "relevant_source_ids": [
+      "ANSPDCP (Romania) - Fine against Automobile Bavaria SRL"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-401",
+    "category": "named_entity",
+    "question": "What did the AEPD decide in case PS/00337/2019 regarding the right to object under Article 21 GDPR?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS/00337/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-402",
+    "category": "named_entity",
+    "question": "What did the Austrian BVwG decide in case W176 2295345-1 about transparency and legitimate interest?",
+    "relevant_source_ids": [
+      "BVwG - W176 2295345-1"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-403",
+    "category": "named_entity",
+    "question": "What did the AEPD decide in case E/00113/2019 about right to erasure violations?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - E/00113/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-404",
+    "category": "edge_case",
+    "question": "When does pseudonymised data still count as personal data under GDPR despite appearing anonymised?",
+    "relevant_source_ids": [
+      "CNIL (France) - SAN-2024-013"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-405",
+    "category": "edge_case",
+    "question": "When does updating a privacy policy after a complaint make a company compliant with GDPR transparency requirements?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - E/07449/2019"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-406",
+    "category": "edge_case",
+    "question": "When does a GDPR violation result in a warning with conditional fine rather than immediate penalty?",
+    "relevant_source_ids": [
+      "AKI (Estonia) - 2.1-1/25/737-1585-20"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-407",
+    "category": "edge_case",
+    "question": "When can a GDPR data breach complaint be upheld with no fine despite confirmed violations of Articles 32 and 33?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2021-31-4596"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-408",
+    "category": "edge_case",
+    "question": "When does an insurance company's collection of decade-old health data for a compensation claim fall under Article 9(2)(f) GDPR processing exemption rather than requiring explicit consent?",
+    "relevant_source_ids": [
+      "Datatilsynet (Denmark) - 2020-31-3840"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-409",
+    "category": "edge_case",
+    "question": "Can a GDPR complaint be upheld without a fine when a controller's coding error causes mass email attachment breach affecting 250,000 monthly communications?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - EXP202412881"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-410",
+    "category": "edge_case",
+    "question": "Can a data subject demand erasure of criminal record information under GDPR Article 17 when the underlying conviction remains legally valid despite their claim of procedural irregularities in enforcement?",
+    "relevant_source_ids": [
+      "AKI (Estonia) - 2.1-3/20/172"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-411",
+    "category": "multi_target",
+    "question": "How does the Austrian DSB handle cases where no fine is imposed, and what types of GDPR violations most commonly result in non-monetary enforcement decisions from this authority?",
+    "relevant_source_ids": [
+      "DSB (Austria) - 2025-0.620.443",
+      "DSB (Austria) - 2023-0.174.027",
+      "DSB (Austria) - 2025-0.789.117"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-412",
+    "category": "multi_target",
+    "question": "What enforcement actions has the Spanish data protection authority taken against controllers in cases involving technology companies and what articles of the GDPR were most commonly cited?",
+    "relevant_source_ids": [
+      "AN - 2185/2021",
+      "AEPD (Spain) - PS/00552/2023"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-413",
+    "category": "multi_target",
+    "question": "How does the Hamburg DPA handle different types of GDPR violations and what factors determine whether they impose fines or issue orders without monetary penalties?",
+    "relevant_source_ids": [
+      "HmbBfDI (Hamburg) - Anordnung einer Auskunftserteilung",
+      "HmbBfDI (Hamburg) - H&M",
+      "HmbBfDI (Hamburg) - Bußgeld wegen des Betriebs einer Dashcam im Straßenverkehr"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-414",
+    "category": "multi_target",
+    "question": "How have different EU data protection authorities applied Article 25 GDPR requirements for data protection by design in cases involving security incidents, and what outcomes resulted when controllers demonstrated compliance or non-compliance?",
+    "relevant_source_ids": [
+      "AEPD (Spain) - PS-00143-2025",
+      "Garante per la protezione dei dati personali (Italy) - 10063782",
+      "ANSPDCP (Romania) - Comunicat Presa 09 12 2022"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-415",
+    "category": "multi_target",
+    "question": "How does the General Court of the European Union handle GDPR cases involving EU institutions as controllers, and what patterns emerge in its rulings regarding personal data processing by the Commission and other EU bodies?",
+    "relevant_source_ids": [
+      "GC - T‑354/22 - Bindl v Commission",
+      "GC - T-557/20 - SRB v. EDPS",
+      "GC - T‑384/20 - OC v Commission"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  },
+  {
+    "id": "gs5-416",
+    "category": "multi_target",
+    "question": "What enforcement actions has the Italian DPA taken against Intesa Sanpaolo for data protection violations, and what GDPR articles were cited across these cases?",
+    "relevant_source_ids": [
+      "Garante per la protezione dei dati personali (Italy) - 10234984",
+      "Garante per la protezione dei dati personali (Italy) - 10070521",
+      "Garante per la protezione dei dati personali (Italy) - 10230412"
+    ],
+    "expected_route": "rag",
+    "filters": {}
+  }
+]

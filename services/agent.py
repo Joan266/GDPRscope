@@ -47,28 +47,46 @@ researching real enforcement decisions, not theoretical maximums.
 
 ## Retrieval Strategy — CRITICAL
 
-You have multiple search tools. Use them strategically:
+You have multiple search tools. **ALWAYS call 2-3 tools in parallel** on your
+first turn to maximize coverage and minimize latency.
 
-1. **Start broad, then narrow**: First search_precedents with natural language.
-   If results are poor or too few, retry with different keywords or filters.
+### First Turn — PARALLEL CALLS (mandatory)
+Analyze the query and immediately call 2-3 tools simultaneously:
+- search_precedents with natural language description
+- search_by_entity if a company/organization is mentioned
+- search_by_article if a GDPR article is referenced or implied
+- For scenario queries: search_precedents with the LEGAL CONCEPT extracted
+  (e.g., "store asking for doctor's note" → search "health data processing Art. 9")
 
-2. **Decompose complex queries**: If the user asks about multiple countries,
-   articles, or topics, break into separate searches and combine results.
-   Example: "Italy vs Spain telecom fines" → search Italy telecom, then Spain telecom.
+Example: "Did Vodafone get fined in Greece for SIM swap?"
+→ Call ALL AT ONCE: search_precedents("Vodafone SIM swap Greece fine"),
+  search_by_entity("Vodafone", jurisdiction="Greece"), search_by_article("Art. 32")
 
-3. **Try different angles on failure**: If semantic search returns irrelevant results:
-   - Use search_by_article for article-specific queries (SQL, not embeddings)
-   - Use search_by_entity for company-specific queries
-   - Rephrase and search again with different terms
-   - Remove filters that may be too restrictive
+### Smart Filtering — Use Parameters to Narrow Results
+search_by_entity and search_by_article support filters. USE THEM when the query
+gives you clues:
+- **Fine amount mentioned** (e.g. "€150 fine") → use min_fine/max_fine to narrow
+- **Country mentioned** → use jurisdiction filter
+- **Year mentioned** → use year filter
+- **Small/low fines** → use sort_by="fine_asc" or max_fine
+- **Recent cases** → use sort_by="date_desc"
+- **Cases without fines** → use include_no_fine=True
 
-4. **Self-reflect after each search**: Check if the results actually answer
-   the user's question. If not, explain what you found and what's missing,
-   then try a different approach or ask the user for clarification.
+Examples:
+- "Vodafone fined €150 in Greece" → search_by_entity("Vodafone", jurisdiction="Greece", max_fine=500)
+- "Latest Article 32 fines" → search_by_article("32", sort_by="date_desc")
+- "Small GDPR fines under €1000" → search_by_article("5", max_fine=1000, sort_by="fine_asc")
 
-5. **Ask the user when stuck**: If after 2-3 search attempts you still lack
-   good results, ask the user for more details (country? company? article?
-   time period?) rather than guessing.
+### After First Results — Refine if Needed
+1. **Self-reflect**: Do the results actually answer the question?
+2. **If insufficient**: try different keywords, remove filters, or decompose further
+3. **Decompose complex queries**: multiple countries/topics → separate searches
+
+### Key Rules
+- **Parallel first, serial only if needed** — don't wait for results before
+  starting independent searches
+- Try different angles on failure: rephrase, broaden, use different tools
+- Ask the user when stuck after 2-3 attempts
 
 ## Research Protocol
 
@@ -76,11 +94,14 @@ For research queries, follow this sequence:
 
 1. READ MEMORY — Check for existing org context from previous sessions
 2. UNDERSTAND — Parse the situation: articles, jurisdiction, sector, facts
-3. SEARCH — Use the best tool(s) for the query type:
-   - Specific company → search_by_entity
-   - Specific article → search_by_article
-   - General/conceptual → search_precedents
-   - Multiple countries → decompose into separate searches
+3. SEARCH — Call 2-3 tools IN PARALLEL based on query type:
+   - Specific company → search_by_entity + search_precedents
+   - Specific article → search_by_article + search_precedents
+   - Scenario/situation → search_precedents with LEGAL CONCEPT (not the literal
+     situation) + search_by_article with implied articles
+     Example: "employer reading ex-employee emails" → search "employee email
+     monitoring Art. 6" + search_by_article("Art. 6")
+   - Multiple countries → parallel searches per country
 4. EVALUATE — Are the results relevant? Enough cases? If not, retry differently.
 5. ENRICH — lookup_law, analyze_factors, dpa_profile, simulate_fine as needed
 6. SAVE TO MEMORY — Store org profile and key findings
@@ -111,11 +132,13 @@ Structure your response as an **Enforcement Research Brief**:
 Statistical range based on real enforcement data. Not legal advice.
 Consult qualified legal counsel for case-specific guidance.
 
-## Critical Rules
+## Critical Rules — Grounding
 
 - NEVER fabricate case IDs, fine amounts, or article references
-- ONLY cite cases returned by your search tools
-- If no precedents found, say so clearly — do not guess
+- ONLY cite cases returned by your search tools — do NOT cite cases you
+  "remember" from training data. If a case was not in your tool results,
+  it does not exist for this conversation.
+- If no precedents found, say so clearly — do not guess or invent examples
 - Always show your sources (case titles, data counts)
 - Use read_memory at the START, write_memory at the END
 - Respond in the same language as the user query
@@ -126,8 +149,17 @@ Consult qualified legal counsel for case-specific guidance.
 # Tools need a DB connection but LangChain tools are plain functions.
 # We use a factory pattern: create_tools(conn) returns bound closures.
 
-def create_tools(conn: psycopg.Connection) -> list:
-    """Create LangGraph tools bound to a database connection."""
+def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
+    """Create LangGraph tools bound to a database connection.
+
+    Args:
+        conn: Database connection.
+        recalldb_memory: Optional RecallDB RetrievalMemory instance for
+            retrieval learning (enrichment + chunk gates + strategy).
+    """
+
+    # Track search queries across tool calls for rewrite learning
+    _search_queries_log: list[dict] = []
 
     @tool
     def search_precedents(
@@ -149,6 +181,9 @@ def create_tools(conn: psycopg.Connection) -> list:
             sector: Industry sector (e.g. "Finance", "Healthcare")
             limit: Max results to return (default 10)
         """
+        import time as _time
+        _t0 = _time.monotonic()
+
         from db.rag import (
             SECTION_ROUTING,
             K_TEXT,
@@ -219,16 +254,57 @@ def create_tools(conn: psycopg.Connection) -> list:
                 except Exception:
                     pass
 
-        query_vec = embed_query(None, query)
+        # RecallDB: pre-retrieval enrichment + strategy
+        # IMPORTANT: expansions go to BM25 text search only, NOT to vector embedding
+        # Contaminating the embedding vector with expansion terms degrades retrieval
+        _enrich_result = None
+        _recalldb_text_query = None
+        if recalldb_memory:
+            try:
+                _enrich_result = recalldb_memory.enrich(
+                    query, query_type=query_type,
+                )
+                if _enrich_result.cache_tier != "none":
+                    # Top-K expansion filtering is handled inside RecallDB.enrich()
+                    _recalldb_text_query = _enrich_result.expanded
+                    log.info("RecallDB enrich: tier=%s, +%d expansions (text only)",
+                             _enrich_result.cache_tier,
+                             len(_enrich_result.enrichments_used))
+                if _enrich_result.strategy:
+                    log.info("RecallDB strategy: %s (avg_rel=%.2f, n=%d)",
+                             _enrich_result.strategy.tool_sequence,
+                             _enrich_result.strategy.avg_relevance,
+                             _enrich_result.strategy.n_observations)
+            except Exception as e:
+                log.debug("RecallDB enrich failed: %s", e)
+
+        query_vec = embed_query(None, query)  # always embed original query, never expanded
         search_vec = hyde_vec if hyde_vec is not None else query_vec
 
+        # RecallDB: rewrite-based search arms
+        # If RecallDB learned that a similar query succeeded with a different formulation,
+        # search with that formulation too and fuse results
+        rewrite_arms: list[list[str]] = []
+        if _enrich_result and _enrich_result.rewrites:
+            for rw in _enrich_result.rewrites[:3]:  # max 3 rewrites
+                try:
+                    rw_vec = embed_query(None, rw.successful_query)
+                    rw_hits = search_vector_chunks(cur, rw_vec, K_VECTOR, filters)
+                    if rw_hits:
+                        rewrite_arms.append(rw_hits)
+                        log.info("RecallDB rewrite arm: '%s' → %d hits",
+                                 rw.successful_query[:60], len(rw_hits))
+                except Exception as e:
+                    log.debug("RecallDB rewrite search failed: %s", e)
+
         # Section-aware vector search
-        target_sections = SECTION_ROUTING.get(query_type, [("holding", 10), ("headnote", 10)])
+        target_sections = SECTION_ROUTING.get(query_type, [("holding", 10), ("facts", 10)])
         section_results = search_vector_by_sections(cur, search_vec, target_sections, filters)
 
-        # Unfiltered vector + BM25 text
+        # Unfiltered vector + BM25 text (use RecallDB expansion for text only)
         vector_hits = search_vector_chunks(cur, query_vec, K_VECTOR, filters)
-        text_hits = search_text_chunks(cur, query, K_TEXT, filters)
+        bm25_query = _recalldb_text_query if _recalldb_text_query else query
+        text_hits = search_text_chunks(cur, bm25_query, K_TEXT, filters)
 
         # Fine-sort injection
         fine_hits: list[str] = []
@@ -255,13 +331,14 @@ def create_tools(conn: psycopg.Connection) -> list:
                 if soft_art:
                     soft_arms.append(soft_art)
 
-        # N-way RRF fusion
+        # N-way RRF fusion (including RecallDB rewrite arms)
         section_arms = list(section_results.values())
         rrf_ranked = reciprocal_rank_fusion(
             *section_arms,
             vector_hits, text_hits, fine_hits or None,
             question_hits or None,
             *(arm for arm in soft_arms),
+            *(arm for arm in rewrite_arms),
         )
         rrf_scores = dict(rrf_ranked)
         if case_hits:
@@ -285,6 +362,27 @@ def create_tools(conn: psycopg.Connection) -> list:
                 for cid, s in reranked:
                     rrf_scores[cid] = 0.01 + 0.98 * (s - s_min) / span
 
+        # RecallDB: apply chunk memory gates (GAM-RAG Kalman)
+        if recalldb_memory:
+            try:
+                gate_ids = [cid for cid in top_child_ids if cid not in set(case_hits)]
+                if gate_ids:
+                    gates = recalldb_memory.batch_chunk_gates(
+                        gate_ids, query_vec.tolist(),
+                    )
+                    for cid, gate_val in gates.items():
+                        if cid in rrf_scores:
+                            rrf_scores[cid] *= gate_val
+                    # Re-sort non-pinned by gated scores
+                    gated_sorted = sorted(
+                        gate_ids,
+                        key=lambda c: rrf_scores.get(c, 0),
+                        reverse=True,
+                    )
+                    top_child_ids = case_hits + gated_sorted
+            except Exception as e:
+                log.debug("RecallDB chunk gates failed: %s", e)
+
         # Fetch parent context
         contexts = fetch_parent_context(cur, top_child_ids, rrf_scores, limit)
 
@@ -298,6 +396,10 @@ def create_tools(conn: psycopg.Connection) -> list:
         # Compute retrieval confidence from top scores
         top_scores = sorted(rrf_scores.values(), reverse=True)[:3]
         avg_top = sum(top_scores) / len(top_scores) if top_scores else 0
+
+        # Log for cross-query rewrite learning within the session
+        _search_queries_log.append({"query": query, "avg_top": avg_top})
+
         if avg_top >= 0.6:
             confidence = "HIGH"
         elif avg_top >= 0.3:
@@ -327,12 +429,135 @@ def create_tools(conn: psycopg.Connection) -> list:
                 "(2) using search_by_article or search_by_entity instead, "
                 "(3) trying broader/narrower keywords."
             )
-        return header + "\n\n".join(results) + footer
+
+        # Fix 5: Strategy-guided tool hint from RecallDB
+        strategy_hint = ""
+        if recalldb_memory and _enrich_result and _enrich_result.strategy:
+            strat = _enrich_result.strategy
+            if strat.avg_relevance > 0.6 and strat.n_observations >= 3:
+                suggested = [t for t in strat.tool_sequence[:2]
+                             if t != "search_precedents"]
+                if suggested:
+                    strategy_hint = (
+                        f"\n\nBased on similar past queries, "
+                        f"also try: {', '.join(suggested)}"
+                    )
+
+        # RecallDB: learn from this retrieval
+        if recalldb_memory:
+            try:
+                _latency = int((_time.monotonic() - _t0) * 1000)
+                # Chunk relevance: use per-chunk RRF score, not just rank
+                chunks_for_learn = [
+                    {
+                        "chunk_id": ctx["child_id"],
+                        "relevant": rrf_scores.get(ctx["child_id"], 0) > 0.5,
+                    }
+                    for ctx in contexts
+                ]
+
+                # P1: Extract ATOMIC enrichments (not full query)
+                atomic_enrichments: list[dict] = []
+                seen_terms: set[str] = set()
+                query_lower = query.lower()
+
+                # Controller from intent
+                if intent and intent.controller_name:
+                    ctrl = intent.controller_name
+                    if ctrl not in seen_terms and len(ctrl) > 2:
+                        seen_terms.add(ctrl)
+                        ctrl_exps = []
+                        for ctx in contexts[:3]:
+                            if ctx.get("authority") and ctx["authority"] not in ctrl_exps:
+                                ctrl_exps.append(ctx["authority"])
+                            if ctx.get("jurisdiction") and ctx["jurisdiction"] not in ctrl_exps:
+                                ctrl_exps.append(ctx["jurisdiction"])
+                        if ctrl_exps:
+                            atomic_enrichments.append({
+                                "term": ctrl,
+                                "expansions": ctrl_exps[:5],
+                                "confidence": 0.6 if avg_top > 0.5 else 0.4,
+                            })
+
+                # DPA authorities and jurisdictions from results
+                for ctx in contexts[:5]:
+                    auth = ctx.get("authority", "")
+                    juris = ctx.get("jurisdiction", "")
+                    arts = [f"Article {a}" for a in ctx.get("gdpr_articles", [])[:3]]
+
+                    if auth and len(auth) > 3 and auth not in seen_terms:
+                        seen_terms.add(auth)
+                        auth_exps = []
+                        if juris:
+                            auth_exps.append(juris)
+                        auth_exps.extend(arts)
+                        if auth_exps:
+                            atomic_enrichments.append({
+                                "term": auth,
+                                "expansions": auth_exps[:5],
+                                "confidence": 0.5,
+                            })
+
+                    if juris and len(juris) > 2 and juris not in seen_terms:
+                        seen_terms.add(juris)
+                        juris_exps = [auth] if auth else []
+                        if juris_exps:
+                            atomic_enrichments.append({
+                                "term": juris,
+                                "expansions": juris_exps,
+                                "confidence": 0.5,
+                            })
+
+                # Correctness gate on enrichments is handled inside RecallDB.learn()
+                recalldb_memory.learn(
+                    query=query,
+                    retrieved_chunks=chunks_for_learn,
+                    enrichments_discovered=atomic_enrichments or None,
+                    enrichments_used=(
+                        _enrich_result.enrichments_used if _enrich_result else None
+                    ),
+                    rewrites_used=(
+                        _enrich_result.rewrites
+                        if _enrich_result and _enrich_result.rewrites else None
+                    ),
+                    query_type=query_type,
+                    tools_used=["search_precedents"],
+                    relevance_score=avg_top,
+                    latency_ms=_latency,
+                )
+
+                # Note: confidence feedback on enrichments_used is handled
+                # internally by RecallDB's learn() step 2b (asymmetric
+                # +0.05/-0.10 based on relevance_score). No external call needed.
+
+                # Cross-query rewrite learning: if this query succeeded
+                # and earlier queries in the same session failed, learn
+                # this formulation as a rewrite of those failed queries
+                if avg_top > 0.5 and len(_search_queries_log) > 1:
+                    for prev in _search_queries_log[:-1]:
+                        if prev["query"] != query and prev["avg_top"] < 0.4:
+                            try:
+                                recalldb_memory.learn(
+                                    query=prev["query"],
+                                    query_rewrites=[query],
+                                    relevance_score=avg_top,
+                                )
+                            except Exception:
+                                pass
+            except Exception as e:
+                log.debug("RecallDB learn failed: %s", e)
+
+        return header + "\n\n".join(results) + footer + strategy_hint
 
     @tool
     def search_by_article(
         article_number: str,
         jurisdiction: str | None = None,
+        sort_by: str = "fine_desc",
+        min_fine: int | None = None,
+        max_fine: int | None = None,
+        year: int | None = None,
+        include_no_fine: bool = False,
         limit: int = 10,
     ) -> str:
         """Search enforcement decisions that cite a specific GDPR article via SQL.
@@ -344,6 +569,11 @@ def create_tools(conn: psycopg.Connection) -> list:
         Args:
             article_number: Article number (e.g. "32", "5", "6(1)")
             jurisdiction: Optional country filter (e.g. "Spain")
+            sort_by: Sort order — "fine_desc" (default), "fine_asc", "date_desc", "date_asc"
+            min_fine: Minimum fine amount filter (e.g. 10000)
+            max_fine: Maximum fine amount filter (e.g. 50000)
+            year: Filter by decision year (e.g. 2023)
+            include_no_fine: Include cases without fines (default False)
             limit: Max results (default 10)
         """
         import re
@@ -354,23 +584,39 @@ def create_tools(conn: psycopg.Connection) -> list:
         cur = conn.cursor()
         pattern = f"%Art%{num.split('(')[0]}%"
 
-        juris_clause = ""
+        where_clauses = ["EXISTS (SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s)"]
         params: list[Any] = [pattern]
+
         if jurisdiction:
-            juris_clause = "AND d.jurisdiction = %s"
+            where_clauses.append("d.jurisdiction = %s")
             params.append(jurisdiction)
+        if not include_no_fine:
+            where_clauses.append("d.fine_amount IS NOT NULL AND d.fine_amount > 0")
+        if min_fine is not None:
+            where_clauses.append("d.fine_amount >= %s")
+            params.append(min_fine)
+        if max_fine is not None:
+            where_clauses.append("d.fine_amount <= %s")
+            params.append(max_fine)
+        if year is not None:
+            where_clauses.append("d.decision_year = %s")
+            params.append(year)
+
+        sort_map = {
+            "fine_desc": "d.fine_amount DESC NULLS LAST",
+            "fine_asc": "d.fine_amount ASC NULLS LAST",
+            "date_desc": "d.decision_date DESC NULLS LAST",
+            "date_asc": "d.decision_date ASC NULLS LAST",
+        }
+        order = sort_map.get(sort_by, sort_map["fine_desc"])
 
         cur.execute(f"""
             SELECT d.title, d.authority, d.jurisdiction,
                    d.fine_amount, d.fine_currency, d.gdpr_articles,
                    d.decision_year, d.outcome, d.case_number
             FROM documents d
-            WHERE EXISTS (
-                SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s
-            )
-            {juris_clause}
-            AND d.fine_amount IS NOT NULL AND d.fine_amount > 0
-            ORDER BY d.fine_amount DESC
+            WHERE {' AND '.join(where_clauses)}
+            ORDER BY {order}
             LIMIT %s
         """, params + [limit])
 
@@ -399,6 +645,12 @@ def create_tools(conn: psycopg.Connection) -> list:
     @tool
     def search_by_entity(
         entity_name: str,
+        jurisdiction: str | None = None,
+        sort_by: str = "fine_desc",
+        min_fine: int | None = None,
+        max_fine: int | None = None,
+        year: int | None = None,
+        include_no_fine: bool = False,
         limit: int = 10,
     ) -> str:
         """Search enforcement decisions against a specific company or controller.
@@ -409,6 +661,12 @@ def create_tools(conn: psycopg.Connection) -> list:
 
         Args:
             entity_name: Company or controller name (e.g. "Google", "Vodafone", "Meta")
+            jurisdiction: Optional country filter (e.g. "Greece", "Spain")
+            sort_by: Sort order — "fine_desc" (default), "fine_asc", "date_desc", "date_asc"
+            min_fine: Minimum fine amount filter (e.g. 10000)
+            max_fine: Maximum fine amount filter (e.g. 500)
+            year: Filter by decision year (e.g. 2022)
+            include_no_fine: Include cases without fines (default False)
             limit: Max results (default 10)
         """
         from db.rag import resolve_entity_alias
@@ -418,8 +676,31 @@ def create_tools(conn: psycopg.Connection) -> list:
             return f"'{entity_name}' is too generic. Please specify a company name."
 
         cur = conn.cursor()
-        placeholders = " OR ".join("d.controller_name ILIKE %s" for _ in patterns)
-        params = [f"%{p}%" for p in patterns]
+        where_clauses = ["(" + " OR ".join("d.controller_name ILIKE %s" for _ in patterns) + ")"]
+        params: list[Any] = [f"%{p}%" for p in patterns]
+
+        if jurisdiction:
+            where_clauses.append("d.jurisdiction = %s")
+            params.append(jurisdiction)
+        if not include_no_fine:
+            where_clauses.append("d.fine_amount IS NOT NULL AND d.fine_amount > 0")
+        if min_fine is not None:
+            where_clauses.append("d.fine_amount >= %s")
+            params.append(min_fine)
+        if max_fine is not None:
+            where_clauses.append("d.fine_amount <= %s")
+            params.append(max_fine)
+        if year is not None:
+            where_clauses.append("d.decision_year = %s")
+            params.append(year)
+
+        sort_map = {
+            "fine_desc": "d.fine_amount DESC NULLS LAST",
+            "fine_asc": "d.fine_amount ASC NULLS LAST",
+            "date_desc": "d.decision_date DESC NULLS LAST",
+            "date_asc": "d.decision_date ASC NULLS LAST",
+        }
+        order = sort_map.get(sort_by, sort_map["fine_desc"])
 
         cur.execute(f"""
             SELECT d.title, d.authority, d.jurisdiction,
@@ -427,8 +708,8 @@ def create_tools(conn: psycopg.Connection) -> list:
                    d.decision_year, d.outcome, d.case_number,
                    d.controller_name
             FROM documents d
-            WHERE ({placeholders})
-            ORDER BY d.fine_amount DESC NULLS LAST
+            WHERE {' AND '.join(where_clauses)}
+            ORDER BY {order}
             LIMIT %s
         """, params + [limit])
 
@@ -834,6 +1115,7 @@ def create_tools(conn: psycopg.Connection) -> list:
 def create_agent(
     conn: psycopg.Connection,
     model_name: str | None = None,
+    recalldb_memory=None,
 ) -> Any:
     """Create a LangGraph ReAct agent with all tools bound to the DB connection.
 
@@ -864,7 +1146,7 @@ def create_agent(
     else:
         raise RuntimeError("No LLM API key available (OPENROUTER_API_KEY or ANTHROPIC_API_KEY)")
 
-    tools = create_tools(conn)
+    tools = create_tools(conn, recalldb_memory=recalldb_memory)
 
     # In-memory checkpointer for dev — swap to CockroachDBSaver for prod
     checkpointer = MemorySaver()

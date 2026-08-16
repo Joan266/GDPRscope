@@ -40,6 +40,9 @@ import psycopg
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from db import rag as rag_module
 
+# RecallDB integration (optional — enabled with --recalldb flag)
+_recalldb_memory = None
+
 # ── Config ─────────────────────────────────────────────────────────────────────
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
@@ -226,14 +229,25 @@ def retrieve_top_k(
                 if doc_ids:
                     filters["doc_ids"] = doc_ids
 
+    # RecallDB: pre-retrieval enrichment
+    embed_question = question
+    if _recalldb_memory:
+        _enrich_result = _recalldb_memory.enrich(question)
+        if _enrich_result.cache_tier != "none":
+            embed_question = _enrich_result.expanded
+            log.info("  RecallDB: tier=%s, %d enrichments → '%s'",
+                     _enrich_result.cache_tier,
+                     len(_enrich_result.enrichments_used),
+                     embed_question[:120])
+
     # HyDE: for article_lookup queries, embed a hypothetical passage
     if intent and intent.gdpr_articles and rag_module.ANTHROPIC_API_KEY:
         try:
             query_vec = rag_module.hyde_embed(question, intent)
         except Exception:
-            query_vec = rag_module.embed_query(bedrock_client, question)
+            query_vec = rag_module.embed_query(bedrock_client, embed_question)
     else:
-        query_vec = rag_module.embed_query(bedrock_client, question)
+        query_vec = rag_module.embed_query(bedrock_client, embed_question)
 
     vector_hits = rag_module.search_vector_chunks(cur, query_vec, k * 2, filters)
     text_hits   = rag_module.search_text_chunks(cur, question, k * 2, filters)
@@ -271,6 +285,17 @@ def retrieve_top_k(
         *(arm for arm in expansion_arms),
     )
     rrf_scores  = dict(rrf_ranked)
+
+    # RecallDB: apply chunk memory gates to RRF scores
+    if _recalldb_memory and rrf_scores:
+        gates = _recalldb_memory.batch_chunk_gates(list(rrf_scores.keys()), query_vec)
+        has_signal = any(g != 1.0 for g in gates.values())
+        if has_signal:
+            rrf_scores = {cid: score * gates[cid] for cid, score in rrf_scores.items()}
+            rrf_ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+            log.info("  RecallDB: chunk gates applied (%d non-neutral)",
+                     sum(1 for g in gates.values() if g != 1.0))
+
     if case_hits:
         for cid in case_hits:
             rrf_scores[cid] = max(rrf_scores.get(cid, 0.0), 1.0)
@@ -648,6 +673,57 @@ def evaluate(
         rr  = reciprocal_rank(retrieved_titles, relevant)
         cp  = {k: context_precision(retrieved_titles, relevant, k) for k in K_VALUES}
 
+        # RecallDB: learn from this retrieval
+        # Signal: cross-encoder rerank score as relevance proxy (no golden set leak)
+        if _recalldb_memory:
+            # Chunk gates: use cross-encoder scores as relevance signal
+            # Top-ranked chunks after reranker = likely relevant
+            chunks_for_learn = []
+            for rank, ctx in enumerate(contexts):
+                ce_score = rrf_scores.get(ctx["child_id"], 0.0)
+                chunks_for_learn.append({
+                    "chunk_id": ctx["child_id"],
+                    "relevant": rank < 3 and ce_score > 0.5,  # top-3 high-confidence
+                })
+
+            # Enrichments: extract legal terms from top-ranked chunks (NO doc titles)
+            enrichments = None
+            top_ctx = contexts[:3]
+            if top_ctx:
+                expansions: set[str] = set()
+                for ctx in top_ctx:
+                    # GDPR articles mentioned in the chunk's document
+                    if ctx.get("gdpr_articles"):
+                        for art in ctx["gdpr_articles"]:
+                            expansions.add(f"Article {art}")
+                    # Authority name (DPA) — legitimate legal vocabulary
+                    if ctx.get("authority") and len(ctx["authority"]) > 3:
+                        expansions.add(ctx["authority"])
+                    # Jurisdiction
+                    if ctx.get("jurisdiction") and len(ctx["jurisdiction"]) > 2:
+                        expansions.add(ctx["jurisdiction"])
+                # Only store if we found meaningful expansions
+                query_words = set(question.lower().split())
+                novel = [t for t in expansions if t.lower() not in query_words]
+                if novel:
+                    enrichments = [{
+                        "term": question[:200],
+                        "expansions": novel[:8],
+                        "confidence": 0.5,
+                    }]
+
+            try:
+                _recalldb_memory.learn(
+                    query=question,
+                    retrieved_chunks=chunks_for_learn,
+                    enrichments_discovered=enrichments,
+                    relevance_score=rrf_scores.get(
+                        contexts[0]["child_id"], 0.0) if contexts else 0.0,
+                    latency_ms=retrieval_ms,
+                )
+            except Exception as e:
+                log.warning("  RecallDB learn failed: %s", e)
+
         result: dict = {
             "id":              qid,
             "category":        item.get("category", ""),
@@ -766,6 +842,82 @@ def evaluate(
         "judge_output_tok":_token_counter["output"],
         "judge_calls":     _token_counter["calls"],
     })
+    return results
+
+
+def _evaluate_one(item: dict, bedrock_client, run_llm: bool) -> dict:
+    """Evaluate a single golden set item with its own DB connection."""
+    qid = item["id"]
+    question = item["question"]
+    relevant = item["relevant_source_ids"]
+    filters = dict(item.get("filters", {}))
+
+    t0 = time.monotonic()
+    try:
+        conn = psycopg.connect(DATABASE_URL, autocommit=True)
+        with conn.cursor() as cur:
+            contexts, rrf_scores = retrieve_top_k(
+                cur, bedrock_client, question, k=max(K_VALUES), filters=filters
+            )
+        conn.close()
+    except Exception as e:
+        log.error("  [%s] Error: %s", qid, e)
+        return {"id": qid, "error": str(e)}
+
+    retrieved_titles = doc_titles_from_contexts(contexts)
+    retrieval_ms = int((time.monotonic() - t0) * 1000)
+
+    hr = {k: hit_rate(retrieved_titles, relevant, k) for k in K_VALUES}
+    rr = reciprocal_rank(retrieved_titles, relevant)
+    cp = {k: context_precision(retrieved_titles, relevant, k) for k in K_VALUES}
+
+    log.info("  [%s] HR@5=%.2f  MRR=%.3f  %dms", qid, hr.get(5, 0), rr, retrieval_ms)
+
+    return {
+        "id": qid,
+        "category": item.get("category", ""),
+        "question": question,
+        "relevant_ids": relevant,
+        "retrieved_ids": retrieved_titles,
+        "retrieval_ms": retrieval_ms,
+        "hit_rate": hr,
+        "mrr": rr,
+        "context_precision": cp,
+    }
+
+
+def evaluate_parallel(
+    golden_set: list[dict],
+    bedrock_client,
+    run_llm: bool,
+    category_filter: str | None,
+    workers: int,
+) -> list[dict]:
+    """Parallel evaluation — each worker gets its own DB connection."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    if category_filter:
+        golden_set = [q for q in golden_set if q.get("category") == category_filter]
+
+    log.info("Parallel eval: %d queries with %d workers", len(golden_set), workers)
+    eval_t0 = time.monotonic()
+    results: list[dict] = []
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(_evaluate_one, item, bedrock_client, run_llm): item
+            for item in golden_set
+        }
+        for i, future in enumerate(as_completed(futures), 1):
+            result = future.result()
+            results.append(result)
+            if i % 10 == 0:
+                log.info("  Progress: %d/%d done", i, len(golden_set))
+
+    total_ms = int((time.monotonic() - eval_t0) * 1000)
+    log.info("Parallel eval done in %.1f s", total_ms / 1000)
+    results.append({"_meta": True, "total_eval_ms": total_ms,
+                     "judge_input_tok": 0, "judge_output_tok": 0, "judge_calls": 0})
     return results
 
 
@@ -938,6 +1090,10 @@ def main() -> None:
     parser.add_argument("--out",    default=None, help="Guardar resultados en JSON")
     parser.add_argument("--category", default=None,
                         help="Evaluar solo una categoría del golden set")
+    parser.add_argument("--recalldb", action="store_true",
+                        help="Enable RecallDB retrieval learning (accumulates across runs)")
+    parser.add_argument("--parallel", type=int, default=1,
+                        help="Number of parallel workers (default: 1 = sequential)")
     args = parser.parse_args()
 
     if not DATABASE_URL:
@@ -957,7 +1113,26 @@ def main() -> None:
 
     bedrock_client = rag_module.make_bedrock_client()
 
-    results = evaluate(golden_set, conn, bedrock_client, args.llm, args.category)
+    if args.recalldb:
+        global _recalldb_memory
+        try:
+            from recalldb import RetrievalMemory
+            _recalldb_memory = RetrievalMemory(
+                connection_string=DATABASE_URL,
+                embedding_fn=lambda text: rag_module.embed_query(None, text),
+                vector_dims=1024,
+                domain="gdpr",
+            )
+            _recalldb_memory.initialize()
+            log.info("RecallDB enabled — retrieval learning active")
+        except ImportError:
+            log.error("RecallDB not installed. Run: pip install -e ../recalldb")
+            sys.exit(1)
+
+    if args.parallel > 1:
+        results = evaluate_parallel(golden_set, bedrock_client, args.llm, args.category, args.parallel)
+    else:
+        results = evaluate(golden_set, conn, bedrock_client, args.llm, args.category)
     conn.close()
 
     print_report(results)
