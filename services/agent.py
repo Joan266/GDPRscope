@@ -735,7 +735,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         results are ranked by relevance instead of just date.
 
         Args:
-            article_number: Article number (e.g. "32", "5", "6(1)")
+            article_number: Article number with sub-article if known (e.g. "32(1)", "6(1)(f)", "15(1)(g)", "5")
             context: The user's original question (used for semantic reranking)
             jurisdiction: Optional country filter (e.g. "Spain")
             sort_by: Sort order — "date_desc" (default), "date_asc", "fine_desc", "fine_asc"
@@ -748,12 +748,29 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         from db.rag import embed_query, vector_to_pg
 
         import re
-        num = re.sub(r"[^0-9()]", "", article_number)
+        # Keep digits, parentheses, and letters for sub-articles like 6(1)(f)
+        cleaned = re.sub(r"(?i)^art(?:icle)?\.?\s*", "", article_number.strip())
+        num = re.sub(r"[^0-9a-zA-Z()]", "", cleaned)
         if not num:
             return f"Invalid article number: {article_number}"
 
         cur = conn.cursor()
-        pattern = f"%Art%{num.split('(')[0]}%"
+        base_num = re.split(r"[( ]", num)[0]  # "6" from "6(1)(f)"
+
+        # Try specific sub-article first, fall back to base if too few results
+        specific_pattern = f"%Art%{num}%" if num != base_num else None
+        base_pattern = f"%Art%{base_num}%"
+
+        if specific_pattern:
+            cur.execute(
+                "SELECT count(*) FROM documents WHERE EXISTS "
+                "(SELECT 1 FROM unnest(gdpr_articles) AS a WHERE a ILIKE %s)",
+                (specific_pattern,),
+            )
+            specific_count = cur.fetchone()[0]
+            pattern = specific_pattern if specific_count >= 5 else base_pattern
+        else:
+            pattern = base_pattern
 
         where_clauses = ["EXISTS (SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s)"]
         params: list[Any] = [pattern]
