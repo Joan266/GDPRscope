@@ -398,22 +398,41 @@ def _eval_single_query(
         hr_final = hr_exact
         rr_final = rr_exact
 
-    # Extract per-result RAG scores from tool outputs
+    # Detect tool errors and extract RAG scores from tool outputs
     rag_scores: list[dict] = []
+    tool_errors: list[dict] = []
+    _ERROR_PATTERNS = (
+        "No matching", "No enforcement", "not found", "Invalid",
+        "too generic", "Error", "Traceback",
+    )
     for t in trace:
-        if t.get("type") == "tool_result" and t.get("tool") in (
-            "search_precedents", "search_by_entity", "search_by_article",
-        ):
+        if t.get("type") == "tool_result":
             output = t.get("output_preview", "")
-            for line in output.split("\n"):
-                if line.strip().startswith("**") and "**" in line.strip()[2:]:
-                    title = line.strip().split("**")[1]
-                    score_match = re.search(r"Score:\s*([\d.]+)", output[output.find(title):])
-                    rag_scores.append({
-                        "title": title,
-                        "tool": t["tool"],
-                        "score": float(score_match.group(1)) if score_match else None,
-                    })
+            tool_name = t.get("tool", "?")
+
+            # Detect error/empty responses from tools
+            is_error = (
+                not output.strip()
+                or any(p in output for p in _ERROR_PATTERNS)
+                and "Found" not in output
+            )
+            if is_error and len(output) < 200:
+                tool_errors.append({
+                    "tool": tool_name,
+                    "message": output.strip()[:150] or "(empty response)",
+                })
+
+            # Extract scores from search tools
+            if tool_name in ("search_precedents", "search_by_entity", "search_by_article"):
+                for line in output.split("\n"):
+                    if line.strip().startswith("**") and "**" in line.strip()[2:]:
+                        title = line.strip().split("**")[1]
+                        score_match = re.search(r"Score:\s*([\d.]+)", output[output.find(title):])
+                        rag_scores.append({
+                            "title": title,
+                            "tool": tool_name,
+                            "score": float(score_match.group(1)) if score_match else None,
+                        })
 
     entry: dict = {
         "id": qid,
@@ -432,11 +451,14 @@ def _eval_single_query(
         "source_in_response": source_in_response,
         "fuzzy_matched": bool(fuzzy_extra) and hr_exact[5] == 0,
         "rag_scores": rag_scores[:20],
+        "tool_errors": tool_errors,
         "response_preview": response_text[:2000],
         "trace": trace,
     }
 
     status = "HIT" if hr_final[5] > 0 else "MISS"
+    if tool_errors:
+        status += f" (⚠ {len(tool_errors)} tool errors)"
     log.info(
         "  [%s] HR@5=%.0f  MRR=%.3f  tools=%d  msgs=%d  %s",
         qid, hr_final[5], rr_final,
@@ -591,12 +613,31 @@ def print_report(results: list[dict]) -> None:
             tools = sum(r.get("tool_calls", 0) for r in cat_r) / nc
             print(f"  {cat:<22} n={nc:>3}  HR@5={hr5:.2f}  MRR={mrr:.3f}  tools={tools:.1f}")
 
+    # Tool errors summary
+    queries_with_errors = [r for r in valid if r.get("tool_errors")]
+    if queries_with_errors:
+        from collections import Counter as _Counter
+        err_tools = _Counter()
+        for r in queries_with_errors:
+            for e in r["tool_errors"]:
+                err_tools[e["tool"]] += 1
+        n_err = len(queries_with_errors)
+        err_hits = sum(1 for r in queries_with_errors
+                       if r["hit_rate"].get(5, r["hit_rate"].get("5", 0)) > 0)
+        print(f"\n-- Tool Errors ({n_err} queries affected) ----------------------------")
+        print(f"  Queries with errors: {n_err}/{n} ({n_err/n*100:.0f}%)")
+        print(f"  Of those, still HIT: {err_hits}/{n_err}")
+        for tool_name, count in err_tools.most_common():
+            print(f"    {tool_name}: {count} errors")
+
     # Misses
     missed = [r for r in valid if r["hit_rate"].get(5, r["hit_rate"].get("5", 0)) == 0]
     if missed:
         print(f"\n-- Misses ({len(missed)}) -------------------------------------------------")
         for r in missed[:20]:
-            print(f"  [{r['id']}] {r['question'][:65]}")
+            errs = len(r.get("tool_errors", []))
+            err_flag = f" ⚠{errs}err" if errs else ""
+            print(f"  [{r['id']}] {r['question'][:60]}{err_flag}")
 
     # Timing
     if meta.get("total_eval_s"):
