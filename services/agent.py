@@ -64,11 +64,13 @@ Analyze the query and immediately call 2-3 tools simultaneously:
 
 Example: "Did Vodafone get fined in Greece for SIM swap?"
 → Call ALL AT ONCE: search_precedents("Vodafone SIM swap Greece fine"),
-  search_by_entity("Vodafone", jurisdiction="Greece"), search_by_article("Art. 32")
+  search_by_entity("Vodafone", context="Did Vodafone get fined in Greece for SIM swap?", jurisdiction="Greece"),
+  search_by_article("32", context="Did Vodafone get fined in Greece for SIM swap?")
 
 Example: "Can a marketing agency be held liable for GDPR violations?"
 → Call ALL AT ONCE: search_precedents("marketing agency GDPR liability processor controller"),
-  search_by_entity("marketing agency"), search_by_article("Art. 28")
+  search_by_entity("marketing agency", context="Can a marketing agency be held liable for GDPR violations?"),
+  search_by_article("28", context="marketing agency GDPR liability processor controller")
 
 ### Smart Filtering — Use Parameters to Narrow Results
 search_by_entity and search_by_article support filters. USE THEM when the query
@@ -80,11 +82,11 @@ gives you clues:
 - **Recent cases** → use sort_by="date_desc"
 - **Only enforcement fines** → use only_with_fine=True
 
-Examples:
-- "Vodafone fined €150 in Greece" → search_by_entity("Vodafone", jurisdiction="Greece", max_fine=500)
-- "Latest Article 32 decisions" → search_by_article("32", sort_by="date_desc")
-- "Article 15 court rulings" → search_by_article("15") (includes court decisions by default)
-- "Small GDPR fines under €1000" → search_by_article("5", max_fine=1000, sort_by="fine_asc", only_with_fine=True)
+Examples (ALWAYS pass context= with the user's question for better ranking):
+- "Vodafone fined €150 in Greece" → search_by_entity("Vodafone", context="Vodafone fined €150 in Greece", jurisdiction="Greece", max_fine=500)
+- "Latest Article 32 decisions" → search_by_article("32", context="Latest Article 32 decisions", sort_by="date_desc")
+- "Article 15 court rulings" → search_by_article("15", context="Article 15 court rulings")
+- "Small GDPR fines under €1000" → search_by_article("5", context="Small GDPR fines under 1000", max_fine=1000, sort_by="fine_asc", only_with_fine=True)
 
 ### Query Decomposition — For Complex/Conceptual Queries
 When the query involves a LEGAL CONCEPT (not a specific entity/case), decompose it
@@ -93,14 +95,14 @@ article_lookup queries.
 
 Example: "Can a controller refuse access because data is blocked?"
 → Plan:
-  1. search_by_article("Art. 15") — understand access rights
+  1. search_by_article("15", context="Can a controller refuse access because data is blocked?")
   2. search_precedents("controller refuse access request grounds") — find refusal cases
   3. search_precedents("data blocking restriction processing Art. 18") — find blocking cases
 Execute steps 1-2 in parallel, then step 3 if needed.
 
 Example: "Does GDPR require companies to delete data of former customers who unsubscribed?"
 → Plan:
-  1. search_by_article("Art. 17") — right to erasure
+  1. search_by_article("17", context="GDPR delete data former customers unsubscribed")
   2. search_precedents("erasure former customer data retention unsubscribe")
   3. search_precedents("delete personal data marketing opt-out")
 Execute all in parallel.
@@ -132,12 +134,12 @@ For research queries, follow this sequence:
 1. READ MEMORY — Check for existing org context from previous sessions
 2. UNDERSTAND — Parse the situation: articles, jurisdiction, sector, facts
 3. SEARCH — Call 2-3 tools IN PARALLEL based on query type:
-   - Specific company → search_by_entity + search_precedents
-   - Specific article → search_by_article + search_precedents
+   - Specific company → search_by_entity(name, context=user_question) + search_precedents
+   - Specific article → search_by_article(num, context=user_question) + search_precedents
    - Scenario/situation → search_precedents with LEGAL CONCEPT (not the literal
      situation) + search_by_article with implied articles
      Example: "employer reading ex-employee emails" → search "employee email
-     monitoring Art. 6" + search_by_article("Art. 6")
+     monitoring Art. 6" + search_by_article("6", context="employer reading ex-employee emails")
    - Multiple countries → parallel searches per country
 4. EVALUATE — Are the results relevant? Enough cases? If not, retry differently.
 5. ENRICH — lookup_law, analyze_factors, dpa_profile, simulate_fine as needed
@@ -204,7 +206,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         jurisdiction: str | None = None,
         articles: list[str] | None = None,
         sector: str | None = None,
-        limit: int = 10,
+        limit: int = 15,
     ) -> str:
         """Search GDPR enforcement decisions using the full RAG pipeline.
 
@@ -713,6 +715,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
     @tool
     def search_by_article(
         article_number: str,
+        context: str | None = None,
         jurisdiction: str | None = None,
         sort_by: str = "date_desc",
         min_fine: int | None = None,
@@ -728,8 +731,12 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         By default includes cases without fines (court decisions, reprimands).
         Set only_with_fine=True to filter to enforcement cases with fines only.
 
+        IMPORTANT: Always pass `context` with the user's original question so
+        results are ranked by relevance instead of just date.
+
         Args:
             article_number: Article number (e.g. "32", "5", "6(1)")
+            context: The user's original question (used for semantic reranking)
             jurisdiction: Optional country filter (e.g. "Spain")
             sort_by: Sort order — "date_desc" (default), "date_asc", "fine_desc", "fine_asc"
             min_fine: Minimum fine amount filter (e.g. 10000)
@@ -738,6 +745,8 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             only_with_fine: Only return cases with fines (default False)
             limit: Max results (default 10)
         """
+        from db.rag import embed_query, vector_to_pg
+
         import re
         num = re.sub(r"[^0-9()]", "", article_number)
         if not num:
@@ -764,23 +773,51 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             where_clauses.append("d.decision_year = %s")
             params.append(year)
 
-        sort_map = {
-            "date_desc": "d.decision_date DESC NULLS LAST",
-            "date_asc": "d.decision_date ASC NULLS LAST",
-            "fine_desc": "d.fine_amount DESC NULLS LAST",
-            "fine_asc": "d.fine_amount ASC NULLS LAST",
-        }
-        order = sort_map.get(sort_by, sort_map["date_desc"])
+        where_sql = " AND ".join(where_clauses)
 
-        cur.execute(f"""
-            SELECT d.title, d.authority, d.jurisdiction,
-                   d.fine_amount, d.fine_currency, d.gdpr_articles,
-                   d.decision_year, d.outcome, d.case_number
-            FROM documents d
-            WHERE {' AND '.join(where_clauses)}
-            ORDER BY {order}
-            LIMIT %s
-        """, params + [limit])
+        # When context is provided, use vector reranking over a larger SQL pool
+        if context:
+            query_vec = vector_to_pg(embed_query(None, context))
+            cur.execute(f"""
+                WITH article_docs AS (
+                    SELECT d.id, d.title, d.authority, d.jurisdiction,
+                           d.fine_amount, d.fine_currency, d.gdpr_articles,
+                           d.decision_year, d.outcome, d.case_number
+                    FROM documents d
+                    WHERE {where_sql}
+                    LIMIT 200
+                )
+                SELECT ad.title, ad.authority, ad.jurisdiction,
+                       ad.fine_amount, ad.fine_currency, ad.gdpr_articles,
+                       ad.decision_year, ad.outcome, ad.case_number,
+                       MIN(c.embedding <=> %s::vector(1024)) AS best_dist
+                FROM article_docs ad
+                JOIN chunks c ON c.document_id = ad.id
+                WHERE c.chunk_type = 'child'
+                  AND c.embedding_version = 'bge-m3-1024'
+                GROUP BY ad.id, ad.title, ad.authority, ad.jurisdiction,
+                         ad.fine_amount, ad.fine_currency, ad.gdpr_articles,
+                         ad.decision_year, ad.outcome, ad.case_number
+                ORDER BY best_dist
+                LIMIT %s
+            """, params + [query_vec, limit])
+        else:
+            sort_map = {
+                "date_desc": "d.decision_date DESC NULLS LAST",
+                "date_asc": "d.decision_date ASC NULLS LAST",
+                "fine_desc": "d.fine_amount DESC NULLS LAST",
+                "fine_asc": "d.fine_amount ASC NULLS LAST",
+            }
+            order = sort_map.get(sort_by, sort_map["date_desc"])
+            cur.execute(f"""
+                SELECT d.title, d.authority, d.jurisdiction,
+                       d.fine_amount, d.fine_currency, d.gdpr_articles,
+                       d.decision_year, d.outcome, d.case_number
+                FROM documents d
+                WHERE {where_sql}
+                ORDER BY {order}
+                LIMIT %s
+            """, params + [limit])
 
         rows = cur.fetchall()
         if not rows:
@@ -788,7 +825,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
 
         results = []
         for i, row in enumerate(rows, 1):
-            title, auth, juris, fine, currency, arts, yr, outcome, case_num = row
+            title, auth, juris, fine, currency, arts, yr, outcome, case_num = row[:9]
             arts_str = ", ".join(arts[:5]) if arts else "N/A"
             fine_str = f"{currency or 'EUR'} {fine:,}" if fine else "No fine"
             results.append(
@@ -808,6 +845,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
     @tool
     def search_by_entity(
         entity_name: str,
+        context: str | None = None,
         jurisdiction: str | None = None,
         sort_by: str = "date_desc",
         min_fine: int | None = None,
@@ -821,8 +859,12 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         Direct SQL lookup on controller_name — more reliable than semantic search
         for company-specific queries. Includes court rulings without fines by default.
 
+        IMPORTANT: Always pass `context` with the user's original question so
+        results are ranked by relevance instead of just date.
+
         Args:
             entity_name: Company or controller name (e.g. "Google", "Vodafone", "Meta")
+            context: The user's original question (used for semantic reranking)
             jurisdiction: Optional country filter (e.g. "Greece", "Spain")
             sort_by: Sort order — "date_desc" (default), "date_asc", "fine_desc", "fine_asc"
             min_fine: Minimum fine amount filter (e.g. 10000)
@@ -831,7 +873,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             only_with_fine: Only return cases with fines (default False)
             limit: Max results (default 10)
         """
-        from db.rag import resolve_entity_alias
+        from db.rag import resolve_entity_alias, embed_query, vector_to_pg
 
         patterns = resolve_entity_alias(entity_name)
         if not patterns:
@@ -856,24 +898,54 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             where_clauses.append("d.decision_year = %s")
             params.append(year)
 
-        sort_map = {
-            "date_desc": "d.decision_date DESC NULLS LAST",
-            "date_asc": "d.decision_date ASC NULLS LAST",
-            "fine_desc": "d.fine_amount DESC NULLS LAST",
-            "fine_asc": "d.fine_amount ASC NULLS LAST",
-        }
-        order = sort_map.get(sort_by, sort_map["date_desc"])
+        where_sql = " AND ".join(where_clauses)
 
-        cur.execute(f"""
-            SELECT d.title, d.authority, d.jurisdiction,
-                   d.fine_amount, d.fine_currency, d.gdpr_articles,
-                   d.decision_year, d.outcome, d.case_number,
-                   d.controller_name
-            FROM documents d
-            WHERE {' AND '.join(where_clauses)}
-            ORDER BY {order}
-            LIMIT %s
-        """, params + [limit])
+        if context:
+            query_vec = vector_to_pg(embed_query(None, context))
+            cur.execute(f"""
+                WITH entity_docs AS (
+                    SELECT d.id, d.title, d.authority, d.jurisdiction,
+                           d.fine_amount, d.fine_currency, d.gdpr_articles,
+                           d.decision_year, d.outcome, d.case_number,
+                           d.controller_name
+                    FROM documents d
+                    WHERE {where_sql}
+                    LIMIT 100
+                )
+                SELECT ed.title, ed.authority, ed.jurisdiction,
+                       ed.fine_amount, ed.fine_currency, ed.gdpr_articles,
+                       ed.decision_year, ed.outcome, ed.case_number,
+                       ed.controller_name,
+                       MIN(c.embedding <=> %s::vector(1024)) AS best_dist
+                FROM entity_docs ed
+                JOIN chunks c ON c.document_id = ed.id
+                WHERE c.chunk_type = 'child'
+                  AND c.embedding_version = 'bge-m3-1024'
+                GROUP BY ed.id, ed.title, ed.authority, ed.jurisdiction,
+                         ed.fine_amount, ed.fine_currency, ed.gdpr_articles,
+                         ed.decision_year, ed.outcome, ed.case_number,
+                         ed.controller_name
+                ORDER BY best_dist
+                LIMIT %s
+            """, params + [query_vec, limit])
+        else:
+            sort_map = {
+                "date_desc": "d.decision_date DESC NULLS LAST",
+                "date_asc": "d.decision_date ASC NULLS LAST",
+                "fine_desc": "d.fine_amount DESC NULLS LAST",
+                "fine_asc": "d.fine_amount ASC NULLS LAST",
+            }
+            order = sort_map.get(sort_by, sort_map["date_desc"])
+            cur.execute(f"""
+                SELECT d.title, d.authority, d.jurisdiction,
+                       d.fine_amount, d.fine_currency, d.gdpr_articles,
+                       d.decision_year, d.outcome, d.case_number,
+                       d.controller_name
+                FROM documents d
+                WHERE {where_sql}
+                ORDER BY {order}
+                LIMIT %s
+            """, params + [limit])
 
         rows = cur.fetchall()
         if not rows:
@@ -882,7 +954,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         results = []
         for i, row in enumerate(rows, 1):
             (title, auth, juris, fine, currency, arts,
-             yr, outcome, case_num, controller) = row
+             yr, outcome, case_num, controller) = row[:10]
             fine_str = f"{currency or 'EUR'} {fine:,}" if fine else "No fine"
             arts_str = ", ".join(arts[:5]) if arts else "N/A"
             results.append(

@@ -658,6 +658,8 @@ def main() -> None:
                         help="Run N queries concurrently (default: 1 = serial)")
     parser.add_argument("--recalldb", action="store_true",
                         help="Enable RecallDB retrieval learning")
+    parser.add_argument("--ids", default=None,
+                        help="Path to JSON list of query IDs to run (retry mode)")
     args = parser.parse_args()
 
     if not DATABASE_URL:
@@ -669,6 +671,12 @@ def main() -> None:
 
     with open(golden_path, encoding="utf-8") as f:
         golden_set = json.load(f)
+
+    if args.ids:
+        with open(args.ids, encoding="utf-8") as f:
+            id_set = set(json.load(f))
+        golden_set = [q for q in golden_set if q["id"] in id_set]
+        log.info("ID filter: %d queries from %s", len(golden_set), args.ids)
 
     if args.category:
         golden_set = [q for q in golden_set if q.get("category") == args.category]
