@@ -52,15 +52,23 @@ first turn to maximize coverage and minimize latency.
 
 ### First Turn — PARALLEL CALLS (mandatory)
 Analyze the query and immediately call 2-3 tools simultaneously:
-- search_precedents with natural language description
-- search_by_entity if a company/organization is mentioned
+- search_precedents with natural language description — ALWAYS
+- search_by_entity — if ANY company, organization, DPA, government body,
+  university, hospital, or institution is mentioned. Even if the name is partial
+  or informal (e.g., "Vodafone", "a Spanish radio station", "a Romanian housing
+  association"). When in doubt, ALWAYS call search_by_entity.
 - search_by_article if a GDPR article is referenced or implied
 - For scenario queries: search_precedents with the LEGAL CONCEPT extracted
-  (e.g., "store asking for doctor's note" → search "health data processing Art. 9")
+  (e.g., "store asking for doctor's note" → search "health data processing
+  employee medical data Art. 9 special categories")
 
 Example: "Did Vodafone get fined in Greece for SIM swap?"
 → Call ALL AT ONCE: search_precedents("Vodafone SIM swap Greece fine"),
   search_by_entity("Vodafone", jurisdiction="Greece"), search_by_article("Art. 32")
+
+Example: "Can a marketing agency be held liable for GDPR violations?"
+→ Call ALL AT ONCE: search_precedents("marketing agency GDPR liability processor controller"),
+  search_by_entity("marketing agency"), search_by_article("Art. 28")
 
 ### Smart Filtering — Use Parameters to Narrow Results
 search_by_entity and search_by_article support filters. USE THEM when the query
@@ -297,6 +305,26 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                 except Exception as e:
                     log.debug("RecallDB rewrite search failed: %s", e)
 
+        # Article text enrichment: if articles detected, fetch legal text
+        # and append to BM25 query for better keyword matching
+        article_text_boost = ""
+        if intent and intent.gdpr_articles:
+            try:
+                art_nums = intent.gdpr_articles[:3]
+                placeholders = ",".join(["%s"] * len(art_nums))
+                cur.execute(
+                    f"SELECT article_number, title, content FROM gdpr_law "
+                    f"WHERE article_number IN ({placeholders})",
+                    art_nums,
+                )
+                for row in cur.fetchall():
+                    # Use title as keyword boost (concise, relevant terms)
+                    article_text_boost += f" {row[1]}"
+                if article_text_boost:
+                    log.info("Article text boost: %s", article_text_boost.strip()[:100])
+            except Exception as e:
+                log.debug("Article text fetch failed: %s", e)
+
         # Section-aware vector search
         target_sections = SECTION_ROUTING.get(query_type, [("holding", 10), ("facts", 10)])
         section_results = search_vector_by_sections(cur, search_vec, target_sections, filters)
@@ -304,6 +332,8 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         # Unfiltered vector + BM25 text (use RecallDB expansion for text only)
         vector_hits = search_vector_chunks(cur, query_vec, K_VECTOR, filters)
         bm25_query = _recalldb_text_query if _recalldb_text_query else query
+        if article_text_boost:
+            bm25_query = bm25_query + article_text_boost
         text_hits = search_text_chunks(cur, bm25_query, K_TEXT, filters)
 
         # Fine-sort injection
@@ -316,6 +346,36 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
 
         # Case-number direct lookup
         case_hits = _fetch_chunks_for_case_numbers(cur, query)
+
+        # Case factors search: for conceptual/scenario queries, find docs
+        # with matching violation types via case_factors metadata
+        factor_hits: list[str] = []
+        if is_conceptual and intent and intent.gdpr_articles:
+            try:
+                art_placeholders = ",".join(["%s"] * len(intent.gdpr_articles[:3]))
+                cur.execute(
+                    f"SELECT DISTINCT cf.document_id FROM case_factors cf "
+                    f"WHERE cf.factor_type = 'gdpr_article' "
+                    f"AND cf.factor_value IN ({art_placeholders}) "
+                    f"LIMIT 20",
+                    intent.gdpr_articles[:3],
+                )
+                factor_doc_ids = [r[0] for r in cur.fetchall()]
+                if factor_doc_ids:
+                    doc_placeholders = ",".join(["%s"] * len(factor_doc_ids))
+                    cur.execute(
+                        f"SELECT id FROM chunks WHERE document_id IN ({doc_placeholders}) "
+                        f"AND chunk_type = 'child' AND embedding_version = 'bge-m3-1024' "
+                        f"LIMIT 30",
+                        factor_doc_ids,
+                    )
+                    factor_hits = [r[0] for r in cur.fetchall()]
+                    if factor_hits:
+                        log.info("Case factors arm: %d chunks from %d docs (arts: %s)",
+                                 len(factor_hits), len(factor_doc_ids),
+                                 ",".join(intent.gdpr_articles[:3]))
+            except Exception as e:
+                log.debug("Case factors search failed: %s", e)
 
         # Soft-filter arms (jurisdiction + article)
         soft_arms: list[list[str]] = []
@@ -337,6 +397,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             *section_arms,
             vector_hits, text_hits, fine_hits or None,
             question_hits or None,
+            factor_hits or None,
             *(arm for arm in soft_arms),
             *(arm for arm in rewrite_arms),
         )
@@ -383,6 +444,46 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             except Exception as e:
                 log.debug("RecallDB chunk gates failed: %s", e)
 
+        # Document links expansion (LARAG pattern):
+        # If top results have linked documents, inject their chunks as candidates
+        try:
+            top_doc_ids = set()
+            for cid in top_child_ids[:10]:
+                cur.execute("SELECT document_id FROM chunks WHERE id = %s", (cid,))
+                row = cur.fetchone()
+                if row:
+                    top_doc_ids.add(row[0])
+            if top_doc_ids:
+                placeholders = ",".join(["%s"] * len(top_doc_ids))
+                cur.execute(
+                    f"SELECT DISTINCT target_document_id FROM document_links "
+                    f"WHERE source_document_id IN ({placeholders}) "
+                    f"UNION "
+                    f"SELECT DISTINCT source_document_id FROM document_links "
+                    f"WHERE target_document_id IN ({placeholders})",
+                    list(top_doc_ids) + list(top_doc_ids),
+                )
+                linked_doc_ids = {r[0] for r in cur.fetchall()} - top_doc_ids
+                if linked_doc_ids:
+                    link_placeholders = ",".join(["%s"] * len(linked_doc_ids))
+                    cur.execute(
+                        f"SELECT id FROM chunks WHERE document_id IN ({link_placeholders}) "
+                        f"AND chunk_type = 'child' AND embedding_version = 'bge-m3-1024' "
+                        f"LIMIT 20",
+                        list(linked_doc_ids),
+                    )
+                    linked_chunks = [r[0] for r in cur.fetchall()]
+                    for cid in linked_chunks:
+                        if cid not in rrf_scores:
+                            # Boost slightly below lowest RRF score
+                            rrf_scores[cid] = 0.05
+                            top_child_ids.append(cid)
+                    if linked_chunks:
+                        log.info("Link expansion: +%d chunks from %d linked docs",
+                                 len(linked_chunks), len(linked_doc_ids))
+        except Exception as e:
+            log.debug("Document link expansion failed: %s", e)
+
         # Fetch parent context
         contexts = fetch_parent_context(cur, top_child_ids, rrf_scores, limit)
 
@@ -412,12 +513,14 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         for i, ctx in enumerate(contexts, 1):
             fine_str = f"EUR {ctx['fine_amount']:,}" if ctx.get("fine_amount") else "No fine"
             arts = ", ".join(ctx.get("gdpr_articles", [])[:5])
+            score = rrf_scores.get(ctx.get("child_id", ""), 0) or 0.0
             results.append(
                 f"{i}. **{ctx['title']}**\n"
                 f"   DPA: {ctx.get('authority', 'N/A')} ({ctx.get('jurisdiction', 'N/A')})\n"
                 f"   Fine: {fine_str} | Year: {ctx.get('decision_year', 'N/A')}\n"
                 f"   Articles: {arts}\n"
-                f"   Outcome: {ctx.get('outcome', 'N/A')}"
+                f"   Outcome: {ctx.get('outcome', 'N/A')}\n"
+                f"   Score: {score:.3f}"
             )
 
         header = f"Found {len(contexts)} precedents (relevance: {confidence}):\n\n"

@@ -138,13 +138,20 @@ def hyde_headnote(query_text: str) -> list[float]:
     Facts contain specific details (names, platforms, actions) that match
     better than generic legal principles."""
     hypothetical = _call_light_llm(
-        "Write a 2-sentence factual summary of a GDPR enforcement case "
-        "that would be relevant to this question. Include specific details "
-        "like the type of company, what they did, and what data was involved. "
-        "Write as a DPA case summary starting with 'The DPA investigated...' "
-        "or 'A complaint was filed against...'.\n\n"
+        "You are a GDPR legal expert. Convert this user question into a "
+        "2-sentence factual summary of a real GDPR enforcement case.\n\n"
+        "IMPORTANT: Translate everyday language into legal concepts:\n"
+        "- 'store asked for doctor's note' → 'processing of health data (Art. 9 special categories) "
+        "by a retail controller without valid legal basis'\n"
+        "- 'employer reading emails' → 'monitoring of employee communications "
+        "without adequate transparency measures (Art. 13/14)'\n"
+        "- 'camera in the workplace' → 'video surveillance of employees "
+        "without DPIA and proportionality assessment (Art. 35)'\n\n"
+        "Include: the type of organization, the GDPR violation, affected data, "
+        "and relevant articles. Write as: 'The DPA found that [controller] "
+        "violated [articles] by [specific action] involving [data type].'\n\n"
         f"Question: {query_text[:300]}",
-        max_tokens=120,
+        max_tokens=150,
     )
     if not hypothetical:
         raise RuntimeError("LLM call failed for HyDE-headnote")

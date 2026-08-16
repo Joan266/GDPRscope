@@ -398,6 +398,23 @@ def _eval_single_query(
         hr_final = hr_exact
         rr_final = rr_exact
 
+    # Extract per-result RAG scores from tool outputs
+    rag_scores: list[dict] = []
+    for t in trace:
+        if t.get("type") == "tool_result" and t.get("tool") in (
+            "search_precedents", "search_by_entity", "search_by_article",
+        ):
+            output = t.get("output_preview", "")
+            for line in output.split("\n"):
+                if line.strip().startswith("**") and "**" in line.strip()[2:]:
+                    title = line.strip().split("**")[1]
+                    score_match = re.search(r"Score:\s*([\d.]+)", output[output.find(title):])
+                    rag_scores.append({
+                        "title": title,
+                        "tool": t["tool"],
+                        "score": float(score_match.group(1)) if score_match else None,
+                    })
+
     entry: dict = {
         "id": qid,
         "category": item.get("category", ""),
@@ -414,6 +431,7 @@ def _eval_single_query(
         "mrr": rr_final,
         "source_in_response": source_in_response,
         "fuzzy_matched": bool(fuzzy_extra) and hr_exact[5] == 0,
+        "rag_scores": rag_scores[:20],
         "response_preview": response_text[:2000],
         "trace": trace,
     }
@@ -457,13 +475,9 @@ def evaluate_agent(
             )
             results.append(entry)
     else:
-        # Parallel mode — pre-load models to avoid thread deadlocks
+        # Parallel mode — lazy-load models on first use (RLock protects init)
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        log.info("Parallel mode: %d workers — pre-loading models...", parallel)
-        from db.rag import _get_st_model, _get_cross_encoder
-        _get_st_model()       # SentenceTransformer e5-large-v2
-        _get_cross_encoder()  # BAAI/bge-reranker-v2-m3
-        log.info("Models pre-loaded, starting workers")
+        log.info("Parallel mode: %d workers — models will lazy-load on first query", parallel)
 
         results = [None] * len(golden_set)
         with ThreadPoolExecutor(max_workers=parallel) as executor:
@@ -540,6 +554,30 @@ def print_report(results: list[dict]) -> None:
     print(f"  Avg messages/query   : {avg_msgs:.1f}")
     print(f"  Avg latency          : {avg_ms/1000:.1f}s")
     print(f"  Avg titles retrieved : {avg_titles:.1f}")
+
+    # RAG retrieval scores (from search_precedents output)
+    all_scores = []
+    hit_scores = []
+    miss_scores = []
+    for r in valid:
+        scores = r.get("rag_scores", [])
+        vals = [s["score"] for s in scores if s.get("score") is not None]
+        if vals:
+            all_scores.extend(vals)
+            if r["hit_rate"].get(5, r["hit_rate"].get("5", 0)) > 0:
+                hit_scores.extend(vals)
+            else:
+                miss_scores.extend(vals)
+    if all_scores:
+        print(f"\n-- RAG Retrieval Scores ------------------------------------------")
+        print(f"  All results  : avg={sum(all_scores)/len(all_scores):.3f}  "
+              f"median={sorted(all_scores)[len(all_scores)//2]:.3f}  n={len(all_scores)}")
+        if hit_scores:
+            print(f"  HIT queries  : avg={sum(hit_scores)/len(hit_scores):.3f}  "
+                  f"median={sorted(hit_scores)[len(hit_scores)//2]:.3f}  n={len(hit_scores)}")
+        if miss_scores:
+            print(f"  MISS queries : avg={sum(miss_scores)/len(miss_scores):.3f}  "
+                  f"median={sorted(miss_scores)[len(miss_scores)//2]:.3f}  n={len(miss_scores)}")
 
     # Per-category
     categories = sorted({r.get("category", "") for r in valid})
