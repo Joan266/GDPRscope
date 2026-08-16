@@ -124,6 +124,8 @@ Execute all in parallel.
 - **Parallel first, serial only if needed** — don't wait for results before
   starting independent searches
 - **Score-aware**: use the score distribution to decide your next action
+- **Max 3 search_precedents calls per query** — don't repeat with minor variations.
+  If 2 calls didn't find it, try a DIFFERENT tool or angle, not the same rephrased.
 - Try different angles on failure: rephrase, broaden, use different tools
 - Ask the user when stuck after 2-3 attempts
 
@@ -792,29 +794,23 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
 
         where_sql = " AND ".join(where_clauses)
 
-        # When context is provided, use vector reranking over a larger SQL pool
+        # When context is provided, vector-rerank ALL matching docs (no CTE LIMIT —
+        # arbitrary LIMIT 200 could exclude the target doc from a 2600-doc pool)
         if context:
             query_vec = vector_to_pg(embed_query(None, context))
             cur.execute(f"""
-                WITH article_docs AS (
-                    SELECT d.id, d.title, d.authority, d.jurisdiction,
-                           d.fine_amount, d.fine_currency, d.gdpr_articles,
-                           d.decision_year, d.outcome, d.case_number
-                    FROM documents d
-                    WHERE {where_sql}
-                    LIMIT 200
-                )
-                SELECT ad.title, ad.authority, ad.jurisdiction,
-                       ad.fine_amount, ad.fine_currency, ad.gdpr_articles,
-                       ad.decision_year, ad.outcome, ad.case_number,
+                SELECT d.title, d.authority, d.jurisdiction,
+                       d.fine_amount, d.fine_currency, d.gdpr_articles,
+                       d.decision_year, d.outcome, d.case_number,
                        MIN(c.embedding <=> %s::vector(1024)) AS best_dist
-                FROM article_docs ad
-                JOIN chunks c ON c.document_id = ad.id
-                WHERE c.chunk_type = 'child'
+                FROM documents d
+                JOIN chunks c ON c.document_id = d.id
+                WHERE {where_sql}
+                  AND c.chunk_type = 'child'
                   AND c.embedding_version = 'bge-m3-1024'
-                GROUP BY ad.id, ad.title, ad.authority, ad.jurisdiction,
-                         ad.fine_amount, ad.fine_currency, ad.gdpr_articles,
-                         ad.decision_year, ad.outcome, ad.case_number
+                GROUP BY d.id, d.title, d.authority, d.jurisdiction,
+                         d.fine_amount, d.fine_currency, d.gdpr_articles,
+                         d.decision_year, d.outcome, d.case_number
                 ORDER BY best_dist
                 LIMIT %s
             """, params + [query_vec, limit])
@@ -920,28 +916,20 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         if context:
             query_vec = vector_to_pg(embed_query(None, context))
             cur.execute(f"""
-                WITH entity_docs AS (
-                    SELECT d.id, d.title, d.authority, d.jurisdiction,
-                           d.fine_amount, d.fine_currency, d.gdpr_articles,
-                           d.decision_year, d.outcome, d.case_number,
-                           d.controller_name
-                    FROM documents d
-                    WHERE {where_sql}
-                    LIMIT 100
-                )
-                SELECT ed.title, ed.authority, ed.jurisdiction,
-                       ed.fine_amount, ed.fine_currency, ed.gdpr_articles,
-                       ed.decision_year, ed.outcome, ed.case_number,
-                       ed.controller_name,
+                SELECT d.title, d.authority, d.jurisdiction,
+                       d.fine_amount, d.fine_currency, d.gdpr_articles,
+                       d.decision_year, d.outcome, d.case_number,
+                       d.controller_name,
                        MIN(c.embedding <=> %s::vector(1024)) AS best_dist
-                FROM entity_docs ed
-                JOIN chunks c ON c.document_id = ed.id
-                WHERE c.chunk_type = 'child'
+                FROM documents d
+                JOIN chunks c ON c.document_id = d.id
+                WHERE {where_sql}
+                  AND c.chunk_type = 'child'
                   AND c.embedding_version = 'bge-m3-1024'
-                GROUP BY ed.id, ed.title, ed.authority, ed.jurisdiction,
-                         ed.fine_amount, ed.fine_currency, ed.gdpr_articles,
-                         ed.decision_year, ed.outcome, ed.case_number,
-                         ed.controller_name
+                GROUP BY d.id, d.title, d.authority, d.jurisdiction,
+                         d.fine_amount, d.fine_currency, d.gdpr_articles,
+                         d.decision_year, d.outcome, d.case_number,
+                         d.controller_name
                 ORDER BY best_dist
                 LIMIT %s
             """, params + [query_vec, limit])
