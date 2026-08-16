@@ -377,17 +377,21 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         case_hits = _fetch_chunks_for_case_numbers(cur, query)
 
         # Case factors search: for conceptual/scenario queries, find docs
-        # with matching violation types via case_factors metadata
+        # with matching GDPR articles that also have case_factors extracted
         factor_hits: list[str] = []
         if is_conceptual and intent and intent.gdpr_articles:
             try:
-                art_placeholders = ",".join(["%s"] * len(intent.gdpr_articles[:3]))
+                art_patterns = [f"%Art%{a.split('(')[0].strip()}%" for a in intent.gdpr_articles[:3]]
+                art_conditions = " OR ".join(
+                    "EXISTS (SELECT 1 FROM unnest(d.gdpr_articles) AS a WHERE a ILIKE %s)"
+                    for _ in art_patterns
+                )
                 cur.execute(
                     f"SELECT DISTINCT cf.document_id FROM case_factors cf "
-                    f"WHERE cf.factor_type = 'gdpr_article' "
-                    f"AND cf.factor_value IN ({art_placeholders}) "
+                    f"JOIN documents d ON d.id = cf.document_id "
+                    f"WHERE ({art_conditions}) "
                     f"LIMIT 20",
-                    intent.gdpr_articles[:3],
+                    art_patterns,
                 )
                 factor_doc_ids = [r[0] for r in cur.fetchall()]
                 if factor_doc_ids:
@@ -784,12 +788,13 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
 
         results = []
         for i, row in enumerate(rows, 1):
-            title, auth, juris, fine, currency, arts, year, outcome, case_num = row
+            title, auth, juris, fine, currency, arts, yr, outcome, case_num = row
             arts_str = ", ".join(arts[:5]) if arts else "N/A"
+            fine_str = f"{currency or 'EUR'} {fine:,}" if fine else "No fine"
             results.append(
                 f"{i}. **{title}**\n"
                 f"   DPA: {auth or 'N/A'} ({juris or 'N/A'})\n"
-                f"   Fine: {currency or 'EUR'} {fine:,} | Year: {year or 'N/A'}\n"
+                f"   Fine: {fine_str} | Year: {yr or 'N/A'}\n"
                 f"   Articles: {arts_str}\n"
                 f"   Outcome: {outcome or 'N/A'}"
             )
@@ -877,14 +882,14 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         results = []
         for i, row in enumerate(rows, 1):
             (title, auth, juris, fine, currency, arts,
-             year, outcome, case_num, controller) = row
+             yr, outcome, case_num, controller) = row
             fine_str = f"{currency or 'EUR'} {fine:,}" if fine else "No fine"
             arts_str = ", ".join(arts[:5]) if arts else "N/A"
             results.append(
                 f"{i}. **{title}**\n"
                 f"   Controller: {controller or 'N/A'}\n"
                 f"   DPA: {auth or 'N/A'} ({juris or 'N/A'})\n"
-                f"   Fine: {fine_str} | Year: {year or 'N/A'}\n"
+                f"   Fine: {fine_str} | Year: {yr or 'N/A'}\n"
                 f"   Articles: {arts_str}\n"
                 f"   Outcome: {outcome or 'N/A'}"
             )
