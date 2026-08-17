@@ -813,7 +813,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                          d.decision_year, d.outcome, d.case_number
                 ORDER BY best_dist
                 LIMIT %s
-            """, params + [query_vec, limit])
+            """, [query_vec] + params + [limit])
         else:
             sort_map = {
                 "date_desc": "d.decision_date DESC NULLS LAST",
@@ -932,7 +932,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                          d.controller_name
                 ORDER BY best_dist
                 LIMIT %s
-            """, params + [query_vec, limit])
+            """, [query_vec] + params + [limit])
         else:
             sort_map = {
                 "date_desc": "d.decision_date DESC NULLS LAST",
