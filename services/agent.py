@@ -93,19 +93,27 @@ When the query involves a LEGAL CONCEPT (not a specific entity/case), decompose 
 into sub-queries BEFORE searching. This is critical for conceptual, scenario, and
 article_lookup queries.
 
+**Each search_precedents call must attack a DIFFERENT ANGLE:**
+- Angle A: the specific factual situation (what happened)
+- Angle B: the legal principle or article at stake
+- Angle C: the type of entity or sector involved
+- Angle D: the outcome or consequence
+
 Example: "Can a controller refuse access because data is blocked?"
 → Plan:
   1. search_by_article("15", context="Can a controller refuse access because data is blocked?")
-  2. search_precedents("controller refuse access request grounds") — find refusal cases
-  3. search_precedents("data blocking restriction processing Art. 18") — find blocking cases
-Execute steps 1-2 in parallel, then step 3 if needed.
+  2. search_precedents("controller refuse access request grounds") — ANGLE A: factual
+  3. search_precedents("data blocking restriction processing Art. 18") — ANGLE B: legal
+  4. search_precedents("right of access limitation exception exemption") — ANGLE D: outcome
+Execute steps 1-3 in parallel, step 4 only if needed.
 
 Example: "Does GDPR require companies to delete data of former customers who unsubscribed?"
 → Plan:
   1. search_by_article("17", context="GDPR delete data former customers unsubscribed")
-  2. search_precedents("erasure former customer data retention unsubscribe")
-  3. search_precedents("delete personal data marketing opt-out")
-Execute all in parallel.
+  2. search_precedents("erasure former customer data retention unsubscribe") — ANGLE A
+  3. search_precedents("right to be forgotten marketing opt-out deletion") — ANGLE B
+  4. search_precedents("retention period expired customer relationship ended") — ANGLE C
+Execute steps 1-3 in parallel, step 4 only if needed.
 
 ### After First Results — Score-Aware Refinement
 1. **Read the scores**: Check the Score values in the results.
@@ -124,9 +132,13 @@ Execute all in parallel.
 - **Parallel first, serial only if needed** — don't wait for results before
   starting independent searches
 - **Score-aware**: use the score distribution to decide your next action
-- **Max 3 search_precedents calls per query** — don't repeat with minor variations.
-  If 2 calls didn't find it, try a DIFFERENT tool or angle, not the same rephrased.
-- Try different angles on failure: rephrase, broaden, use different tools
+- **Max 4 search_precedents calls per query** — each call MUST use a distinct angle:
+  1. Entity/case-focused (names, organizations, specific facts)
+  2. Legal concept (GDPR articles, legal principles, doctrines)
+  3. Factual pattern (what happened: "employee monitoring", "data breach notification delay")
+  4. Outcome/consequence (fine amount, corrective measure, type of violation)
+  Do NOT rephrase the same angle — if two calls cover similar ground, you're wasting a slot.
+- Try different tools on failure, not the same tool rephrased
 - Ask the user when stuck after 2-3 attempts
 
 ## Research Protocol
