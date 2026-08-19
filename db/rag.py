@@ -106,8 +106,7 @@ def make_bedrock_client():
 
 
 def embed_query(client, text: str) -> list[float]:
-    """Embed via BGE-M3. El parámetro client se ignora (compatibilidad).
-    BGE-M3 no requiere prefijo."""
+    """Embed via BGE-M3. El parámetro client se ignora (compatibilidad)."""
     text = text[:MAX_CHARS_QUERY].strip()
     if not text:
         raise ValueError("Query vacía")
@@ -164,6 +163,115 @@ def hyde_headnote(query_text: str) -> list[float]:
 def vector_to_pg(embedding: list[float]) -> str:
     """Serializa vector a literal VECTOR de CockroachDB/PostgreSQL."""
     return "[" + ",".join(f"{x:.8f}" for x in embedding) + "]"
+
+
+# ── Sparse embeddings (BGE-M3 lexical weights) ───────────────────────────────
+
+_sparse_model = None
+_sparse_head: tuple | None = None  # (weight, bias)
+_sparse_tokenizer = None
+_sparse_lock = threading.Lock()
+
+
+def _get_sparse_model():
+    """Lazy-load BGE-M3 base model + sparse linear head for lexical weights."""
+    global _sparse_model, _sparse_head, _sparse_tokenizer
+    if _sparse_model is None:
+        with _sparse_lock:
+            if _sparse_model is None:
+                import glob as _glob
+
+                import torch
+                from transformers import AutoModel, AutoTokenizer
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                _sparse_tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-m3")
+                _sparse_model = AutoModel.from_pretrained("BAAI/bge-m3")
+                if device == "cuda":
+                    _sparse_model = _sparse_model.half().to(device)
+                else:
+                    _sparse_model = _sparse_model.to(device)
+                _sparse_model.eval()
+
+                cache = os.path.expanduser("~/.cache/huggingface/hub/models--BAAI--bge-m3")
+                sp_paths = _glob.glob(os.path.join(cache, "**", "sparse_linear.pt"), recursive=True)
+                if not sp_paths:
+                    raise FileNotFoundError("sparse_linear.pt not found in HuggingFace cache")
+                sp = torch.load(sp_paths[0], map_location=device, weights_only=True)
+                _sparse_head = (sp["weight"], sp["bias"])
+                log.info("Sparse model loaded (device=%s)", device)
+    return _sparse_model, _sparse_head, _sparse_tokenizer
+
+
+def embed_query_sparse(text: str) -> dict[str, float]:
+    """Generate sparse lexical weights for a query using BGE-M3 sparse head."""
+    import torch
+
+    text = text[:MAX_CHARS_QUERY].strip()
+    if not text:
+        return {}
+
+    model, (sp_w, sp_b), tokenizer = _get_sparse_model()
+    device = sp_w.device
+
+    encoded = tokenizer(
+        [text], padding=True, truncation=True,
+        return_tensors="pt", max_length=8192,
+    ).to(device)
+
+    with torch.no_grad():
+        hidden = model(**encoded).last_hidden_state
+        weights = torch.relu(hidden @ sp_w.T + sp_b).squeeze(-1)
+
+    input_ids = encoded["input_ids"][0].tolist()
+    token_weights = weights[0].tolist()
+    sparse: dict[str, float] = {}
+    for tid, w in zip(input_ids, token_weights):
+        if w > 0.01 and tid not in (0, 1, 2):
+            key = str(tid)
+            sparse[key] = max(sparse.get(key, 0.0), w)
+    return sparse
+
+
+def _sparse_dot(a: dict[str, float], b: dict[str, float]) -> float:
+    """Dot product of two sparse vectors. O(min(len(a), len(b)))."""
+    if len(a) > len(b):
+        a, b = b, a
+    return sum(a[k] * b[k] for k in a if k in b)
+
+
+def sparse_rerank(
+    cur: psycopg.Cursor,
+    query_sparse: dict[str, float],
+    chunk_ids: list[str],
+) -> list[str]:
+    """Re-rank chunk IDs by sparse dot product with query.
+    Loads sparse_embedding JSONB from DB for the candidate set."""
+    if not chunk_ids or not query_sparse:
+        return chunk_ids
+
+    import json as _json
+
+    cur.execute(
+        "SELECT id, sparse_embedding FROM chunks WHERE id = ANY(%s) AND sparse_embedding IS NOT NULL",
+        (chunk_ids,),
+    )
+    scored = []
+    ids_without_sparse = set(chunk_ids)
+    for row in cur.fetchall():
+        cid = str(row[0])
+        ids_without_sparse.discard(cid)
+        sparse = row[1] if isinstance(row[1], dict) else _json.loads(row[1])
+        score = _sparse_dot(query_sparse, sparse)
+        scored.append((cid, score))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    ranked = [cid for cid, _ in scored]
+    # Append chunks without sparse at the end (preserve original order)
+    for cid in chunk_ids:
+        if cid in ids_without_sparse and cid not in ranked:
+            ranked.append(cid)
+    return ranked
 
 
 # ── Corpus index ───────────────────────────────────────────────────────────────
@@ -1516,7 +1624,31 @@ def query(
                         expansion_arms.append(hits)
                 log.info("  Expansion: %d arms for '%s'", len(v_section_results), variant[:60])
 
-        # 3. N-way RRF: section + unfiltered + text + fine + HyPE + soft-filters + expansions
+        # 2i. Sparse lexical arm — BGE-M3 sparse dot product as RRF arm
+        sparse_arm: list[str] = []
+        try:
+            query_sparse = embed_query_sparse(query_text)
+            if query_sparse:
+                all_candidates: set[str] = set()
+                for arm in section_results.values():
+                    all_candidates.update(arm)
+                all_candidates.update(vector_hits)
+                all_candidates.update(text_hits)
+                if fine_hits:
+                    all_candidates.update(fine_hits)
+                if question_hits:
+                    all_candidates.update(question_hits)
+                for arm in soft_arms:
+                    all_candidates.update(arm)
+                for arm in expansion_arms:
+                    all_candidates.update(arm)
+                sparse_arm = sparse_rerank(cur, query_sparse, list(all_candidates))
+                if sparse_arm:
+                    log.info("Sparse arm: %d candidates reranked", len(sparse_arm))
+        except Exception as exc:
+            log.warning("Sparse arm skipped: %s", exc)
+
+        # 3. N-way RRF: section + unfiltered + text + fine + HyPE + soft-filters + expansions + sparse
         section_arms = list(section_results.values())
         rrf_ranked    = reciprocal_rank_fusion(
             *section_arms,
@@ -1524,6 +1656,7 @@ def query(
             question_hits or None,
             *(arm for arm in soft_arms),
             *(arm for arm in expansion_arms),
+            sparse_arm or None,
         )
         rrf_scores    = dict(rrf_ranked)
         # Case-number hits: pin at top with score 1.0 (above any RRF score)
@@ -1534,7 +1667,7 @@ def query(
                                      if cid not in set(case_hits)]
         log.info("RRF: %d unique chunks (using top %d as candidates)", len(rrf_ranked), len(top_child_ids))
 
-        # 3b. Cross-encoder reranking — all query types
+        # 3a. Cross-encoder reranking — all query types
         non_pinned = [cid for cid in top_child_ids if cid not in set(case_hits)]
         if len(non_pinned) > top_n:
             log.info("Cross-encoder reranking %d candidates...", len(non_pinned))

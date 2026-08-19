@@ -244,6 +244,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             apply_intent_filters,
             classify_query_type,
             embed_query,
+            embed_query_sparse,
             expand_query,
             extract_intent,
             fetch_parent_context,
@@ -257,6 +258,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             search_text_chunks,
             search_vector_by_sections,
             search_vector_chunks,
+            sparse_rerank,
             _fetch_chunks_for_case_numbers,
             _fetch_fine_sorted_chunks,
             _find_controller_docs,
@@ -440,7 +442,33 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                 if soft_art:
                     soft_arms.append(soft_art)
 
-        # N-way RRF fusion (including RecallDB rewrite arms)
+        # Sparse lexical arm — BGE-M3 sparse dot product as RRF arm
+        sparse_arm: list[str] = []
+        try:
+            query_sparse = embed_query_sparse(query)
+            if query_sparse:
+                all_candidates: set[str] = set()
+                for arm in section_results.values():
+                    all_candidates.update(arm)
+                all_candidates.update(vector_hits)
+                all_candidates.update(text_hits)
+                if fine_hits:
+                    all_candidates.update(fine_hits)
+                if question_hits:
+                    all_candidates.update(question_hits)
+                if factor_hits:
+                    all_candidates.update(factor_hits)
+                for arm in soft_arms:
+                    all_candidates.update(arm)
+                for arm in rewrite_arms:
+                    all_candidates.update(arm)
+                sparse_arm = sparse_rerank(cur, query_sparse, list(all_candidates))
+                if sparse_arm:
+                    log.info("Sparse arm: %d candidates reranked", len(sparse_arm))
+        except Exception as exc:
+            log.warning("Sparse arm skipped: %s", exc)
+
+        # N-way RRF fusion (including RecallDB rewrite arms + sparse)
         section_arms = list(section_results.values())
         rrf_ranked = reciprocal_rank_fusion(
             *section_arms,
@@ -449,6 +477,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             factor_hits or None,
             *(arm for arm in soft_arms),
             *(arm for arm in rewrite_arms),
+            sparse_arm or None,
         )
         rrf_scores = dict(rrf_ranked)
         if case_hits:
