@@ -2,13 +2,20 @@
 
 GDPR enforcement research tool. Searches 8,000+ real enforcement decisions across 36 jurisdictions to answer questions about fines, precedents, and regulatory patterns.
 
-Built for privacy lawyers and DPOs who spend hours manually researching enforcement history.
+Built for privacy lawyers and DPOs who need to research enforcement precedents across multiple DPAs and jurisdictions — a process that typically involves searching GDPRhub, EUR-Lex, and individual DPA websites separately.
 
 ## How it works
 
-A LangGraph ReAct agent with 9 tools queries a PostgreSQL database of GDPR enforcement decisions. The retrieval pipeline combines dense vectors, sparse lexical weights, BM25 full-text search, and cross-encoder reranking via Reciprocal Rank Fusion.
+A [LangGraph](https://langchain-ai.github.io/langgraph/) ReAct agent (Reason + Act: the LLM decides which tools to call, reads the results, and decides whether to search again or answer) with 9 tools queries a PostgreSQL database of GDPR enforcement decisions.
 
-The agent decomposes complex queries into parallel sub-searches, applies HyDE (Hypothetical Document Embeddings) for conceptual queries, and uses intent extraction to route to specialized search arms.
+The retrieval pipeline combines multiple search strategies and merges them via [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~grbovic/p131-cormack.pdf) (RRF — a method that merges ranked lists from different search methods by combining their positions, so a document ranked high by multiple methods rises to the top):
+
+- **Dense vector search** — each text is encoded as 1024 numbers (an "embedding") that capture meaning; similar texts have similar numbers, so searching is finding the closest vectors
+- **Sparse lexical search** — each text produces ~50-100 (word: importance weight) pairs, learned by the model; matches exact terms but with learned importance rather than raw frequency
+- **BM25 full-text search** — classic keyword matching via PostgreSQL tsvector; finds documents that contain the query terms regardless of meaning
+- **Cross-encoder reranking** — a second model that reads (query + document) together and scores relevance; more accurate than comparing vectors separately but slower, so only applied to the top ~20 candidates
+
+The agent decomposes complex queries into parallel sub-searches, applies HyDE (generates a hypothetical decision excerpt and embeds that instead of the raw question, bridging the vocabulary gap between questions and legal text), and uses intent extraction to route to specialized search arms.
 
 ### Agent tools
 
@@ -27,23 +34,23 @@ The agent decomposes complex queries into parallel sub-searches, applies HyDE (H
 
 ```
 query
-  |-> intent extraction (LLM)
+  |-> intent extraction (LLM parses entity names, articles, jurisdiction from the question)
   |-> query type classification (conceptual / entity / article / scenario / ...)
-  |-> HyDE embedding (generates hypothetical decision excerpt, then embeds)
+  |-> HyDE embedding (LLM writes a fake decision excerpt, then embeds that instead of the question)
   |
-  |-> dense vector search (BGE-M3, 1024d, section-aware routing)
-  |-> BM25 full-text search (tsvector, with article text boost)
-  |-> sparse lexical search (BGE-M3 learned token weights, JSONB)
+  |-> dense vector search (BGE-M3, 1024 dims, section-aware routing)
+  |-> BM25 full-text search (PostgreSQL tsvector, with article title boost)
+  |-> sparse lexical search (BGE-M3 learned token weights, stored as JSONB)
   |-> fine-sort arm, case-number lookup, case-factors arm (conditional)
   |
-  |-> Reciprocal Rank Fusion (all arms merged)
-  |-> cross-encoder reranking (bge-reranker-v2-m3, for conceptual queries)
-  |-> parent chunk expansion (child retrieval -> parent context to LLM)
+  |-> Reciprocal Rank Fusion (merges all ranked lists by position)
+  |-> cross-encoder reranking (reads query+doc together, for conceptual queries)
+  |-> parent chunk expansion (small chunks for search -> full section sent to LLM)
 ```
 
 ### Fine simulator
 
-Implements the EDPB 5-step methodology against real precedent data:
+Implements the [EDPB 5-step methodology](https://www.edpb.europa.eu/system/files/2023-05/edpb_guidelines_042022_calculationofadministrativefines_en.pdf) against real precedent data:
 
 1. Categorize violation severity (Art. 83(4) vs 83(5-6))
 2. Calculate starting point from turnover and severity band
@@ -55,12 +62,12 @@ Similarity scoring uses eta-squared variable importance measured on 3,841 fined 
 
 ## Eval results
 
-Evaluated on a golden set of 416 queries across 9 categories (named_entity, conceptual, scenario, fine_lookup, false_premise, cross_jurisdiction, edge_case, article_lookup, multi_target).
+Evaluated on a golden set of 416 queries across 9 categories.
 
-Metric: Hit Rate @ 5 (does the expected document appear in the top 5 retrieved?).
+Metric: Hit Rate @ 5 — does the expected document appear in the top 5 retrieved?
 
 ```
-Single-query RAG baseline:     ~50%  HR@5
+Single-query vector search:    ~50%  HR@5
 Agent (multi-turn, 9 tools):    82%  HR@5
 ```
 
@@ -78,7 +85,7 @@ Per-category breakdown (agent):
 | article_lookup | 76% | 34 |
 | conceptual | 64% | 50 |
 
-Weakest category (conceptual) is bounded by embedding distance between abstract legal questions and specific decision text. Many "misses" retrieve equally valid alternative precedents not in the golden set.
+The weakest category (conceptual, 64%) is limited by the embedding model — BGE-M3 is a general-purpose multilingual model, not specialized in legal text. Abstract legal questions like "Can a DPO also be the IT manager?" produce embeddings that are distant from the specific decision text that answers them. A legal-domain embedding model or fine-tuning BGE-M3 on (GDPR query, relevant decision) pairs would likely improve these categories, but was out of scope. Many "misses" in this category do retrieve relevant precedents — just not the specific one in the golden set.
 
 ## Data sources
 
@@ -106,10 +113,10 @@ db/
   enrich_legal.py       Legal metadata extraction
   enrich_sector.py      Sector classification
   extract_factors.py    Art. 83(2) factor extraction (LLM-based)
-  rag.py                Hybrid retrieval engine (1,908 lines)
+  rag.py                Hybrid retrieval engine
 
 services/
-  agent.py              LangGraph ReAct agent, 9 tools (1,541 lines)
+  agent.py              LangGraph ReAct agent, 9 tools
   fine_simulator.py     EDPB 5-step fine estimation engine
   dpa_profiles.py       DPA behavioral profile generation
   intelligence.py       Enforcement trend analytics
@@ -124,7 +131,7 @@ eval/
   golden_set_v5.json    416 queries, 9 categories
 
 tests/
-  test_fine_simulator.py  55 tests (categorization, starting point, percentiles, factor analysis, leave-one-out)
+  test_fine_simulator.py  55 tests (categorization, starting point, percentiles, factor analysis)
 ```
 
 ## Stack
