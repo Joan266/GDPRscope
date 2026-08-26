@@ -40,12 +40,12 @@ class SimulationInput:
     turnover_eur: int | None = None
     data_subjects_affected: int | None = None
     data_categories: str | None = None  # "health", "financial", "children", etc.
-    intentional: bool = False
-    prior_violations: bool = False
-    cooperated: bool = True
-    notified_voluntarily: bool = True
-    corrective_measures: bool = True
-    prior_security_measures: bool = True
+    intentional: bool | None = None
+    prior_violations: bool | None = None
+    cooperated: bool | None = None
+    notified_voluntarily: bool | None = None
+    corrective_measures: bool | None = None
+    prior_security_measures: bool | None = None
 
 
 @dataclass
@@ -226,11 +226,15 @@ def _build_article_patterns(articles: list[str]) -> list[str]:
     return patterns
 
 
-def find_precedents(conn: psycopg.Connection, params: SimulationInput) -> list[Precedent]:
+def find_precedents(conn: psycopg.Connection, params: SimulationInput,
+                    exclude_title: str | None = None) -> list[Precedent]:
     """Find matching precedent cases with cascading relaxation.
 
     Tries strict match first (articles + jurisdiction + sector), then
     progressively relaxes filters until enough precedents are found.
+
+    Args:
+        exclude_title: If set, exclude this case from results (for unbiased evaluation).
     """
     input_articles = set(_normalize_article(a) for a in params.articles_violated)
     # Build array of patterns for array overlap using array_to_string
@@ -277,6 +281,8 @@ def find_precedents(conn: psycopg.Connection, params: SimulationInput) -> list[P
     for r in rows:
         title = r[0]
         if title in seen_ids:
+            continue
+        if exclude_title and title == exclude_title:
             continue
         seen_ids.add(title)
 
@@ -435,20 +441,31 @@ def get_dpa_comparison(conn: psycopg.Connection,
 
 def _weighted_percentile(values: list[float], weights: list[float],
                          percentile: float) -> float:
-    """Compute weighted percentile. percentile in [0, 1]."""
+    """Compute weighted percentile with linear interpolation. percentile in [0, 1]."""
     if not values:
         return 0.0
+    if len(values) == 1:
+        return values[0]
     pairs = sorted(zip(values, weights))
     vals, wts = zip(*pairs)
-    cum_weight = []
     total = sum(wts)
+    # Cumulative weight at each point (right edge)
+    cum = []
     running = 0.0
     for w in wts:
         running += w
-        cum_weight.append((running - w / 2) / total)  # midpoint method
-    for i, cw in enumerate(cum_weight):
-        if cw >= percentile:
-            return vals[i]
+        cum.append(running / total)
+    # Find where percentile falls and interpolate
+    if percentile <= cum[0]:
+        return vals[0]
+    for i in range(1, len(cum)):
+        if percentile <= cum[i]:
+            # Linear interpolation between vals[i-1] and vals[i]
+            span = cum[i] - cum[i - 1]
+            if span == 0:
+                return vals[i]
+            frac = (percentile - cum[i - 1]) / span
+            return vals[i - 1] + frac * (vals[i] - vals[i - 1])
     return vals[-1]
 
 
@@ -485,17 +502,17 @@ def calculate_fine_range(precedents: list[Precedent],
             "note": "No matching precedents found; range based on EDPB methodology only",
         }
 
-    # Apply factor adjustments
+    # Apply factor adjustments (only when explicitly set, not None)
     adjustment = 1.0
-    if params.intentional:
+    if params.intentional is True:
         adjustment *= 1.3
-    if params.prior_violations:
+    if params.prior_violations is True:
         adjustment *= 1.25
-    if params.cooperated:
+    if params.cooperated is True:
         adjustment *= 0.85
-    if params.notified_voluntarily:
+    if params.notified_voluntarily is True:
         adjustment *= 0.90
-    if params.corrective_measures:
+    if params.corrective_measures is True:
         adjustment *= 0.90
     if params.data_categories in ("health", "biometric", "genetic", "children"):
         adjustment *= 1.2
@@ -508,12 +525,36 @@ def calculate_fine_range(precedents: list[Precedent],
     # Cap at legal maximum
     legal_max = starting_point["legal_max"]
 
+    raw_range = {
+        "min": fine_min * adjustment,
+        "percentile_25": p25 * adjustment,
+        "median": median * adjustment,
+        "percentile_75": p75 * adjustment,
+        "max": fine_max * adjustment,
+    }
+
+    # When turnover is provided, blend precedent range with EDPB starting point.
+    # Precedents are dominated by small fines (PYME median ~30K). For large
+    # companies, the EDPB starting point (based on turnover) is a better anchor.
+    if params.turnover_eur and params.turnover_eur > 0:
+        edpb_low = starting_point["starting_low"]
+        edpb_mid = starting_point["starting_mid"]
+        edpb_high = starting_point["starting_high"]
+        # If precedent range is below the EDPB low, blend upward
+        if raw_range["median"] < edpb_low:
+            # Weight: precedents inform shape, EDPB informs scale
+            blend = 0.3  # 30% precedent, 70% EDPB
+            raw_range["percentile_25"] = raw_range["percentile_25"] * blend + edpb_low * (1 - blend)
+            raw_range["median"] = raw_range["median"] * blend + edpb_mid * (1 - blend)
+            raw_range["percentile_75"] = raw_range["percentile_75"] * blend + edpb_high * (1 - blend)
+            raw_range["max"] = max(raw_range["max"], edpb_high)
+
     return {
-        "min": int(min(fine_min * adjustment, legal_max)),
-        "percentile_25": int(min(p25 * adjustment, legal_max)),
-        "median": int(min(median * adjustment, legal_max)),
-        "percentile_75": int(min(p75 * adjustment, legal_max)),
-        "max": int(min(fine_max * adjustment, legal_max)),
+        "min": int(min(raw_range["min"], legal_max)),
+        "percentile_25": int(min(raw_range["percentile_25"], legal_max)),
+        "median": int(min(raw_range["median"], legal_max)),
+        "percentile_75": int(min(raw_range["percentile_75"], legal_max)),
+        "max": int(min(raw_range["max"], legal_max)),
         "precedent_count": len(scored),
         "adjustment_factor": round(adjustment, 2),
     }
@@ -521,8 +562,13 @@ def calculate_fine_range(precedents: list[Precedent],
 
 # ── Main simulation function ─────────────────────────────────────────────────
 
-def simulate_fine(conn: psycopg.Connection, params: SimulationInput) -> SimulationResult:
-    """Run the full 5-step EDPB prosecution simulation."""
+def simulate_fine(conn: psycopg.Connection, params: SimulationInput,
+                  exclude_title: str | None = None) -> SimulationResult:
+    """Run the full 5-step EDPB prosecution simulation.
+
+    Args:
+        exclude_title: If set, exclude this case from precedent pool (for unbiased evaluation).
+    """
 
     # Step 1
     category = categorize_violation(params.articles_violated)
@@ -531,7 +577,7 @@ def simulate_fine(conn: psycopg.Connection, params: SimulationInput) -> Simulati
     starting_point = calculate_starting_point(category, params.turnover_eur)
 
     # Step 3
-    precedents = find_precedents(conn, params)
+    precedents = find_precedents(conn, params, exclude_title=exclude_title)
     factor_impacts = analyze_factor_impacts(conn, params)
     dpa_comparison = get_dpa_comparison(conn, params.articles_violated)
 
@@ -541,19 +587,19 @@ def simulate_fine(conn: psycopg.Connection, params: SimulationInput) -> Simulati
     # Build methodology explanation
     aggravating = []
     mitigating = []
-    if params.intentional:
+    if params.intentional is True:
         aggravating.append("Intentional violation (+30%)")
-    if params.prior_violations:
+    if params.prior_violations is True:
         aggravating.append("Prior violations (+25%)")
     if params.data_categories in ("health", "biometric", "genetic", "children"):
         aggravating.append(f"Sensitive data: {params.data_categories} (+20%)")
     if params.data_subjects_affected and params.data_subjects_affected > 10000:
         aggravating.append(f"{params.data_subjects_affected:,} data subjects affected")
-    if params.cooperated:
+    if params.cooperated is True:
         mitigating.append("Cooperated with DPA (-15%)")
-    if params.notified_voluntarily:
+    if params.notified_voluntarily is True:
         mitigating.append("Voluntarily notified (-10%)")
-    if params.corrective_measures:
+    if params.corrective_measures is True:
         mitigating.append("Took corrective measures (-10%)")
 
     methodology = {

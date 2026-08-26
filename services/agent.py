@@ -1024,11 +1024,11 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
         sector: str | None = None,
         turnover_eur: int | None = None,
         data_subjects_affected: int | None = None,
-        cooperated: bool = True,
-        notified_voluntarily: bool = False,
-        corrective_measures: bool = False,
-        intentional: bool = False,
-        prior_violations: bool = False,
+        cooperated: bool | None = None,
+        notified_voluntarily: bool | None = None,
+        corrective_measures: bool | None = None,
+        intentional: bool | None = None,
+        prior_violations: bool | None = None,
     ) -> str:
         """Run EDPB 5-step fine simulation based on real enforcement data.
 
@@ -1041,11 +1041,11 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             sector: Industry sector (e.g. "Finance")
             turnover_eur: Annual turnover in EUR (if known)
             data_subjects_affected: Number of affected data subjects
-            cooperated: Did the org cooperate with the DPA?
-            notified_voluntarily: Was the breach self-reported?
-            corrective_measures: Were corrective measures taken?
-            intentional: Was the violation intentional?
-            prior_violations: Does the org have prior GDPR violations?
+            cooperated: Did the org cooperate with the DPA? (None = unknown)
+            notified_voluntarily: Was the breach self-reported? (None = unknown)
+            corrective_measures: Were corrective measures taken? (None = unknown)
+            intentional: Was the violation intentional? (None = unknown)
+            prior_violations: Does the org have prior GDPR violations? (None = unknown)
         """
         params = SimulationInput(
             articles_violated=articles_violated,

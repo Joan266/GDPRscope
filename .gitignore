@@ -22,3 +22,6 @@ eval/recalldb_runs.log
 
 # Research screenshots
 research/*.png
+
+# Archived code (kept locally, not committed)
+_archive/
