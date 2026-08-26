@@ -927,7 +927,7 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             only_with_fine: Only return cases with fines (default False)
             limit: Max results (default 10)
         """
-        from db.rag import resolve_entity_alias, embed_query, vector_to_pg
+        from db.rag import resolve_entity_alias, fuzzy_search_entity, embed_query, vector_to_pg
 
         patterns = resolve_entity_alias(entity_name)
         if not patterns:
@@ -994,6 +994,32 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             """, params + [limit])
 
         rows = cur.fetchall()
+
+        # Fallback: trigram fuzzy search if ILIKE found nothing
+        if not rows:
+            try:
+                fuzzy_hits = fuzzy_search_entity(cur, entity_name, limit=limit)
+                if fuzzy_hits:
+                    doc_ids = [h[0] for h in fuzzy_hits]
+                    matched_name = fuzzy_hits[0][1]
+                    placeholders = ",".join(["%s"] * len(doc_ids))
+                    cur.execute(f"""
+                        SELECT d.title, d.authority, d.jurisdiction,
+                               d.fine_amount, d.fine_currency, d.gdpr_articles,
+                               d.decision_year, d.outcome, d.case_number,
+                               d.controller_name
+                        FROM documents d
+                        WHERE d.id = ANY(%s::uuid[])
+                        ORDER BY d.decision_date DESC NULLS LAST
+                        LIMIT %s
+                    """, (doc_ids, limit))
+                    rows = cur.fetchall()
+                    if rows:
+                        log.info("Fuzzy fallback: '%s' → '%s' (sim=%.2f)",
+                                 entity_name, matched_name, fuzzy_hits[0][2])
+            except Exception as e:
+                log.debug("Trigram fuzzy search failed (pg_trgm may not be installed): %s", e)
+
         if not rows:
             return f"No enforcement decisions found for '{entity_name}'."
 

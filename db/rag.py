@@ -342,6 +342,28 @@ def resolve_entity_alias(name: str) -> list[str]:
     return patterns
 
 
+def fuzzy_search_entity(cur: psycopg.Cursor, name: str,
+                        limit: int = 20) -> list[tuple[str, str, float]]:
+    """Trigram fuzzy search on controller_name using pg_trgm.
+
+    Fallback for when ILIKE exact/substring matching finds nothing
+    (typos, abbreviations, partial names).
+
+    Returns list of (document_id, controller_name, similarity_score).
+    Requires: CREATE EXTENSION IF NOT EXISTS pg_trgm;
+    """
+    cur.execute("""
+        SELECT DISTINCT d.id, d.controller_name,
+               similarity(lower(d.controller_name), lower(%s)) AS sim
+        FROM documents d
+        WHERE d.controller_name IS NOT NULL
+          AND similarity(lower(d.controller_name), lower(%s)) > 0.15
+        ORDER BY sim DESC
+        LIMIT %s
+    """, (name, name, limit))
+    return [(str(r[0]), r[1], r[2]) for r in cur.fetchall()]
+
+
 # ── Intent extraction ──────────────────────────────────────────────────────────
 
 _INTENT_PROMPT = """\
@@ -455,6 +477,7 @@ def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str
     """Returns doc IDs that match controller_name and have embedded child chunks.
     Resolves entity aliases (e.g. 'BBVA' → 'Banco Bilbao Vizcaya Argentaria')
     so abbreviations match the canonical legal names stored in DB.
+    Falls back to pg_trgm trigram similarity if ILIKE finds nothing.
     Requires c.embedding IS NOT NULL — prevents unembedded Tracker docs from
     restricting the search to docs with no vector representation."""
     patterns = resolve_entity_alias(controller_name)
@@ -474,7 +497,20 @@ def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str
         """,
         params,
     )
-    return [str(row[0]) for row in cur.fetchall()]
+    results = [str(row[0]) for row in cur.fetchall()]
+
+    # Fallback: trigram fuzzy search if ILIKE found nothing
+    if not results:
+        try:
+            fuzzy_hits = fuzzy_search_entity(cur, controller_name, limit=20)
+            if fuzzy_hits:
+                log.info("Fuzzy fallback for '%s' → '%s' (sim=%.2f)",
+                         controller_name, fuzzy_hits[0][1], fuzzy_hits[0][2])
+                results = [h[0] for h in fuzzy_hits]
+        except Exception:
+            pass
+
+    return results
 
 
 def rerank_by_metadata(contexts: list[dict], intent: QueryIntent) -> list[dict]:

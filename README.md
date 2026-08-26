@@ -13,7 +13,7 @@ The retrieval pipeline combines multiple search strategies and merges them via [
 - **Dense vector search** — each text is encoded as 1024 numbers (an "embedding") that capture meaning; similar texts have similar numbers, so searching is finding the closest vectors
 - **Sparse lexical search** — each text produces ~50-100 (word: importance weight) pairs, learned by the model; matches exact terms but with learned importance rather than raw frequency
 - **BM25 full-text search** — classic keyword matching via PostgreSQL tsvector; finds documents that contain the query terms regardless of meaning
-- **Cross-encoder reranking** — a second model that reads (query + document) together and scores relevance; more accurate than comparing vectors separately but slower, so only applied to the top ~20 candidates
+- **Cross-encoder reranking** — a second model that reads (query + document) together and scores relevance; more accurate than comparing vectors separately but slower, so only applied to the top ~30 candidates
 
 The agent decomposes complex queries into parallel sub-searches, applies HyDE (generates a hypothetical decision excerpt and embeds that instead of the raw question, bridging the vocabulary gap between questions and legal text), and uses intent extraction to route to specialized search arms.
 
@@ -23,7 +23,7 @@ The agent decomposes complex queries into parallel sub-searches, applies HyDE (g
 |---|---|
 | `search_precedents` | Full RAG pipeline: intent extraction, HyDE, section-aware vector search, RRF fusion, cross-encoder reranking |
 | `search_by_article` | Find decisions by GDPR article number with semantic reranking. Sub-article precision (e.g., "6(1)(f)") |
-| `search_by_entity` | Find decisions by company/authority name with fuzzy matching |
+| `search_by_entity` | Find decisions by company/authority name (ILIKE + alias resolution, pg_trgm trigram fallback for typos) |
 | `simulate_fine` | EDPB 5-step fine estimation from matching precedents (P25-P75 range, not a point estimate) |
 | `lookup_law` | Retrieve GDPR article text + relevant recitals |
 | `analyze_factors` | Art. 83(2) aggravating/mitigating factor analysis from case_factors table |
@@ -159,7 +159,7 @@ Single-mode vector search hit ~50% HR@5 on our eval set. Dense embeddings captur
 Legal decisions have natural sections (facts, holding, dispute). Small chunks (~625 tokens) are better for retrieval precision — the embedding captures a focused idea. But the LLM needs the full section to reason correctly. Parent-child solves this: search against children, send parents to the LLM. This pattern is [well-documented in production RAG systems](https://docs.llamaindex.ai/en/stable/optimizing/production_rag/).
 
 **Why HyDE (Hypothetical Document Embeddings)?**
-A user asks "Can a DPO also be the IT manager?" but decisions are written as "The DPA found that the controller violated Art. 38(6) by appointing a DPO who also held the position of IT director...". The question and the answer use different vocabulary. [HyDE](https://arxiv.org/abs/2212.10496) bridges this by generating a hypothetical decision excerpt from the question and embedding that instead. Measured improvement: +14pp on article_lookup queries.
+A user asks "Can a DPO also be the IT manager?" but decisions are written as "The DPA found that the controller violated Art. 38(6) by appointing a DPO who also held the position of IT director...". The question and the answer use different vocabulary. [HyDE](https://arxiv.org/abs/2212.10496) bridges this by generating a hypothetical decision excerpt from the question and embedding that instead. Used for conceptual and scenario queries where the vocabulary gap is largest.
 
 **Why BGE-M3 instead of a legal-domain embedding model?**
 The [Massive Legal Embedding Benchmark (MLEB)](https://arxiv.org/abs/2510.19365) shows legal-specialized models (Voyage Law-2, Kanon 2) outperform general models on GDPR retrieval tasks. BGE-M3 was chosen because it provides dense + sparse embeddings from a single model (reducing infrastructure complexity) and runs locally on GPU without API costs. A legal-domain model or fine-tuning on (GDPR query, decision) pairs is the most direct path to improving the 64% HR@5 on conceptual queries.

@@ -1,3 +1,7 @@
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS vector;     -- pgvector: VECTOR type + ANN indexes
+CREATE EXTENSION IF NOT EXISTS pg_trgm;    -- trigram fuzzy matching on controller_name
+
 -- =============================================================
 -- JurisMind — CockroachDB Schema
 -- v1.0.0 — 2026-07-28
