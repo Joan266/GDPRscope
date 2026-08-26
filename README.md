@@ -1,6 +1,6 @@
 # GDPRScope
 
-GDPR enforcement research tool. Searches 8,000+ real enforcement decisions across 36 jurisdictions to answer questions about fines, precedents, and regulatory patterns.
+GDPR enforcement research tool. Searches 8,000+ real enforcement decisions across 38 jurisdictions to answer questions about fines, precedents, and regulatory patterns.
 
 Built for privacy lawyers and DPOs who need to research enforcement precedents across multiple DPAs and jurisdictions — a process that typically involves searching GDPRhub, EUR-Lex, and individual DPA websites separately.
 
@@ -23,7 +23,7 @@ The agent decomposes complex queries into parallel sub-searches, applies HyDE (g
 |---|---|
 | `search_precedents` | Full RAG pipeline: intent extraction, HyDE, section-aware vector search, RRF fusion, cross-encoder reranking |
 | `search_by_article` | Find decisions by GDPR article number with semantic reranking. Sub-article precision (e.g., "6(1)(f)") |
-| `search_by_entity` | Find decisions by company/authority name (ILIKE + alias resolution, pg_trgm trigram fallback for typos) |
+| `search_by_entity` | Find decisions by company/authority name (ILIKE + alias resolution, title search fallback, pg_trgm trigram fallback for typos) |
 | `simulate_fine` | EDPB 5-step fine estimation from matching precedents (P25-P75 range, not a point estimate) |
 | `lookup_law` | Retrieve GDPR article text + relevant recitals |
 | `analyze_factors` | Art. 83(2) aggravating/mitigating factor analysis from case_factors table |
@@ -62,7 +62,7 @@ Similarity scoring uses eta-squared variable importance measured on 3,841 fined 
 
 ## Eval results
 
-Evaluated on a golden set of 416 queries across 9 categories.
+Evaluated on a golden set of 457 queries across 9 categories (hand-written from real documents in the database, with expected document IDs verified against the corpus).
 
 Metric: Hit Rate @ 5 — does the expected document appear in the top 5 retrieved?
 
@@ -79,13 +79,13 @@ Per-category breakdown (agent):
 | fine_lookup | 92% | 50 |
 | false_premise | 90% | 50 |
 | named_entity | 88% | 80 |
-| edge_case | 84% | 37 |
-| scenario | 81% | 50 |
-| multi_target | 77% | 25 |
-| article_lookup | 76% | 34 |
-| conceptual | 64% | 50 |
+| scenario | 81% | 59 |
+| multi_target | 77% | 31 |
+| article_lookup | 76% | 42 |
+| edge_case | 69% | 45 |
+| conceptual | 64% | 59 |
 
-The weakest category (conceptual, 64%) is limited by the embedding model — BGE-M3 is a general-purpose multilingual model, not specialized in legal text. Abstract legal questions like "Can a DPO also be the IT manager?" produce embeddings that are distant from the specific decision text that answers them. A legal-domain embedding model or fine-tuning BGE-M3 on (GDPR query, relevant decision) pairs would likely improve these categories, but was out of scope. Many "misses" in this category do retrieve relevant precedents — just not the specific one in the golden set.
+The two weakest categories are limited by different factors. Conceptual queries (64%) are bounded by the embedding model — BGE-M3 is a general-purpose multilingual model, not specialized in legal text. Abstract questions like "Can a DPO also be the IT manager?" produce embeddings that are distant from the specific decision text that answers them. Edge case queries (69%) stress the retrieval pipeline with unusual patterns (multi-language, very old decisions, obscure DPAs). A legal-domain embedding model or fine-tuning BGE-M3 on (GDPR query, relevant decision) pairs would likely improve both categories, but was out of scope. Many "misses" do retrieve relevant precedents — just not the specific one in the golden set.
 
 ## Data sources
 
@@ -128,7 +128,8 @@ ui/
 
 eval/
   eval_agent.py         Agent evaluation pipeline (HR@K, MRR, tool error detection)
-  golden_set_v5.json    416 queries, 9 categories
+  golden_set_v5.json    416 queries, 9 categories (base set)
+  golden_set_v6.json    457 queries (expanded weak categories)
 
 tests/
   test_fine_simulator.py  55 tests (categorization, starting point, percentiles, factor analysis)
@@ -138,7 +139,7 @@ tests/
 
 | Component | Technology |
 |---|---|
-| Database | PostgreSQL 16 + pgvector (dev) / CockroachDB Serverless (prod) |
+| Database | PostgreSQL 16 + pgvector |
 | Dense embeddings | BGE-M3 (1024d, local GPU via sentence-transformers) |
 | Sparse embeddings | BGE-M3 lexical weights (sparse_linear.pt head, stored as JSONB) |
 | Cross-encoder reranker | bge-reranker-v2-m3 |
