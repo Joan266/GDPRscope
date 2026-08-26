@@ -953,6 +953,12 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
             params.append(year)
 
         where_sql = " AND ".join(where_clauses)
+        sort_map = {
+            "date_desc": "d.decision_date DESC NULLS LAST",
+            "date_asc": "d.decision_date ASC NULLS LAST",
+            "fine_desc": "d.fine_amount DESC NULLS LAST",
+            "fine_asc": "d.fine_amount ASC NULLS LAST",
+        }
 
         if context:
             query_vec = vector_to_pg(embed_query(None, context))
@@ -975,12 +981,6 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
                 LIMIT %s
             """, [query_vec] + params + [limit])
         else:
-            sort_map = {
-                "date_desc": "d.decision_date DESC NULLS LAST",
-                "date_asc": "d.decision_date ASC NULLS LAST",
-                "fine_desc": "d.fine_amount DESC NULLS LAST",
-                "fine_asc": "d.fine_amount ASC NULLS LAST",
-            }
             order = sort_map.get(sort_by, sort_map["date_desc"])
             cur.execute(f"""
                 SELECT d.title, d.authority, d.jurisdiction,
@@ -995,14 +995,57 @@ def create_tools(conn: psycopg.Connection, recalldb_memory=None) -> list:
 
         rows = cur.fetchall()
 
-        # Fallback: trigram fuzzy search if ILIKE found nothing
+        # Fallback 1: title ILIKE (respondent names, court names, case numbers)
+        if not rows:
+            title_clauses = ["d.title ILIKE %s"]
+            title_params: list[Any] = [f"%{entity_name}%"]
+            if jurisdiction:
+                title_clauses.append("d.jurisdiction = %s")
+                title_params.append(jurisdiction)
+            title_where = " AND ".join(title_clauses)
+            sort_order = sort_map.get(sort_by, "d.decision_date DESC NULLS LAST") if not context else "best_dist"
+            if context:
+                query_vec_t = vector_to_pg(embed_query(None, context))
+                cur.execute(f"""
+                    SELECT d.title, d.authority, d.jurisdiction,
+                           d.fine_amount, d.fine_currency, d.gdpr_articles,
+                           d.decision_year, d.outcome, d.case_number,
+                           d.controller_name,
+                           MIN(c.embedding <=> %s::vector(1024)) AS best_dist
+                    FROM documents d
+                    JOIN chunks c ON c.document_id = d.id
+                    WHERE {title_where}
+                      AND c.chunk_type = 'child'
+                      AND c.embedding_version = 'bge-m3-1024'
+                    GROUP BY d.id, d.title, d.authority, d.jurisdiction,
+                             d.fine_amount, d.fine_currency, d.gdpr_articles,
+                             d.decision_year, d.outcome, d.case_number,
+                             d.controller_name
+                    ORDER BY best_dist
+                    LIMIT %s
+                """, [query_vec_t] + title_params + [limit])
+            else:
+                cur.execute(f"""
+                    SELECT d.title, d.authority, d.jurisdiction,
+                           d.fine_amount, d.fine_currency, d.gdpr_articles,
+                           d.decision_year, d.outcome, d.case_number,
+                           d.controller_name
+                    FROM documents d
+                    WHERE {title_where}
+                    ORDER BY {sort_order}
+                    LIMIT %s
+                """, title_params + [limit])
+            rows = cur.fetchall()
+            if rows:
+                log.info("Title fallback: '%s' → %d docs", entity_name, len(rows))
+
+        # Fallback 2: trigram fuzzy search on controller_name
         if not rows:
             try:
                 fuzzy_hits = fuzzy_search_entity(cur, entity_name, limit=limit)
                 if fuzzy_hits:
                     doc_ids = [h[0] for h in fuzzy_hits]
                     matched_name = fuzzy_hits[0][1]
-                    placeholders = ",".join(["%s"] * len(doc_ids))
                     cur.execute(f"""
                         SELECT d.title, d.authority, d.jurisdiction,
                                d.fine_amount, d.fine_currency, d.gdpr_articles,

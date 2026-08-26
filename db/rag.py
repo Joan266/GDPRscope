@@ -499,7 +499,26 @@ def _find_controller_docs(cur: psycopg.Cursor, controller_name: str) -> list[str
     )
     results = [str(row[0]) for row in cur.fetchall()]
 
-    # Fallback: trigram fuzzy search if ILIKE found nothing
+    # Fallback 1: title ILIKE (respondent names, court names, case numbers)
+    if not results:
+        cur.execute(
+            """
+            SELECT DISTINCT d.id
+            FROM documents d
+            JOIN chunks c ON c.document_id = d.id
+            WHERE d.title ILIKE %s
+              AND c.chunk_type = 'child'
+              AND c.embedding_version = 'bge-m3-1024'
+            LIMIT 50
+            """,
+            (f"%{controller_name}%",),
+        )
+        title_hits = [str(row[0]) for row in cur.fetchall()]
+        if title_hits:
+            log.info("Title fallback for '%s' → %d docs", controller_name, len(title_hits))
+            results = title_hits
+
+    # Fallback 2: trigram fuzzy search on controller_name
     if not results:
         try:
             fuzzy_hits = fuzzy_search_entity(cur, controller_name, limit=20)
