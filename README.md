@@ -148,6 +148,33 @@ tests/
 | UI | Streamlit |
 | Ingestion | psycopg3 direct, requests, MediaWiki API, SPARQL |
 
+## Design decisions
+
+Key architectural choices and the reasoning behind them.
+
+**Why hybrid retrieval (dense + sparse + BM25) instead of just vector search?**
+Single-mode vector search hit ~50% HR@5 on our eval set. Dense embeddings capture meaning but miss exact terms (entity names, article numbers). BM25 catches exact matches but misses semantic similarity. Sparse learned weights (BGE-M3 lexical head) sit between both — they match terms but with model-learned importance. [RRF](https://plg.uwaterloo.ca/~grbovic/p131-cormack.pdf) merges their ranked lists so a document found by multiple methods ranks higher. We tested sparse as a post-RRF override (v11, 81.2%) vs as an RRF arm (v12, 81.8%) — the override approach destroyed good rankings from the other arms.
+
+**Why parent-child chunking instead of fixed-size chunks?**
+Legal decisions have natural sections (facts, holding, dispute). Small chunks (~625 tokens) are better for retrieval precision — the embedding captures a focused idea. But the LLM needs the full section to reason correctly. Parent-child solves this: search against children, send parents to the LLM. This pattern is [well-documented in production RAG systems](https://docs.llamaindex.ai/en/stable/optimizing/production_rag/).
+
+**Why HyDE (Hypothetical Document Embeddings)?**
+A user asks "Can a DPO also be the IT manager?" but decisions are written as "The DPA found that the controller violated Art. 38(6) by appointing a DPO who also held the position of IT director...". The question and the answer use different vocabulary. [HyDE](https://arxiv.org/abs/2212.10496) bridges this by generating a hypothetical decision excerpt from the question and embedding that instead. Measured improvement: +14pp on article_lookup queries.
+
+**Why BGE-M3 instead of a legal-domain embedding model?**
+The [Massive Legal Embedding Benchmark (MLEB)](https://arxiv.org/abs/2510.19365) shows legal-specialized models (Voyage Law-2, Kanon 2) outperform general models on GDPR retrieval tasks. BGE-M3 was chosen because it provides dense + sparse embeddings from a single model (reducing infrastructure complexity) and runs locally on GPU without API costs. A legal-domain model or fine-tuning on (GDPR query, decision) pairs is the most direct path to improving the 64% HR@5 on conceptual queries.
+
+**Why an agent instead of a single RAG pipeline?**
+Single-query RAG fails on three patterns: superlative queries ("highest fine for Art. 32"), entity-specific queries (large corpus = entity gets buried), and multi-document synthesis ("typical fine range in France"). The agent can call `search_by_entity` for exact matches, `search_by_article` with filters for article-specific queries, and `simulate_fine` for range questions — choosing the right tool per query type. This lifted HR@5 from ~50% to 82%.
+
+**Why EDPB 5-step methodology for fine simulation?**
+The [EDPB Guidelines 04/2022](https://www.edpb.europa.eu/system/files/2023-05/edpb_guidelines_042022_calculationofadministrativefines_en.pdf) define how DPAs should calculate fines. Using the same methodology as the regulators (severity classification, turnover-based starting point, Art. 83(2) factor adjustment) produces ranges grounded in how fines are actually determined, not statistical averages that ignore legal structure. Variable importance was measured empirically via eta-squared on 3,841 fined cases.
+
+**What was considered and discarded?**
+- *ColBERT (multi-vector retrieval)*: 28 GB storage for 85K chunks, redundant with cross-encoder reranking (both do token-level comparison, but cross-encoder does full cross-attention which is strictly more powerful than ColBERT's MaxSim).
+- *GraphRAG*: Researched [LegalGraphRAG](https://arxiv.org/abs/2605.28120) (fact graphs + ontology communities) and [Graph RAG for Legal Norms](https://arxiv.org/abs/2505.00039) (versioned legislation graphs). The citations table exists in the schema for future graph traversal, but the agentic approach with structured tools achieved 82% HR@5 without graph infrastructure.
+- *RecallDB (retrieval learning)*: Hooks exist in the code but disabled — the agent's tool usage pattern is too consistent for retrieval learning to provide meaningful signal.
+
 ## Setup
 
 ```bash
