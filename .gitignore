@@ -8,6 +8,7 @@ venv/
 *.csv
 .playwright-mcp/
 .claude/
+CLAUDE.md
 ref_*.png
 ui_v2_*.png
 SESSION_*.md
